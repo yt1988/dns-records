@@ -45,7 +45,7 @@ export default {
   fd_ok: "No mail or name-server problems found",
 
   h_records: "Records", th_type: "Type", th_value: "Value", th_ttl: "TTL", th_from: "Resolvers",
-  no_records: "No records", rec_n: "{n} of {b}", ttl_range: "{a}–{b} s", ttl_s: "{a} s",
+  no_records: "No records", rec_n: "{n} of {b}", ttl_range: "{a}–{b} s", ttl_s: "{a} s", ttl_h: "{a} h", ttl_d: "{a} d", ttl_range_h: "{a}–{b} h", ttl_range_d: "{a}–{b} d",
   lk_dns: "Which DNS resolver is fastest for you?", lk_ping: "Ping this domain from 18 locations", lk_asn: "Who owns this IP",
   records_note: "Values are merged across resolvers; TTL is what each resolver has left.",
 

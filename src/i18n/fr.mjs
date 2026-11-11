@@ -45,7 +45,7 @@ export default {
   fd_ok: "Aucun problème de courrier ni de serveur de noms",
 
   h_records: "Enregistrements", th_type: "Type", th_value: "Valeur", th_ttl: "TTL", th_from: "Résolveurs",
-  no_records: "Aucun enregistrement", rec_n: "{n} sur {b}", ttl_range: "{a}–{b} s", ttl_s: "{a} s",
+  no_records: "Aucun enregistrement", rec_n: "{n} sur {b}", ttl_range: "{a}–{b} s", ttl_s: "{a} s", ttl_h: "{a} h", ttl_d: "{a} j", ttl_range_h: "{a}–{b} h", ttl_range_d: "{a}–{b} j",
   lk_dns: "Quel résolveur DNS est le plus rapide pour vous ?", lk_ping: "Pinger ce domaine depuis 18 lieux", lk_asn: "À qui appartient cette IP",
   records_note: "Les valeurs sont fusionnées entre résolveurs ; le TTL est ce qu’il reste à chacun.",
 

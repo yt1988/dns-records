@@ -32,6 +32,19 @@ import { encodeResult, decodeResult, sharePath, resultsFromSnapshot, CODES } fro
     catch (e) { return d.toISOString().slice(0, 10); }
   };
   const pct = n => Math.round(n * 100) + "%";
+  // TTL: seconds are precise but hard to read past an hour; long values get hours or days instead.
+  const ttlNum = n => (n >= 10 ? String(Math.round(n)) : n.toFixed(1).replace(/\.0$/, ""));
+  function ttlText(a, b) {
+    if (Math.max(a, b) >= 172800) {
+      const f = n => ttlNum(n / 86400);
+      return a === b ? t("ttl_d", { a: f(a) }) : t("ttl_range_d", { a: f(a), b: f(b) });
+    }
+    if (Math.max(a, b) >= 3600) {
+      const f = n => ttlNum(n / 3600);
+      return a === b ? t("ttl_h", { a: f(a) }) : t("ttl_range_h", { a: f(a), b: f(b) });
+    }
+    return a === b ? t("ttl_s", { a }) : t("ttl_range", { a, b });
+  }
 
   // Other 1ms.dog tools: their address comes from the shell's <meta name="<id>">; self-hosted there is none, so no link.
   // Links keep this page's language folder.
@@ -420,7 +433,7 @@ import { encodeResult, decodeResult, sharePath, resultsFromSnapshot, CODES } fro
         a.href = asnHref(row.data); a.target = "_blank"; a.rel = "noopener"; a.title = t("lk_asn");
         v.appendChild(a);
       } else v.textContent = row.data;
-      const ttl = row.ttlMin === row.ttlMax ? t("ttl_s", { a: row.ttlMin }) : t("ttl_range", { a: row.ttlMin, b: row.ttlMax });
+      const ttl = ttlText(row.ttlMin, row.ttlMax);
       const from = t("rec_n", { n: row.count, b: RESOLVERS.length });
       // On a phone the last two columns fold under the value instead of scrolling out of sight.
       v.appendChild(el("span", "v-meta", ttl + " · " + from));
@@ -668,9 +681,11 @@ import { encodeResult, decodeResult, sharePath, resultsFromSnapshot, CODES } fro
     y += 34;
     x.fillStyle = m && m.consistency != null && m.ok.length * 2 >= RESOLVERS.length ? v("ok") : v("muted");
     x.font = "700 64px " + M;
-    x.fillText(m && m.consistency != null ? pct(m.consistency) : "—", P, y);
+    const pctText = m && m.consistency != null ? pct(m.consistency) : "—";
+    const pctW = x.measureText(pctText).width;
+    x.fillText(pctText, P, y);
     x.fillStyle = v("muted"); x.font = "400 26px " + F;
-    x.fillText(t("k_agree"), P + 128, y - 8);
+    x.fillText(t("k_agree"), P + pctW + 20, y - 16);
     y += 40;
     const agree = m && m.consistency != null
       ? t("card_line", { a: m.majority.resolvers.length, b: m.ok.length, n: state.records.length })

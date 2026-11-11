@@ -45,7 +45,7 @@ export default {
   fd_ok: "Проблем с почтой и NS-серверами не найдено",
 
   h_records: "Записи", th_type: "Тип", th_value: "Значение", th_ttl: "TTL", th_from: "Резолверы",
-  no_records: "Записей нет", rec_n: "{n} из {b}", ttl_range: "{a}–{b} с", ttl_s: "{a} с",
+  no_records: "Записей нет", rec_n: "{n} из {b}", ttl_range: "{a}–{b} с", ttl_s: "{a} с", ttl_h: "{a} ч", ttl_d: "{a} д", ttl_range_h: "{a}–{b} ч", ttl_range_d: "{a}–{b} д",
   lk_dns: "Какой DNS-резолвер быстрее всего у вас?", lk_ping: "Пинговать этот домен из 18 точек", lk_asn: "Кому принадлежит этот IP",
   records_note: "Одинаковые значения объединены; TTL — сколько осталось у каждого резолвера.",
 

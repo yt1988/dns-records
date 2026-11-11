@@ -45,7 +45,7 @@ export default {
   fd_ok: "No se encontraron problemas de correo ni de servidores de nombres",
 
   h_records: "Registros", th_type: "Tipo", th_value: "Valor", th_ttl: "TTL", th_from: "Servidores DNS",
-  no_records: "Sin registros", rec_n: "{n} de {b}", ttl_range: "{a}–{b} s", ttl_s: "{a} s",
+  no_records: "Sin registros", rec_n: "{n} de {b}", ttl_range: "{a}–{b} s", ttl_s: "{a} s", ttl_h: "{a} h", ttl_d: "{a} d", ttl_range_h: "{a}–{b} h", ttl_range_d: "{a}–{b} d",
   lk_dns: "¿Qué servidor DNS es más rápido para ti?", lk_ping: "Hacer ping a este dominio desde 18 ubicaciones", lk_asn: "¿De quién es esta IP?",
   records_note: "Los valores están unidos entre servidores; el TTL es lo que le queda a cada uno.",
 

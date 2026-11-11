@@ -45,9 +45,9 @@ export default {
   fd_ok: "메일과 NS에서 문제를 찾지 못했습니다",
 
   h_records: "레코드", th_type: "종류", th_value: "값", th_ttl: "TTL", th_from: "DNS 서버",
-  no_records: "레코드 없음", rec_n: "{b}개 중 {n}개", ttl_range: "{a}–{b}초", ttl_s: "{a}초",
+  no_records: "레코드 없음", rec_n: "{b}개 중 {n}개", ttl_range: "{a}–{b}초", ttl_s: "{a}초", ttl_h: "{a}시간", ttl_d: "{a}일", ttl_range_h: "{a}–{b}시간", ttl_range_d: "{a}–{b}일",
   lk_dns: "내게 가장 빠른 DNS 서버는?", lk_ping: "18개 지역에서 이 도메인 Ping", lk_asn: "이 IP의 소유자",
-  records_note: "같은 값은 합쳐서 보여 줍니다. TTL은 각 DNS 서버에 남은 초입니다.",
+  records_note: "같은 값은 합쳐서 보여 줍니다. TTL은 각 DNS 서버에 남은 시간입니다.",
 
   h_prop: "전파", prop_hint: "각 DNS 서버가 지금 반환하는 값", agree: "일치", differs: "다름",
   prop_summary: "응답한 {b}개 중 {a}개 일치", prop_none: "이 종류는 응답한 DNS 서버가 없습니다", th_resolver: "DNS 서버",
