@@ -139,6 +139,7 @@ table.rec td.v { font-family: var(--f-num); overflow-wrap: anywhere; }
 table.rec td.v a { color: inherit; text-decoration: underline dashed; text-underline-offset: 2px; }
 table.rec td.n { font-family: var(--f-num); white-space: nowrap; color: var(--muted); }
 table.rec td.f { font-family: var(--f-num); white-space: nowrap; color: var(--muted); }
+.v-meta { display: none; }
 
 /* propagation */
 .tabs { display: flex; flex-wrap: wrap; gap: 4px; }
@@ -201,6 +202,15 @@ dl.rdap dd .mono { font-family: var(--f-num); }
   .pr { grid-template-columns: minmax(88px, 1fr) 88px; }
   .pr-val { grid-column: 1 / -1; }
   .prop-sum { margin-left: 0; }
+  /* the conclusion owns its line; share/report sit under it and can never cover it */
+  .v-head { display: grid; grid-template-columns: auto minmax(0, 1fr); align-items: start; gap: 4px 9px; }
+  .v-head h2 { grid-column: 2; }
+  .v-head .dot { grid-column: 1; margin-top: 8px; }
+  .v-acts { grid-column: 1 / -1; margin-left: 0; justify-content: flex-start; }
+  /* TTL and the resolver count move under the value instead of scrolling out of the table */
+  table.rec { min-width: 0; }
+  table.rec th:nth-child(3), table.rec th:nth-child(4), table.rec td.n, table.rec td.f { display: none; }
+  .v-meta { display: block; margin-top: 3px; color: var(--muted); font: 12px/1.5 var(--f-ui); }
   .facts { grid-template-columns: 1fr 1fr 1fr; gap: 6px; }
   .fact { padding: 7px 9px; }
   .fact b { font-size: 18px; }

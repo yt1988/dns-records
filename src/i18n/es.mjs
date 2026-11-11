@@ -22,7 +22,7 @@ export default {
   v_allfail: "Ningún servidor DNS respondió",
   v_all: "Los {n} servidores DNS que respondieron coinciden",
   v_most: "{a} de los {b} servidores que respondieron coinciden",
-  v_one: "Solo respondió un servidor DNS",
+  v_one: "Solo respondió un servidor DNS", v_few_all: "Solo respondieron {a} de {b} servidores; los que respondieron coinciden", v_few_most: "Solo respondieron {c} de {b} servidores; {a} de ellos coinciden",
   v_sub: "{ok} de {tot} servidores respondieron · {fail} no conectaron",
   v_shared: "Resultado compartido el {date}",
   v_mine: "Consultar el mío",

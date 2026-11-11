@@ -41,7 +41,7 @@
 <meta name="twitter:description" content="12 の DNS サーバーに同時に問い合わせ、メールと登録情報も">
 <script type="application/ld+json">{"@context":"https://schema.org","@graph":[{"@type":"WebApplication","name":"DNS レコード検索 · 1ms.dog","url":"https://dig.1ms.dog/ja/","applicationCategory":"UtilitiesApplication","operatingSystem":"Any","browserRequirements":"Requires JavaScript","description":"任意のドメインの DNS レコード（A、AAAA、CNAME、MX、NS、TXT、CAA、SRV、SOA）を 12 の公共 DNS サーバーに同時に問い合わせます。反映状況、SPF と DMARC の問題、レジストリの NS、RDAP の登録情報まで表示。無料、ブラウザ内で完結します。","inLanguage":"ja","isAccessibleForFree":true,"offers":{"@type":"Offer","price":"0","priceCurrency":"USD"}},{"@type":"FAQPage","mainEntity":[{"@type":"Question","name":"このページは何を調べますか？","acceptedAnswer":{"@type":"Answer","text":"ドメインを入力すると、9 種類のレコード（A、AAAA、CNAME、MX、NS、TXT、CAA、SRV、SOA）を 12 の公共 DNS サーバーに、ブラウザから DNS over HTTPS（DoH、暗号化された DNS）で同時に問い合わせます。同じ値はまとめ、各サーバーの回答は「反映状況」に表示します。登録情報は RDAP（構造化された WHOIS）から取得します。"}},{"@type":"Question","name":"DNS の反映（伝播）とは？","acceptedAnswer":{"@type":"Answer","text":"レコードを変更しても、各 DNS サーバーは TTL（有効期間）が切れるまで古いコピーを使います。そのため変更直後は、新しい値を返すサーバーと古い値を返すサーバーが混ざり、「反映状況」にどちらかが表示されます。ブラウザはドメイン自身の権威サーバー（53 番ポート）に接続できないため、ここで分かるのは公共 DNS サーバーのキャッシュの状態だけです。"}},{"@type":"Question","name":"「接続できず」と出るのはなぜ？","acceptedAnswer":{"@type":"Answer","text":"問い合わせはブラウザから各 DNS サーバーへ直接送られます。中国本土では Cloudflare と Google の DNS が通常つながらず、他の一部も同じです。その行は「接続できず」と表示します。これは経路の問題で、レコードが空という意味ではありません。応答しなかったサーバーは不一致として数えません。"}},{"@type":"Question","name":"一致率と TTL は何ですか？","acceptedAnswer":{"@type":"Answer","text":"一致率は、応答した DNS サーバーのうち最も多い回答を返した割合です。TTL はそのサーバーがレコードを保持できる残り秒数で、zone の値から減っていきます。サーバーごとに残り時間が違うのは正常で、不一致ではありません。"}},{"@type":"Question","name":"SPF と DMARC はどう確認しますか？","acceptedAnswer":{"@type":"Answer","text":"SPF はドメインの TXT レコードから読みます。v=spf1 が複数ないか、末尾が +all、-all、~all、?all のどれか、もう一度 DNS を引く仕組み（include、a、mx、ptr、exists、redirect）がいくつあるか（上限 10）を確認します。include の先までは追わないため、この数は下限です。DMARC は _dmarc.\u003cドメイン> から、p= の方針、報告先（rua）の有無、pct を読みます。"}},{"@type":"Question","name":"レジストリの NS と DNS サーバーの NS が違うのはなぜ？","acceptedAnswer":{"@type":"Answer","text":"レジストリ側（RDAP）は登録された情報で、DNS サーバーが返すのはドメインが実際に公開している NS レコードです。違う場合は、変更がまだ反映中か、レジストリの情報が古いかのどちらかです。両方をそのまま表示します。"}},{"@type":"Question","name":"RDAP とは？ 項目が空なのはなぜ？","acceptedAnswer":{"@type":"Answer","text":"RDAP はレジストリが提供する構造化された WHOIS です。公開する情報が少ないレジストリもあり、プライバシー保護サービスが登録者情報を置き換えることもあります。欠けている項目は「なし」ではなく「不明」として表示します。"}},{"@type":"Question","name":"問い合わせはどこに送られますか？","acceptedAnswer":{"@type":"Answer","text":"DNS の問い合わせはブラウザから「反映状況」に並ぶ各サーバーへ直接送られます。RDAP は rdap.org に送られ、そこからレジストリへ転送されます。当社のサーバーは通りませんし、ログも残しません。共有リンクにはドメイン、表示したレコード、登録情報だけが入り、あなたの IP は入りません。"}},{"@type":"Question","name":"共有リンクを開いても数値が変わらないのはなぜ？","acceptedAnswer":{"@type":"Answer","text":"共有された結果はスナップショットで、その時点で DNS サーバーが返した内容を表示します。二人が同じデータを見られるようにするためです。今の値を調べるには「自分の結果を調べる」を押してください。"}},{"@type":"Question","name":"DNSSEC、DKIM、証明書も確認しますか？","acceptedAnswer":{"@type":"Answer","text":"この版では確認しません。表示するのは DNS サーバーが返したレコードです。DNSSEC の検証、DKIM セレクタ、証明書は別の確認項目で、別のツールで扱う予定です。"}}]}]}</script>
 <link rel="preload" href="/assets/fonts/geist-latin.woff2" as="font" type="font/woff2" crossorigin>
-<link rel="stylesheet" href="/assets/app.69d340d232.css">
+<link rel="stylesheet" href="/assets/app.45d9c706a6.css">
 </head>
 <body>
 <div class="app">
@@ -154,7 +154,7 @@
   </div>
 </div>
 <script type="application/json" id="data">{"lang":"ja","paths":{"en":"/","zh-CN":"/zh-cn/","zh-TW":"/zh-tw/","ja":"/ja/","ko":"/ko/","es":"/es/","fr":"/fr/","de":"/de/","pt":"/pt/","ru":"/ru/"}}</script>
-<script src="/assets/l.ja.73ac779c1a.js"></script>
-<script src="/assets/app.0987ee0615.js"></script>
+<script src="/assets/l.ja.07cfe9b479.js"></script>
+<script src="/assets/app.7e04c3f03f.js"></script>
 </body>
 </html>

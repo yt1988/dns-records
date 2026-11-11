@@ -356,13 +356,17 @@ import { encodeResult, decodeResult, sharePath, resultsFromSnapshot, CODES } fro
 
     const primary = heroType();
     const m = primary ? state.merged[primary] : null;
+    // Green only when most of the 12 answered: a handful of answers is not a healthy picture of propagation.
+    const covered = !!m && m.ok.length * 2 >= total;
     let title = "", dot = "warn";
     if (!m || !m.ok.length) { title = t("v_allfail"); dot = "bad"; }
     else if (m.nx && m.nx === m.ok.length) { title = t("v_nx", { domain: state.domain }); dot = "warn"; }
     else if (!state.records.length) { title = t("v_empty", { type: primary }); dot = "warn"; }
+    else if (!covered && m.consistency === 1) { title = t("v_few_all", { a: m.ok.length, b: total }); dot = ""; }
+    else if (!covered) { title = t("v_few_most", { a: m.majority.resolvers.length, b: m.ok.length, c: total }); dot = ""; }
     else if (m.consistency === 1) { title = t("v_all", { n: m.ok.length }); dot = "ok"; }
     else if (m.consistency != null) { title = t("v_most", { a: m.majority.resolvers.length, b: m.ok.length }); dot = "warn"; }
-    else { title = t("v_one"); dot = "warn"; }
+    else { title = t("v_one"); dot = ""; }
     $("vTitle").textContent = title;
     $("vDot").className = "dot " + dot;
     $("kAgree").textContent = m && m.consistency != null ? pct(m.consistency) : "—";
@@ -416,11 +420,15 @@ import { encodeResult, decodeResult, sharePath, resultsFromSnapshot, CODES } fro
         a.href = asnHref(row.data); a.target = "_blank"; a.rel = "noopener"; a.title = t("lk_asn");
         v.appendChild(a);
       } else v.textContent = row.data;
+      const ttl = row.ttlMin === row.ttlMax ? t("ttl_s", { a: row.ttlMin }) : t("ttl_range", { a: row.ttlMin, b: row.ttlMax });
+      const from = t("rec_n", { n: row.count, b: RESOLVERS.length });
+      // On a phone the last two columns fold under the value instead of scrolling out of sight.
+      v.appendChild(el("span", "v-meta", ttl + " · " + from));
       tr.appendChild(v);
-      tr.appendChild(el("td", "n", row.ttlMin === row.ttlMax ? t("ttl_s", { a: row.ttlMin }) : t("ttl_range", { a: row.ttlMin, b: row.ttlMax })));
-      const from = el("td", "f", t("rec_n", { n: row.count, b: RESOLVERS.length }));
-      from.title = row.resolvers.map(resName).join(", ");
-      tr.appendChild(from);
+      tr.appendChild(el("td", "n", ttl));
+      const f = el("td", "f", from);
+      f.title = row.resolvers.map(resName).join(", ");
+      tr.appendChild(f);
       tb.appendChild(tr);
     });
     $("recCount").textContent = String(state.records.length);
@@ -658,7 +666,7 @@ import { encodeResult, decodeResult, sharePath, resultsFromSnapshot, CODES } fro
     const primary = heroType();
     const m = primary && state.merged ? state.merged[primary] : null;
     y += 34;
-    x.fillStyle = m && m.consistency != null ? v("ok") : v("muted");
+    x.fillStyle = m && m.consistency != null && m.ok.length * 2 >= RESOLVERS.length ? v("ok") : v("muted");
     x.font = "700 64px " + M;
     x.fillText(m && m.consistency != null ? pct(m.consistency) : "—", P, y);
     x.fillStyle = v("muted"); x.font = "400 26px " + F;

@@ -31,6 +31,8 @@ Three rules keep the result honest:
 
 - **A resolver that did not answer is not a disagreement.** Consistency is the share of *answering* resolvers that gave
   the most common answer. Unreachable resolvers are listed as unreachable; they never look like an empty answer.
+- **Few answers are not a healthy result.** The green dot only appears when at least half of the 12 resolvers answered;
+  with fewer, the conclusion says how many did answer and stays neutral.
 - **TTL differences are not disagreement.** TTL counts down from the zone's value and differs per resolver, so it is
   shown as a range, not compared.
 - **No direct query to the domain's authoritative server.** Browsers cannot speak DNS on port 53, so the page only sees

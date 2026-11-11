@@ -22,7 +22,7 @@ export default {
   v_allfail: "어느 DNS 서버도 응답하지 않았습니다",
   v_all: "응답한 DNS 서버 {n}개가 모두 일치",
   v_most: "응답한 {b}개 중 {a}개가 일치",
-  v_one: "응답한 DNS 서버가 하나뿐입니다",
+  v_one: "응답한 DNS 서버가 하나뿐입니다", v_few_all: "{b}개 중 {a}개만 응답했지만 모두 일치합니다", v_few_most: "{b}개 중 {c}개만 응답했고 그중 {a}개가 일치합니다",
   v_sub: "{tot}개 중 {ok}개 응답 · {fail}개 연결 실패",
   v_shared: "{date}에 공유된 결과",
   v_mine: "내 결과 조회",

@@ -22,7 +22,7 @@ export default {
   v_allfail: "どの DNS サーバーも応答しませんでした",
   v_all: "応答した {n} の DNS サーバーがすべて一致",
   v_most: "応答した {b} のうち {a} が一致",
-  v_one: "応答した DNS サーバーは 1 つだけ",
+  v_one: "応答した DNS サーバーは 1 つだけ", v_few_all: "応答したのは {b} 台中 {a} 台だけですが、そのすべてが一致", v_few_most: "応答したのは {b} 台中 {c} 台だけです。うち {a} 台が一致",
   v_sub: "{tot} のうち {ok} が応答 · {fail} は接続できず",
   v_shared: "{date} に共有された結果",
   v_mine: "自分の結果を調べる",

@@ -41,6 +41,10 @@ CNAME/MX/NS/SOA/TXT/CAA/SRV，未知类型保留 `TYPE<n>` 和十六进制预览
 TTL 只是各家缓存剩余时间，不同不是不一致；合并行显示 `最小–最大` 秒。CNAME 链算回答的一部分，比较时按
 「类型 + 值」排序，顺序和 TTL 不影响。
 
+**覆盖度也算结论的一部分。** 只有少数解析器回答时，即使它们全一致，也不代表传播健康——大陆出口下经常只有
+3–4 家能连上。所以绿点只在「回答的家数 ≥ 12 的一半（6 家）」且一致时用；不足一半时文案改成「只有 3 家回答，
+都一致」，点用中性色。这一条来自站里的 `docs/lessons.md`：「看起来对、其实没测到」不能说成健康。
+
 ### 邮件
 
 - SPF：找 `v=spf1`，检查是否多条、结尾是 `+all/-all/~all/?all`、是否 `all` 在最后、`include/a/mx/ptr/exists/
@@ -79,8 +83,14 @@ description 和 robots，动态 OG 图不做（没有存储，也不值得为一
 ### 构建与部署
 
 `public/` 是生成物并提交：页面、带内容哈希的 JS/CSS、每种语言的字符串文件、sitemap、robots、llms.txt、
-`_headers`（CSP 只有一段内联预涂脚本的 sha256；`connect-src https:` 是因为浏览器要连十几家解析器和 rdap.org）。
-Worker 用静态资源绑定，只有 `/r/...` 进 Worker；还没接 Workers Builds 时手动 `npx wrangler deploy`。
+`_headers`（CSP 只有一段内联预涂脚本的 sha256）。Worker 用静态资源绑定，只有 `/r/...` 进 Worker；还没接
+Workers Builds 时手动 `npx wrangler deploy`。
+
+`connect-src` 写的是 `'self' https:`，不是逐家清单。原因：12 家 DoH 地址是固定的，可以列出来，但 RDAP 走
+rdap.org 后会 **302 到各注册局自己的 RDAP 服务器**（Verisign、PIR、Nominet、DENIC…），CSP 会检查重定向后的
+地址；注册局有上百家且各不相同，列不全就会有一批域名读不到注册信息。两个替代方案都不适合 v1：列「12 家 +
+rdap.org + 常见注册局」仍有缺口；把 RDAP 改成 Worker 代理则要引入服务端请求（我们的服务器会看到访客查的域名），
+与「查询不经过我们服务器」的隐私说明冲突，且要站长同意。所以 v1 保持 `https:`，并在 README 和本文件写明原因。
 
 ### 没做和待定
 

@@ -1036,6 +1036,7 @@
       $("kRecordsWho").textContent = state.types.join(" ");
       const primary = heroType();
       const m = primary ? state.merged[primary] : null;
+      const covered = !!m && m.ok.length * 2 >= total;
       let title = "", dot = "warn";
       if (!m || !m.ok.length) {
         title = t("v_allfail");
@@ -1046,6 +1047,12 @@
       } else if (!state.records.length) {
         title = t("v_empty", { type: primary });
         dot = "warn";
+      } else if (!covered && m.consistency === 1) {
+        title = t("v_few_all", { a: m.ok.length, b: total });
+        dot = "";
+      } else if (!covered) {
+        title = t("v_few_most", { a: m.majority.resolvers.length, b: m.ok.length, c: total });
+        dot = "";
       } else if (m.consistency === 1) {
         title = t("v_all", { n: m.ok.length });
         dot = "ok";
@@ -1054,7 +1061,7 @@
         dot = "warn";
       } else {
         title = t("v_one");
-        dot = "warn";
+        dot = "";
       }
       $("vTitle").textContent = title;
       $("vDot").className = "dot " + dot;
@@ -1110,11 +1117,14 @@
           a.title = t("lk_asn");
           v.appendChild(a);
         } else v.textContent = row.data;
+        const ttl = row.ttlMin === row.ttlMax ? t("ttl_s", { a: row.ttlMin }) : t("ttl_range", { a: row.ttlMin, b: row.ttlMax });
+        const from = t("rec_n", { n: row.count, b: RESOLVERS.length });
+        v.appendChild(el("span", "v-meta", ttl + " \xB7 " + from));
         tr.appendChild(v);
-        tr.appendChild(el("td", "n", row.ttlMin === row.ttlMax ? t("ttl_s", { a: row.ttlMin }) : t("ttl_range", { a: row.ttlMin, b: row.ttlMax })));
-        const from = el("td", "f", t("rec_n", { n: row.count, b: RESOLVERS.length }));
-        from.title = row.resolvers.map(resName).join(", ");
-        tr.appendChild(from);
+        tr.appendChild(el("td", "n", ttl));
+        const f = el("td", "f", from);
+        f.title = row.resolvers.map(resName).join(", ");
+        tr.appendChild(f);
         tb.appendChild(tr);
       });
       $("recCount").textContent = String(state.records.length);
@@ -1397,7 +1407,7 @@
       const primary = heroType();
       const m = primary && state.merged ? state.merged[primary] : null;
       y += 34;
-      x.fillStyle = m && m.consistency != null ? v("ok") : v("muted");
+      x.fillStyle = m && m.consistency != null && m.ok.length * 2 >= RESOLVERS.length ? v("ok") : v("muted");
       x.font = "700 64px " + M;
       x.fillText(m && m.consistency != null ? pct(m.consistency) : "\u2014", P, y);
       x.fillStyle = v("muted");

@@ -41,7 +41,7 @@
 <meta name="twitter:description" content="一次問 12 家解析器，郵件記錄和註冊資訊一起看">
 <script type="application/ld+json">{"@context":"https://schema.org","@graph":[{"@type":"WebApplication","name":"DNS 記錄查詢 · 1ms.dog","url":"https://dig.1ms.dog/zh-tw/","applicationCategory":"UtilitiesApplication","operatingSystem":"Any","browserRequirements":"Requires JavaScript","description":"一次查詢任意網域的 DNS 記錄（A、AAAA、CNAME、MX、NS、TXT、CAA、SRV、SOA），同時問 12 家公共解析器：看傳播情況、SPF 和 DMARC 的問題、註冊局 NS 和 RDAP 註冊資訊。免費，在瀏覽器裡完成。","inLanguage":"zh-TW","isAccessibleForFree":true,"offers":{"@type":"Offer","price":"0","priceCurrency":"USD"}},{"@type":"FAQPage","mainEntity":[{"@type":"Question","name":"這個頁面查什麼？","acceptedAnswer":{"@type":"Answer","text":"輸入網域，頁面從你的瀏覽器直接向 12 家公共解析器查詢九種記錄（A、AAAA、CNAME、MX、NS、TXT、CAA、SRV、SOA），查詢走 DNS over HTTPS（DoH，加密的 DNS）。相同的值會合併，各家解析器自己的回應在「傳播」裡。註冊資訊來自 RDAP，也就是結構化的 WHOIS。"}},{"@type":"Question","name":"DNS 傳播是什麼意思？","acceptedAnswer":{"@type":"Answer","text":"記錄變更以後，每家解析器會一直用舊的那份，直到 TTL（有效期限）走完。所以剛改完時，有的解析器已經回傳新值，有的還是舊值，「傳播」面板顯示的就是誰到了、誰還沒到。瀏覽器連不到網域自己的權威伺服器（53 埠），所以這裡只能看到公共解析器的快取狀態，看不到 zone 裡的絕對真相。"}},{"@type":"Question","name":"為什麼有些解析器顯示「連不上」？","acceptedAnswer":{"@type":"Answer","text":"查詢是從你的瀏覽器直接發到各家解析器的。在中國大陸，Cloudflare 和 Google 的 DNS 通常連不上，少數其他家也一樣，這些列會如實寫「連不上」。這是線路的問題，不代表記錄是空的：沒有回應的解析器不會被算成「不一致」。"}},{"@type":"Question","name":"一致率和 TTL 是什麼意思？","acceptedAnswer":{"@type":"Answer","text":"一致率是回傳了結果的解析器裡，有多少家給的是最常見的那份回應。TTL 是這家解析器還能快取多少秒；它從 zone 裡的值往下數，各家剩下的時間不一樣，所以 TTL 不同不算不一致。"}},{"@type":"Question","name":"SPF 和 DMARC 是怎麼檢查的？","acceptedAnswer":{"@type":"Answer","text":"SPF 從網域的 TXT 記錄裡讀：頁面會看有沒有不只一條 v=spf1 記錄、結尾是 +all、-all、~all 還是 ?all，並數出需要再查一次 DNS 的機制（include、a、mx、ptr、exists、redirect）有幾個，上限是 10。頁面不會跟著 include 裡的記錄查，所以這個數只是下限。DMARC 從 _dmarc.\u003c網域> 裡讀：p= 策略、有沒有回報地址（rua）、pct。"}},{"@type":"Question","name":"為什麼註冊局的 NS 和解析器的不一樣？","acceptedAnswer":{"@type":"Answer","text":"註冊局那邊（RDAP）存的是登記資訊，解析器回傳的是網域實際發布的 NS 記錄。兩者不同通常說明變更還在傳播，或者註冊局的資料還沒更新。兩邊都照原樣顯示。"}},{"@type":"Question","name":"RDAP 是什麼？為什麼有些欄位是空的？","acceptedAnswer":{"@type":"Answer","text":"RDAP 是註冊局提供的結構化 WHOIS。有的註冊局公開的資訊很少，隱私保護服務也會替換註冊人資訊；頁面把缺少的欄位顯示成未知，而不是「沒有」。"}},{"@type":"Question","name":"我的查詢送到哪裡去了？","acceptedAnswer":{"@type":"Answer","text":"每次 DNS 查詢都從你的瀏覽器直接送給「傳播」裡列出的解析器；RDAP 查詢送給 rdap.org，由它跳轉到對應的註冊局。查詢不經過我們的伺服器，我們也不留紀錄。分享連結裡只有網域、你看到的記錄和註冊資訊，永遠沒有你的 IP。"}},{"@type":"Question","name":"為什麼打開分享連結，數字不會變？","acceptedAnswer":{"@type":"Answer","text":"分享的結果是一份快照，顯示當時解析器回傳的內容，這樣兩個人看到的是同一份資料。想查現在的，點「查我現在的」。"}},{"@type":"Question","name":"會檢查 DNSSEC、DKIM 和憑證嗎？","acceptedAnswer":{"@type":"Answer","text":"這一版不檢查。頁面顯示的是解析器回傳的記錄；DNSSEC 驗證、DKIM 選擇器和憑證是另外的檢查，計畫放在別的工具裡。"}}]}]}</script>
 <link rel="preload" href="/assets/fonts/geist-latin.woff2" as="font" type="font/woff2" crossorigin>
-<link rel="stylesheet" href="/assets/app.69d340d232.css">
+<link rel="stylesheet" href="/assets/app.45d9c706a6.css">
 </head>
 <body>
 <div class="app">
@@ -154,7 +154,7 @@
   </div>
 </div>
 <script type="application/json" id="data">{"lang":"zh-TW","paths":{"en":"/","zh-CN":"/zh-cn/","zh-TW":"/zh-tw/","ja":"/ja/","ko":"/ko/","es":"/es/","fr":"/fr/","de":"/de/","pt":"/pt/","ru":"/ru/"}}</script>
-<script src="/assets/l.zh-tw.85be9430c3.js"></script>
-<script src="/assets/app.0987ee0615.js"></script>
+<script src="/assets/l.zh-tw.35d2e20ed3.js"></script>
+<script src="/assets/app.7e04c3f03f.js"></script>
 </body>
 </html>

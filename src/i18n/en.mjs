@@ -22,7 +22,7 @@ export default {
   v_allfail: "No resolver answered",
   v_all: "All {n} answering resolvers agree",
   v_most: "{a} of {b} answering resolvers agree",
-  v_one: "One resolver answered",
+  v_one: "One resolver answered", v_few_all: "Only {a} of {b} resolvers answered; those that did agree", v_few_most: "Only {c} of {b} resolvers answered; {a} of those agree",
   v_sub: "{ok} of {tot} resolvers answered · {fail} couldn't connect",
   v_shared: "Shared result from {date}",
   v_mine: "Look up mine",

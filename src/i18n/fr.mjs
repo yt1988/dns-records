@@ -22,7 +22,7 @@ export default {
   v_allfail: "Aucun résolveur n’a répondu",
   v_all: "Les {n} résolveurs qui ont répondu sont d’accord",
   v_most: "{a} des {b} résolveurs qui ont répondu sont d’accord",
-  v_one: "Un seul résolveur a répondu",
+  v_one: "Un seul résolveur a répondu", v_few_all: "Seuls {a} résolveurs sur {b} ont répondu ; ceux qui ont répondu sont d’accord", v_few_most: "Seuls {c} résolveurs sur {b} ont répondu ; {a} d’entre eux sont d’accord",
   v_sub: "{ok} résolveurs sur {tot} ont répondu · {fail} n’ont pas pu se connecter",
   v_shared: "Résultat partagé le {date}",
   v_mine: "Rechercher le mien",
