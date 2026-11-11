@@ -79,7 +79,7 @@ select option:checked { background-color: var(--soft); }
 .card { background: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: 18px; }
 .main { display: flex; flex-direction: column; gap: 16px; }
 .hero h1 { margin: 0 0 6px; font-size: clamp(22px, 4.4vw, 30px); line-height: 1.2; }
-.intro { margin: 0 0 14px; color: var(--muted); font-size: 14px; max-width: 70ch; }
+.intro { margin: 0 0 14px; color: var(--muted); font-size: 14px; max-width: none; }
 .form .row { display: flex; flex-wrap: wrap; gap: 10px; align-items: flex-end; }
 .fld { display: flex; flex-direction: column; gap: 5px; color: var(--muted); font-size: 12px; }
 .fld.grow { flex: 1 1 260px; min-width: 0; }
@@ -120,6 +120,10 @@ select option:checked { background-color: var(--soft); }
 .findings li::before { content: "·"; color: var(--muted); flex: none; }
 .findings li.warn::before { color: var(--warn); }
 .findings li.bad::before { color: var(--bad); }
+.badges { display: flex; flex-wrap: wrap; gap: 6px; margin: 10px 0 0; }
+.badge { display: inline-block; padding: 2px 9px; border: 1px solid var(--line); border-radius: 999px; background: var(--bg); color: var(--muted); font: 600 11px var(--f-num); }
+.st.grade { font-family: var(--f-num); font-size: 13px; padding: 0 6px; border: 1px solid currentColor; border-radius: 6px; }
+.st.grade:empty { display: none; }
 .links { display: flex; flex-wrap: wrap; gap: 6px 18px; margin: 12px 0 0; font-size: 13px; }
 .foot { font-size: 12px; margin: 0; }
 

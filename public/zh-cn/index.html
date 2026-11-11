@@ -4,11 +4,11 @@
 <meta charset="utf-8">
 <script>(function(){var d=document.documentElement,th=null,s=null;try{th=localStorage.getItem("dig:theme");s=localStorage.getItem("dig:lang")}catch(e){}if(th==="light"||th==="dark")d.setAttribute("data-theme",th);if(!d.hasAttribute("data-root"))return;var P=JSON.parse(d.getAttribute("data-paths")||"{}"),l=null;try{var q=new URLSearchParams(location.search).get("lang");if(P[q])l=q}catch(e){}if(!l&&P[s])l=s;for(var ls=navigator.languages||[navigator.language||"en"],i=0;!l&&!s&&i<ls.length;i++){var x=String(ls[i]).toLowerCase(),b=x.split("-")[0];l=b==="zh"?(/tw|hk|mo|hant/.test(x)?"zh-TW":"zh-CN"):P[b]?b:null}if(l&&l!=="en"&&location.pathname===P.en)location.replace(P[l]+location.search+location.hash)})();</script>
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>DNS 查询：DNS 记录、传播、MX、SPF、DMARC 与注册信息</title>
-<meta name="description" content="一次查询任意域名的 DNS 记录（A、AAAA、CNAME、MX、NS、TXT、CAA、SRV、SOA），同时问 12 家公共解析器：看传播情况、SPF 和 DMARC 的问题、注册局 NS 和 RDAP 注册信息。免费，在浏览器里完成。">
-<meta name="keywords" content="DNS 查询, DNS 记录, DNS 传播检测, MX 查询, SPF 检测, DMARC 查询, TXT 记录, NS 查询, whois, rdap">
+<title>域名透视：DNS 记录、解析器回答、邮件配置和 DNSSEC</title>
+<meta name="description" content="一次查询任意域名的 DNS 记录（A、AAAA、CNAME、MX、NS、TXT、CAA、SRV、SOA），同时问 12 家公共解析器：对比各家回答，检查 SPF、DMARC 和 DNSSEC，给出域名体检等级和注册信息。免费，在浏览器里完成。">
+<meta name="keywords" content="DNS 查询, DNS 记录, DNS 传播检测, DNS 解析器, MX 查询, SPF 检测, DMARC 查询, DNSSEC 检测, TXT 记录, NS 查询, whois, rdap">
 <meta name="robots" content="index, follow">
-<meta name="application-name" content="DNS 记录查询">
+<meta name="application-name" content="域名透视">
 <meta name="theme-color" content="#f6f6f7" media="(prefers-color-scheme: light)">
 <meta name="theme-color" content="#121316" media="(prefers-color-scheme: dark)">
 <link rel="canonical" href="https://dig.1ms.dog/zh-cn/">
@@ -25,8 +25,8 @@
 <link rel="alternate" hreflang="x-default" href="https://dig.1ms.dog/">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="1ms.dog">
-<meta property="og:title" content="DNS 查询：DNS 记录、传播、MX、SPF、DMARC 与注册信息">
-<meta property="og:description" content="一次问 12 家解析器，邮件记录和注册信息一起看">
+<meta property="og:title" content="域名透视：DNS 记录、解析器回答、邮件配置和 DNSSEC">
+<meta property="og:description" content="12 家解析器的回答、域名体检等级、邮件和 DNSSEC">
 <meta property="og:url" content="https://dig.1ms.dog/zh-cn/">
 <meta property="og:locale" content="zh_CN">
 <link rel="icon" href="/favicon.ico" sizes="any">
@@ -34,19 +34,19 @@
 <meta property="og:image" content="https://dig.1ms.dog/og/zh-cn.png">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
-<meta property="og:image:alt" content="DNS 查询：DNS 记录、传播、MX、SPF、DMARC 与注册信息">
+<meta property="og:image:alt" content="域名透视：DNS 记录、解析器回答、邮件配置和 DNSSEC">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:image" content="https://dig.1ms.dog/og/zh-cn.png">
-<meta name="twitter:title" content="DNS 查询：DNS 记录、传播、MX、SPF、DMARC 与注册信息">
-<meta name="twitter:description" content="一次问 12 家解析器，邮件记录和注册信息一起看">
-<script type="application/ld+json">{"@context":"https://schema.org","@graph":[{"@type":"WebApplication","name":"DNS 记录查询 · 1ms.dog","url":"https://dig.1ms.dog/zh-cn/","applicationCategory":"UtilitiesApplication","operatingSystem":"Any","browserRequirements":"Requires JavaScript","description":"一次查询任意域名的 DNS 记录（A、AAAA、CNAME、MX、NS、TXT、CAA、SRV、SOA），同时问 12 家公共解析器：看传播情况、SPF 和 DMARC 的问题、注册局 NS 和 RDAP 注册信息。免费，在浏览器里完成。","inLanguage":"zh-CN","isAccessibleForFree":true,"offers":{"@type":"Offer","price":"0","priceCurrency":"USD"}},{"@type":"FAQPage","mainEntity":[{"@type":"Question","name":"这个页面查什么？","acceptedAnswer":{"@type":"Answer","text":"输入域名，页面从你的浏览器直接向 12 家公共解析器查询九种记录（A、AAAA、CNAME、MX、NS、TXT、CAA、SRV、SOA），查询走 DNS over HTTPS（DoH，加密的 DNS）。相同的值会合并，各家解析器自己的回答在「传播」里。注册信息来自 RDAP，也就是结构化的 WHOIS。"}},{"@type":"Question","name":"DNS 传播是什么意思？","acceptedAnswer":{"@type":"Answer","text":"记录改动以后，每家解析器会一直用旧的那份，直到 TTL（有效期）走完。所以刚改完时，有的解析器已经返回新值，有的还是旧值，「传播」面板显示的就是谁到了、谁还没到。浏览器连不到域名自己的权威服务器（53 端口），所以这里只能看到公共解析器的缓存状态，看不到 zone 里的绝对真相。"}},{"@type":"Question","name":"为什么有些解析器显示「连不上」？","acceptedAnswer":{"@type":"Answer","text":"查询是从你的浏览器直接发到各家解析器的。在中国大陆，Cloudflare 和 Google 的 DNS 通常连不上，少数其他家也一样，这些行会如实写「连不上」。这是线路的问题，不代表记录为空：没有回答的解析器不会被算作「不一致」。"}},{"@type":"Question","name":"一致率和 TTL 是什么意思？","acceptedAnswer":{"@type":"Answer","text":"一致率是返回了结果的解析器里，有多少家给的是最常见的那份回答。TTL 是这家解析器还能缓存多久；它从 zone 里的值往下数，各家剩下的时间不一样，所以 TTL 不同不算不一致。"}},{"@type":"Question","name":"SPF 和 DMARC 是怎么检查的？","acceptedAnswer":{"@type":"Answer","text":"SPF 从域名的 TXT 记录里读：页面会看有没有不止一条 v=spf1 记录、结尾是 +all、-all、~all 还是 ?all，并数出需要再查一次 DNS 的机制（include、a、mx、ptr、exists、redirect）有几个，上限是 10。页面不会跟进 include 里的记录，所以这个数只是下限。DMARC 从 _dmarc.\u003c域名> 里读：p= 策略、有没有报告地址（rua）、pct。"}},{"@type":"Question","name":"为什么注册局的 NS 和解析器的不一样？","acceptedAnswer":{"@type":"Answer","text":"注册局那边（RDAP）存的是登记信息，解析器返回的是域名实际发布的 NS 记录。两者不同通常说明改动还在传播，或者注册局的数据还没更新。两边都按原样显示。"}},{"@type":"Question","name":"RDAP 是什么？为什么有些字段是空的？","acceptedAnswer":{"@type":"Answer","text":"RDAP 是注册局提供的结构化 WHOIS。有的注册局公开的信息很少，隐私保护服务也会替换注册人信息；页面把缺失的字段显示成未知，而不是「没有」。"}},{"@type":"Question","name":"我的查询发到哪里去了？","acceptedAnswer":{"@type":"Answer","text":"每次 DNS 查询都从你的浏览器直接发给「传播」里列出的解析器；RDAP 查询发给 rdap.org，由它跳转到对应的注册局。查询不经过我们的服务器，我们也不留日志。分享链接里只有域名、你看到的记录和注册信息，永远没有你的 IP。"}},{"@type":"Question","name":"为什么打开分享链接，数字不会变？","acceptedAnswer":{"@type":"Answer","text":"分享的结果是一份快照，显示当时解析器返回的内容，这样两个人看到的是同一份数据。想查现在的，点「查我现在的」。"}},{"@type":"Question","name":"会检查 DNSSEC、DKIM 和证书吗？","acceptedAnswer":{"@type":"Answer","text":"这一版不检查。页面显示的是解析器返回的记录；DNSSEC 验证、DKIM 选择器和证书是另外的检查，计划放在别的工具里。"}}]}]}</script>
+<meta name="twitter:title" content="域名透视：DNS 记录、解析器回答、邮件配置和 DNSSEC">
+<meta name="twitter:description" content="12 家解析器的回答、域名体检等级、邮件和 DNSSEC">
+<script type="application/ld+json">{"@context":"https://schema.org","@graph":[{"@type":"WebApplication","name":"域名透视 · 1ms.dog","url":"https://dig.1ms.dog/zh-cn/","applicationCategory":"UtilitiesApplication","operatingSystem":"Any","browserRequirements":"Requires JavaScript","description":"一次查询任意域名的 DNS 记录（A、AAAA、CNAME、MX、NS、TXT、CAA、SRV、SOA），同时问 12 家公共解析器：对比各家回答，检查 SPF、DMARC 和 DNSSEC，给出域名体检等级和注册信息。免费，在浏览器里完成。","inLanguage":"zh-CN","isAccessibleForFree":true,"offers":{"@type":"Offer","price":"0","priceCurrency":"USD"}},{"@type":"FAQPage","mainEntity":[{"@type":"Question","name":"这个页面查什么？","acceptedAnswer":{"@type":"Answer","text":"输入域名，页面从你的浏览器直接向 12 家公共解析器查询九种记录（A、AAAA、CNAME、MX、NS、TXT、CAA、SRV、SOA），查询走 DNS over HTTPS（DoH，加密的 DNS）。相同的值会合并，各家解析器自己的回答在「解析器回答」里。注册信息来自 RDAP，也就是结构化的 WHOIS。"}},{"@type":"Question","name":"体检等级是怎么算的？","acceptedAnswer":{"@type":"Answer","text":"等级取两项里较低的那个：各家回答是否一致，以及邮件配置。只有 12 家都回答且回答全相同时，解析这一项才是 A；有一半连不上就是 B。邮件等级看 SPF 和 DMARC，只在域名有能收信的 MX 时才算。已签名但 DNSSEC 验证失败的域名再降一级。CAA 和 IPv6 只做徽章，不影响等级。"}},{"@type":"Question","name":"DNSSEC 能告诉我什么？","acceptedAnswer":{"@type":"Answer","text":"DNSSEC 让解析器能证明回答确实来自这个域名、中途没有被改。页面向父区查 DS 记录，再读会验证的解析器给出的 AD 位。「已启用，验证通过」表示域名已签名、这些解析器都认可；「已启用，但验证失败」表示已签名的域名给出的回答验不过，会检查的解析器和浏览器会拒绝它。未启用是常态，不扣分；证据不够时页面会写无法判断。"}},{"@type":"Question","name":"记录改动多久能生效？","acceptedAnswer":{"@type":"Answer","text":"记录改动以后，每家解析器会一直用旧的那份，直到 TTL（有效期）走完。所以刚改完时，有的解析器已经回答新值，有的还是旧值，「解析器回答」面板显示的就是谁到了、谁还没到。浏览器连不到域名自己的权威服务器（53 端口），所以这里只能看到公共解析器的缓存状态，看不到 zone 里的绝对真相。"}},{"@type":"Question","name":"为什么有些解析器显示「连不上」？","acceptedAnswer":{"@type":"Answer","text":"查询是从你的浏览器直接发到各家解析器的。在中国大陆，Cloudflare 和 Google 的 DNS 通常连不上，少数其他家也一样，这些行会如实写「连不上」。这是线路的问题，不代表记录为空：没有回答的解析器不会被算作「不一致」。"}},{"@type":"Question","name":"「回答相同」和 TTL 是什么意思？","acceptedAnswer":{"@type":"Answer","text":"「回答相同」数的是给出最常见那份回答的解析器，分母是回答了的解析器。TTL 是这家解析器还能缓存多久；它从 zone 里的值往下数，各家剩下的时间不一样，所以 TTL 不同不算不一致。"}},{"@type":"Question","name":"SPF 和 DMARC 是怎么检查的？","acceptedAnswer":{"@type":"Answer","text":"SPF 从域名的 TXT 记录里读：页面会看有没有不止一条 v=spf1 记录、结尾是 +all、-all、~all 还是 ?all，并数出需要再查一次 DNS 的机制（include、a、mx、ptr、exists、redirect）有几个，上限是 10。页面不会跟进 include 里的记录，所以这个数只是下限。DMARC 从 _dmarc.\u003c域名> 里读：p= 策略、有没有报告地址（rua）、pct。"}},{"@type":"Question","name":"为什么注册局的 NS 和解析器的不一样？","acceptedAnswer":{"@type":"Answer","text":"注册局那边（RDAP）存的是登记信息，解析器返回的是域名实际发布的 NS 记录。两者不同通常说明改动还在生效，或者注册局的数据还没更新。两边都按原样显示。"}},{"@type":"Question","name":"RDAP 是什么？为什么有些字段是空的？","acceptedAnswer":{"@type":"Answer","text":"RDAP 是注册局提供的结构化 WHOIS。有的注册局公开的信息很少，隐私保护服务也会替换注册人信息；页面把缺失的字段显示成未知，而不是「没有」。"}},{"@type":"Question","name":"我的查询发到哪里去了？","acceptedAnswer":{"@type":"Answer","text":"每次 DNS 查询都从你的浏览器直接发给「解析器回答」里列出的解析器；RDAP 查询发给 rdap.org，由它跳转到对应的注册局。查询不经过我们的服务器，我们也不留日志。分享链接里有域名自己的公开记录和你看到的注册信息，没有你的 IP。"}},{"@type":"Question","name":"为什么打开分享链接，数字不会变？","acceptedAnswer":{"@type":"Answer","text":"分享的结果是一份快照，显示当时解析器返回的内容，这样两个人看到的是同一份数据。想查现在的，点「查我现在的」。"}}]}]}</script>
 <link rel="preload" href="/assets/fonts/geist-latin.woff2" as="font" type="font/woff2" crossorigin>
-<link rel="stylesheet" href="/assets/app.45d9c706a6.css">
+<link rel="stylesheet" href="/assets/app.548f6a76d3.css">
 </head>
 <body>
 <div class="app">
   <div class="top">
-    <a class="brand" href="/zh-cn/"><span class="logo"><img class="logo-light" src="/assets/logo-light.svg" width="90" height="36" alt="1ms" loading="lazy"><img class="logo-dark" src="/assets/logo-dark.svg" width="90" height="36" alt="1ms" loading="lazy"></span><span class="brand-name">DNS 记录查询</span></a>
+    <a class="brand" href="/zh-cn/"><span class="logo"><img class="logo-light" src="/assets/logo-light.svg" width="90" height="36" alt="1ms" loading="lazy"><img class="logo-dark" src="/assets/logo-dark.svg" width="90" height="36" alt="1ms" loading="lazy"></span><span class="brand-name">域名透视</span></a>
     <div class="top-acts">
       <label class="sel"><svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="6.2"/><path d="M1.8 8h12.4M8 1.8c1.8 1.7 2.7 3.8 2.7 6.2S9.8 12.5 8 14.2C6.2 12.5 5.3 10.4 5.3 8S6.2 3.5 8 1.8z"/></svg><span class="sr" data-i="lang_label">语言</span>
         <select id="lang"><option value="en">English</option><option value="zh-CN" selected>简体中文</option><option value="zh-TW">繁體中文</option><option value="ja">日本語</option><option value="ko">한국어</option><option value="es">Español</option><option value="fr">Français</option><option value="de">Deutsch</option><option value="pt">Português</option><option value="ru">Русский</option></select></label>
@@ -65,8 +65,8 @@
   <!-- 1. the domain, and the answer right under it -->
   <div class="card main">
     <header class="hero">
-      <h1>DNS 记录查询与传播检测</h1>
-      <p class="intro" data-i="intro">输入域名或链接：同时问 12 家公共解析器，看记录是什么、哪些解析器已经有新值，以及邮件和注册记录说明了什么。</p>
+      <h1>DNS 记录查询、解析器回答与域名体检</h1>
+      <p class="intro" data-i="intro">输入域名或链接：同时问 12 家公共解析器，给出 DNS 记录、各家现在回答什么，再按回答、邮件配置和 DNSSEC 算一个体检等级。</p>
       <form id="f" class="form" autocomplete="off">
         <div class="row">
           <label class="fld grow"><span data-i="f_domain">域名或网址</span>
@@ -94,21 +94,22 @@
       </div>
       <p class="v-sub m" id="vSub">&nbsp;</p>
       <div class="facts">
-        <div class="fact"><span data-i="k_agree">一致率</span><b id="kAgree">—</b><i id="kAgreeWho"></i></div>
-        <div class="fact"><span data-i="k_records">记录</span><b id="kRecords">—</b><i id="kRecordsWho"></i></div>
-        <div class="fact"><span data-i="k_resolvers">回答的解析器</span><b id="kResolvers">—</b><i id="kResolversWho"></i></div>
+        <div class="fact"><span data-i="k_agree">解析一致</span><b id="kAgree">—</b><i id="kAgreeWho"></i></div>
+        <div class="fact"><span data-i="k_mail">邮件等级</span><b id="kMail">—</b><i id="kMailWho"></i></div>
+        <div class="fact"><span data-i="k_dnssec">DNSSEC</span><b id="kDnssec">—</b><i id="kDnssecWho"></i></div>
       </div>
       <ul class="findings" id="findings"></ul>
+      <p class="badges" id="badges" hidden></p>
       <p class="links" id="links" hidden></p>
     </section>
   </div>
 
   <!-- 3. the evidence: merged records, then what each resolver returned -->
   <section class="card sec" id="records" hidden>
-    <div class="sec-h"><h3 data-i="h_records">记录</h3><span class="m rec-count" id="recCount"></span></div>
+    <div class="sec-h"><h3 data-i="h_records">DNS 记录</h3><span class="m rec-count" id="recCount"></span></div>
     <div class="table-wrap">
       <table class="rec">
-        <thead><tr><th data-i="th_type">类型</th><th data-i="th_value">值</th><th data-i="th_ttl">TTL</th><th data-i="th_from">解析器</th></tr></thead>
+        <thead><tr><th data-i="th_type">类型</th><th data-i="th_value">值</th><th data-i="th_ttl">TTL</th><th data-i="th_from">返回此值的解析器</th></tr></thead>
         <tbody id="recBody"></tbody>
       </table>
     </div>
@@ -116,14 +117,14 @@
   </section>
 
   <section class="card sec" id="prop" hidden>
-    <div class="sec-h"><h3 data-i="h_prop">传播</h3><div class="tabs" id="propTabs" role="tablist"></div><span class="m prop-sum" id="propSum"></span></div>
-    <p class="m prop-hint" data-i="prop_hint">各家解析器现在返回什么</p>
+    <div class="sec-h"><h3 data-i="h_prop">解析器回答</h3><div class="tabs" id="propTabs" role="tablist"></div><span class="m prop-sum" id="propSum"></span></div>
+    <p class="m prop-hint" data-i="prop_hint">各家现在给出的回答</p>
     <div class="prop-rows" id="propRows"></div>
   </section>
 
   <div class="grid2">
     <section class="card sec" id="mail" hidden>
-      <div class="sec-h"><h3 data-i="h_mail">邮件</h3></div>
+      <div class="sec-h"><h3 data-i="h_mail">邮件</h3><span class="st grade" id="mailGrade"></span></div>
       <div id="mailBody"></div>
     </section>
     <section class="card sec" id="rdap" hidden>
@@ -132,7 +133,7 @@
     </section>
   </div>
 
-  <p class="foot m" data-i="foot_src">数据：12 家公共 DNS 解析器（走 DNS over HTTPS），注册信息来自 rdap.org。</p>
+  <p class="foot m" data-i="foot_src">数据：12 家公共 DNS 解析器（走 DNS over HTTPS）和 rdap.org 的 RDAP。</p>
 
   <!-- the shell puts the list of the other 1ms.dog tools here (tool-contract §4), before the dialogs -->
   <div data-ms-more></div>
@@ -143,18 +144,18 @@
     <div class="dlg-h"><h2 id="helpT" data-i="help_h">帮助</h2>
       <button class="icon-btn" data-close type="button" aria-label="关闭"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M4 4l8 8M12 4l-8 8"/></svg></button></div>
     <div class="help-b">
-      <nav class="help-nav" id="helpNav" role="tablist"><button type="button" role="tab" data-hq="0" aria-selected="true">这个页面查什么？</button><button type="button" role="tab" data-hq="1" aria-selected="false">DNS 传播是什么意思？</button><button type="button" role="tab" data-hq="2" aria-selected="false">为什么有些解析器显示「连不上」？</button><button type="button" role="tab" data-hq="3" aria-selected="false">一致率和 TTL 是什么意思？</button><button type="button" role="tab" data-hq="4" aria-selected="false">SPF 和 DMARC 是怎么检查的？</button><button type="button" role="tab" data-hq="5" aria-selected="false">为什么注册局的 NS 和解析器的不一样？</button><button type="button" role="tab" data-hq="6" aria-selected="false">RDAP 是什么？为什么有些字段是空的？</button><button type="button" role="tab" data-hq="7" aria-selected="false">我的查询发到哪里去了？</button><button type="button" role="tab" data-hq="8" aria-selected="false">为什么打开分享链接，数字不会变？</button><button type="button" role="tab" data-hq="9" aria-selected="false">会检查 DNSSEC、DKIM 和证书吗？</button></nav>
+      <nav class="help-nav" id="helpNav" role="tablist"><button type="button" role="tab" data-hq="0" aria-selected="true">这个页面查什么？</button><button type="button" role="tab" data-hq="1" aria-selected="false">体检等级是怎么算的？</button><button type="button" role="tab" data-hq="2" aria-selected="false">DNSSEC 能告诉我什么？</button><button type="button" role="tab" data-hq="3" aria-selected="false">记录改动多久能生效？</button><button type="button" role="tab" data-hq="4" aria-selected="false">为什么有些解析器显示「连不上」？</button><button type="button" role="tab" data-hq="5" aria-selected="false">「回答相同」和 TTL 是什么意思？</button><button type="button" role="tab" data-hq="6" aria-selected="false">SPF 和 DMARC 是怎么检查的？</button><button type="button" role="tab" data-hq="7" aria-selected="false">为什么注册局的 NS 和解析器的不一样？</button><button type="button" role="tab" data-hq="8" aria-selected="false">RDAP 是什么？为什么有些字段是空的？</button><button type="button" role="tab" data-hq="9" aria-selected="false">我的查询发到哪里去了？</button><button type="button" role="tab" data-hq="10" aria-selected="false">为什么打开分享链接，数字不会变？</button></nav>
       <div class="help-pick">
         <button class="icon-btn" type="button" data-hstep="-1" aria-label="上一个"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M10 4L6 8l4 4"/></svg></button>
         <select id="helpSel" aria-labelledby="helpT"></select>
         <button class="icon-btn" type="button" data-hstep="1" aria-label="下一个"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M6 4l4 4-4 4"/></svg></button>
       </div>
-      <div class="help-c" id="helpC"><article data-hqb="0"><h3>这个页面查什么？</h3><p>输入域名，页面从你的浏览器直接向 12 家公共解析器查询九种记录（A、AAAA、CNAME、MX、NS、TXT、CAA、SRV、SOA），查询走 DNS over HTTPS（DoH，加密的 DNS）。相同的值会合并，各家解析器自己的回答在「传播」里。注册信息来自 RDAP，也就是结构化的 WHOIS。</p></article><article data-hqb="1" hidden><h3>DNS 传播是什么意思？</h3><p>记录改动以后，每家解析器会一直用旧的那份，直到 TTL（有效期）走完。所以刚改完时，有的解析器已经返回新值，有的还是旧值，「传播」面板显示的就是谁到了、谁还没到。浏览器连不到域名自己的权威服务器（53 端口），所以这里只能看到公共解析器的缓存状态，看不到 zone 里的绝对真相。</p></article><article data-hqb="2" hidden><h3>为什么有些解析器显示「连不上」？</h3><p>查询是从你的浏览器直接发到各家解析器的。在中国大陆，Cloudflare 和 Google 的 DNS 通常连不上，少数其他家也一样，这些行会如实写「连不上」。这是线路的问题，不代表记录为空：没有回答的解析器不会被算作「不一致」。</p></article><article data-hqb="3" hidden><h3>一致率和 TTL 是什么意思？</h3><p>一致率是返回了结果的解析器里，有多少家给的是最常见的那份回答。TTL 是这家解析器还能缓存多久；它从 zone 里的值往下数，各家剩下的时间不一样，所以 TTL 不同不算不一致。</p></article><article data-hqb="4" hidden><h3>SPF 和 DMARC 是怎么检查的？</h3><p>SPF 从域名的 TXT 记录里读：页面会看有没有不止一条 v=spf1 记录、结尾是 +all、-all、~all 还是 ?all，并数出需要再查一次 DNS 的机制（include、a、mx、ptr、exists、redirect）有几个，上限是 10。页面不会跟进 include 里的记录，所以这个数只是下限。DMARC 从 _dmarc.&lt;域名&gt; 里读：p= 策略、有没有报告地址（rua）、pct。</p></article><article data-hqb="5" hidden><h3>为什么注册局的 NS 和解析器的不一样？</h3><p>注册局那边（RDAP）存的是登记信息，解析器返回的是域名实际发布的 NS 记录。两者不同通常说明改动还在传播，或者注册局的数据还没更新。两边都按原样显示。</p></article><article data-hqb="6" hidden><h3>RDAP 是什么？为什么有些字段是空的？</h3><p>RDAP 是注册局提供的结构化 WHOIS。有的注册局公开的信息很少，隐私保护服务也会替换注册人信息；页面把缺失的字段显示成未知，而不是「没有」。</p></article><article data-hqb="7" hidden><h3>我的查询发到哪里去了？</h3><p>每次 DNS 查询都从你的浏览器直接发给「传播」里列出的解析器；RDAP 查询发给 rdap.org，由它跳转到对应的注册局。查询不经过我们的服务器，我们也不留日志。分享链接里只有域名、你看到的记录和注册信息，永远没有你的 IP。</p></article><article data-hqb="8" hidden><h3>为什么打开分享链接，数字不会变？</h3><p>分享的结果是一份快照，显示当时解析器返回的内容，这样两个人看到的是同一份数据。想查现在的，点「查我现在的」。</p></article><article data-hqb="9" hidden><h3>会检查 DNSSEC、DKIM 和证书吗？</h3><p>这一版不检查。页面显示的是解析器返回的记录；DNSSEC 验证、DKIM 选择器和证书是另外的检查，计划放在别的工具里。</p></article></div>
+      <div class="help-c" id="helpC"><article data-hqb="0"><h3>这个页面查什么？</h3><p>输入域名，页面从你的浏览器直接向 12 家公共解析器查询九种记录（A、AAAA、CNAME、MX、NS、TXT、CAA、SRV、SOA），查询走 DNS over HTTPS（DoH，加密的 DNS）。相同的值会合并，各家解析器自己的回答在「解析器回答」里。注册信息来自 RDAP，也就是结构化的 WHOIS。</p></article><article data-hqb="1" hidden><h3>体检等级是怎么算的？</h3><p>等级取两项里较低的那个：各家回答是否一致，以及邮件配置。只有 12 家都回答且回答全相同时，解析这一项才是 A；有一半连不上就是 B。邮件等级看 SPF 和 DMARC，只在域名有能收信的 MX 时才算。已签名但 DNSSEC 验证失败的域名再降一级。CAA 和 IPv6 只做徽章，不影响等级。</p></article><article data-hqb="2" hidden><h3>DNSSEC 能告诉我什么？</h3><p>DNSSEC 让解析器能证明回答确实来自这个域名、中途没有被改。页面向父区查 DS 记录，再读会验证的解析器给出的 AD 位。「已启用，验证通过」表示域名已签名、这些解析器都认可；「已启用，但验证失败」表示已签名的域名给出的回答验不过，会检查的解析器和浏览器会拒绝它。未启用是常态，不扣分；证据不够时页面会写无法判断。</p></article><article data-hqb="3" hidden><h3>记录改动多久能生效？</h3><p>记录改动以后，每家解析器会一直用旧的那份，直到 TTL（有效期）走完。所以刚改完时，有的解析器已经回答新值，有的还是旧值，「解析器回答」面板显示的就是谁到了、谁还没到。浏览器连不到域名自己的权威服务器（53 端口），所以这里只能看到公共解析器的缓存状态，看不到 zone 里的绝对真相。</p></article><article data-hqb="4" hidden><h3>为什么有些解析器显示「连不上」？</h3><p>查询是从你的浏览器直接发到各家解析器的。在中国大陆，Cloudflare 和 Google 的 DNS 通常连不上，少数其他家也一样，这些行会如实写「连不上」。这是线路的问题，不代表记录为空：没有回答的解析器不会被算作「不一致」。</p></article><article data-hqb="5" hidden><h3>「回答相同」和 TTL 是什么意思？</h3><p>「回答相同」数的是给出最常见那份回答的解析器，分母是回答了的解析器。TTL 是这家解析器还能缓存多久；它从 zone 里的值往下数，各家剩下的时间不一样，所以 TTL 不同不算不一致。</p></article><article data-hqb="6" hidden><h3>SPF 和 DMARC 是怎么检查的？</h3><p>SPF 从域名的 TXT 记录里读：页面会看有没有不止一条 v=spf1 记录、结尾是 +all、-all、~all 还是 ?all，并数出需要再查一次 DNS 的机制（include、a、mx、ptr、exists、redirect）有几个，上限是 10。页面不会跟进 include 里的记录，所以这个数只是下限。DMARC 从 _dmarc.&lt;域名&gt; 里读：p= 策略、有没有报告地址（rua）、pct。</p></article><article data-hqb="7" hidden><h3>为什么注册局的 NS 和解析器的不一样？</h3><p>注册局那边（RDAP）存的是登记信息，解析器返回的是域名实际发布的 NS 记录。两者不同通常说明改动还在生效，或者注册局的数据还没更新。两边都按原样显示。</p></article><article data-hqb="8" hidden><h3>RDAP 是什么？为什么有些字段是空的？</h3><p>RDAP 是注册局提供的结构化 WHOIS。有的注册局公开的信息很少，隐私保护服务也会替换注册人信息；页面把缺失的字段显示成未知，而不是「没有」。</p></article><article data-hqb="9" hidden><h3>我的查询发到哪里去了？</h3><p>每次 DNS 查询都从你的浏览器直接发给「解析器回答」里列出的解析器；RDAP 查询发给 rdap.org，由它跳转到对应的注册局。查询不经过我们的服务器，我们也不留日志。分享链接里有域名自己的公开记录和你看到的注册信息，没有你的 IP。</p></article><article data-hqb="10" hidden><h3>为什么打开分享链接，数字不会变？</h3><p>分享的结果是一份快照，显示当时解析器返回的内容，这样两个人看到的是同一份数据。想查现在的，点「查我现在的」。</p></article></div>
     </div>
   </div>
 </div>
 <script type="application/json" id="data">{"lang":"zh-CN","paths":{"en":"/","zh-CN":"/zh-cn/","zh-TW":"/zh-tw/","ja":"/ja/","ko":"/ko/","es":"/es/","fr":"/fr/","de":"/de/","pt":"/pt/","ru":"/ru/"}}</script>
-<script src="/assets/l.zh-cn.e151422802.js"></script>
-<script src="/assets/app.054b5de36d.js"></script>
+<script src="/assets/l.zh-cn.4868102406.js"></script>
+<script src="/assets/app.997acfb0d5.js"></script>
 </body>
 </html>

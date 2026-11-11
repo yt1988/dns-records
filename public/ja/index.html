@@ -4,11 +4,11 @@
 <meta charset="utf-8">
 <script>(function(){var d=document.documentElement,th=null,s=null;try{th=localStorage.getItem("dig:theme");s=localStorage.getItem("dig:lang")}catch(e){}if(th==="light"||th==="dark")d.setAttribute("data-theme",th);if(!d.hasAttribute("data-root"))return;var P=JSON.parse(d.getAttribute("data-paths")||"{}"),l=null;try{var q=new URLSearchParams(location.search).get("lang");if(P[q])l=q}catch(e){}if(!l&&P[s])l=s;for(var ls=navigator.languages||[navigator.language||"en"],i=0;!l&&!s&&i<ls.length;i++){var x=String(ls[i]).toLowerCase(),b=x.split("-")[0];l=b==="zh"?(/tw|hk|mo|hant/.test(x)?"zh-TW":"zh-CN"):P[b]?b:null}if(l&&l!=="en"&&location.pathname===P.en)location.replace(P[l]+location.search+location.hash)})();</script>
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>DNS 検索：DNS レコード・反映状況・MX・SPF・DMARC・登録情報</title>
-<meta name="description" content="任意のドメインの DNS レコード（A、AAAA、CNAME、MX、NS、TXT、CAA、SRV、SOA）を 12 の公共 DNS サーバーに同時に問い合わせます。反映状況、SPF と DMARC の問題、レジストリの NS、RDAP の登録情報まで表示。無料、ブラウザ内で完結します。">
-<meta name="keywords" content="DNS 検索, DNS レコード, DNS 反映確認, MX 検索, SPF チェック, DMARC チェック, TXT レコード, NS 検索, whois, rdap">
+<title>ドメイン透視：DNS レコード・リゾルバーの応答・メール設定・DNSSEC</title>
+<meta name="description" content="任意のドメインの DNS レコード（A、AAAA、CNAME、MX、NS、TXT、CAA、SRV、SOA）を 12 の公共リゾルバーに同時に問い合わせます。応答を比べ、SPF・DMARC・DNSSEC を確認し、ドメイン健診の評価と登録情報を表示。無料、ブラウザ内で完結します。">
+<meta name="keywords" content="DNS 検索, DNS レコード, DNS 反映確認, DNS リゾルバー, MX 検索, SPF チェック, DMARC チェック, DNSSEC チェック, TXT レコード, NS 検索, whois, rdap">
 <meta name="robots" content="index, follow">
-<meta name="application-name" content="DNS レコード検索">
+<meta name="application-name" content="ドメイン透視">
 <meta name="theme-color" content="#f6f6f7" media="(prefers-color-scheme: light)">
 <meta name="theme-color" content="#121316" media="(prefers-color-scheme: dark)">
 <link rel="canonical" href="https://dig.1ms.dog/ja/">
@@ -25,8 +25,8 @@
 <link rel="alternate" hreflang="x-default" href="https://dig.1ms.dog/">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="1ms.dog">
-<meta property="og:title" content="DNS 検索：DNS レコード・反映状況・MX・SPF・DMARC・登録情報">
-<meta property="og:description" content="12 の DNS サーバーに同時に問い合わせ、メールと登録情報も">
+<meta property="og:title" content="ドメイン透視：DNS レコード・リゾルバーの応答・メール設定・DNSSEC">
+<meta property="og:description" content="12 のリゾルバーの応答、ドメイン健診、メールと DNSSEC">
 <meta property="og:url" content="https://dig.1ms.dog/ja/">
 <meta property="og:locale" content="ja_JP">
 <link rel="icon" href="/favicon.ico" sizes="any">
@@ -34,19 +34,19 @@
 <meta property="og:image" content="https://dig.1ms.dog/og/ja.png">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
-<meta property="og:image:alt" content="DNS 検索：DNS レコード・反映状況・MX・SPF・DMARC・登録情報">
+<meta property="og:image:alt" content="ドメイン透視：DNS レコード・リゾルバーの応答・メール設定・DNSSEC">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:image" content="https://dig.1ms.dog/og/ja.png">
-<meta name="twitter:title" content="DNS 検索：DNS レコード・反映状況・MX・SPF・DMARC・登録情報">
-<meta name="twitter:description" content="12 の DNS サーバーに同時に問い合わせ、メールと登録情報も">
-<script type="application/ld+json">{"@context":"https://schema.org","@graph":[{"@type":"WebApplication","name":"DNS レコード検索 · 1ms.dog","url":"https://dig.1ms.dog/ja/","applicationCategory":"UtilitiesApplication","operatingSystem":"Any","browserRequirements":"Requires JavaScript","description":"任意のドメインの DNS レコード（A、AAAA、CNAME、MX、NS、TXT、CAA、SRV、SOA）を 12 の公共 DNS サーバーに同時に問い合わせます。反映状況、SPF と DMARC の問題、レジストリの NS、RDAP の登録情報まで表示。無料、ブラウザ内で完結します。","inLanguage":"ja","isAccessibleForFree":true,"offers":{"@type":"Offer","price":"0","priceCurrency":"USD"}},{"@type":"FAQPage","mainEntity":[{"@type":"Question","name":"このページは何を調べますか？","acceptedAnswer":{"@type":"Answer","text":"ドメインを入力すると、9 種類のレコード（A、AAAA、CNAME、MX、NS、TXT、CAA、SRV、SOA）を 12 の公共 DNS サーバーに、ブラウザから DNS over HTTPS（DoH、暗号化された DNS）で同時に問い合わせます。同じ値はまとめ、各サーバーの回答は「反映状況」に表示します。登録情報は RDAP（構造化された WHOIS）から取得します。"}},{"@type":"Question","name":"DNS の反映（伝播）とは？","acceptedAnswer":{"@type":"Answer","text":"レコードを変更しても、各 DNS サーバーは TTL（有効期間）が切れるまで古いコピーを使います。そのため変更直後は、新しい値を返すサーバーと古い値を返すサーバーが混ざり、「反映状況」にどちらかが表示されます。ブラウザはドメイン自身の権威サーバー（53 番ポート）に接続できないため、ここで分かるのは公共 DNS サーバーのキャッシュの状態だけです。"}},{"@type":"Question","name":"「接続できず」と出るのはなぜ？","acceptedAnswer":{"@type":"Answer","text":"問い合わせはブラウザから各 DNS サーバーへ直接送られます。中国本土では Cloudflare と Google の DNS が通常つながらず、他の一部も同じです。その行は「接続できず」と表示します。これは経路の問題で、レコードが空という意味ではありません。応答しなかったサーバーは不一致として数えません。"}},{"@type":"Question","name":"一致率と TTL は何ですか？","acceptedAnswer":{"@type":"Answer","text":"一致率は、応答した DNS サーバーのうち最も多い回答を返した割合です。TTL はそのサーバーがレコードを保持できる残り時間で、zone の値から減っていきます。サーバーごとに残り時間が違うのは正常で、不一致ではありません。"}},{"@type":"Question","name":"SPF と DMARC はどう確認しますか？","acceptedAnswer":{"@type":"Answer","text":"SPF はドメインの TXT レコードから読みます。v=spf1 が複数ないか、末尾が +all、-all、~all、?all のどれか、もう一度 DNS を引く仕組み（include、a、mx、ptr、exists、redirect）がいくつあるか（上限 10）を確認します。include の先までは追わないため、この数は下限です。DMARC は _dmarc.\u003cドメイン> から、p= の方針、報告先（rua）の有無、pct を読みます。"}},{"@type":"Question","name":"レジストリの NS と DNS サーバーの NS が違うのはなぜ？","acceptedAnswer":{"@type":"Answer","text":"レジストリ側（RDAP）は登録された情報で、DNS サーバーが返すのはドメインが実際に公開している NS レコードです。違う場合は、変更がまだ反映中か、レジストリの情報が古いかのどちらかです。両方をそのまま表示します。"}},{"@type":"Question","name":"RDAP とは？ 項目が空なのはなぜ？","acceptedAnswer":{"@type":"Answer","text":"RDAP はレジストリが提供する構造化された WHOIS です。公開する情報が少ないレジストリもあり、プライバシー保護サービスが登録者情報を置き換えることもあります。欠けている項目は「なし」ではなく「不明」として表示します。"}},{"@type":"Question","name":"問い合わせはどこに送られますか？","acceptedAnswer":{"@type":"Answer","text":"DNS の問い合わせはブラウザから「反映状況」に並ぶ各サーバーへ直接送られます。RDAP は rdap.org に送られ、そこからレジストリへ転送されます。当社のサーバーは通りませんし、ログも残しません。共有リンクにはドメイン、表示したレコード、登録情報だけが入り、あなたの IP は入りません。"}},{"@type":"Question","name":"共有リンクを開いても数値が変わらないのはなぜ？","acceptedAnswer":{"@type":"Answer","text":"共有された結果はスナップショットで、その時点で DNS サーバーが返した内容を表示します。二人が同じデータを見られるようにするためです。今の値を調べるには「自分の結果を調べる」を押してください。"}},{"@type":"Question","name":"DNSSEC、DKIM、証明書も確認しますか？","acceptedAnswer":{"@type":"Answer","text":"この版では確認しません。表示するのは DNS サーバーが返したレコードです。DNSSEC の検証、DKIM セレクタ、証明書は別の確認項目で、別のツールで扱う予定です。"}}]}]}</script>
+<meta name="twitter:title" content="ドメイン透視：DNS レコード・リゾルバーの応答・メール設定・DNSSEC">
+<meta name="twitter:description" content="12 のリゾルバーの応答、ドメイン健診、メールと DNSSEC">
+<script type="application/ld+json">{"@context":"https://schema.org","@graph":[{"@type":"WebApplication","name":"ドメイン透視 · 1ms.dog","url":"https://dig.1ms.dog/ja/","applicationCategory":"UtilitiesApplication","operatingSystem":"Any","browserRequirements":"Requires JavaScript","description":"任意のドメインの DNS レコード（A、AAAA、CNAME、MX、NS、TXT、CAA、SRV、SOA）を 12 の公共リゾルバーに同時に問い合わせます。応答を比べ、SPF・DMARC・DNSSEC を確認し、ドメイン健診の評価と登録情報を表示。無料、ブラウザ内で完結します。","inLanguage":"ja","isAccessibleForFree":true,"offers":{"@type":"Offer","price":"0","priceCurrency":"USD"}},{"@type":"FAQPage","mainEntity":[{"@type":"Question","name":"このページは何を調べますか？","acceptedAnswer":{"@type":"Answer","text":"ドメインを入力すると、9 種類のレコード（A、AAAA、CNAME、MX、NS、TXT、CAA、SRV、SOA）を 12 の公共リゾルバーに、ブラウザから DNS over HTTPS（DoH、暗号化された DNS）で同時に問い合わせます。同じ値はまとめ、各リゾルバーの応答は「リゾルバーの応答」に表示します。登録情報は RDAP（構造化された WHOIS）から取得します。"}},{"@type":"Question","name":"健診の評価はどう決まりますか？","acceptedAnswer":{"@type":"Answer","text":"評価は 2 つのうち低いほうです。1 つは応答がどれだけ揃っているか、もう 1 つはメール設定です。応答は、12 台すべてが応答し、しかも全部同じときだけ A になります。半分がつながらないと B です。メール評価は SPF と DMARC から出し、メールを受け取れる MX があるときだけ付けます。署名済みで DNSSEC の検証に失敗するドメインはもう 1 段下がります。CAA と IPv6 はバッジだけで、評価は変わりません。"}},{"@type":"Question","name":"DNSSEC で何が分かりますか？","acceptedAnswer":{"@type":"Answer","text":"DNSSEC があると、リゾルバーは応答が本当にそのドメインのもので、途中で書き換えられていないことを証明できます。ページは親ゾーンに DS レコードを問い合わせ、検証すると分かっているリゾルバーの AD ビットを読みます。「有効、検証済み」はドメインが署名済みで、そのリゾルバーがすべて認めたという意味です。「有効だが検証に失敗」は、署名済みのドメインの応答が検証を通らず、確認するリゾルバーやブラウザーが拒否する状態です。無効はよくある状態で、評価は下がりません。材料が足りないときは「判断できません」と書きます。"}},{"@type":"Question","name":"レコードの変更はいつ反映されますか？","acceptedAnswer":{"@type":"Answer","text":"レコードを変更しても、各リゾルバーは TTL（有効期間）が切れるまで古いコピーを使います。そのため変更直後は、新しい値を返すリゾルバーと古い値を返すリゾルバーが混ざり、「リゾルバーの応答」にどちらかが表示されます。ブラウザはドメイン自身の権威サーバー（53 番ポート）に接続できないため、ここで分かるのは公共リゾルバーのキャッシュの状態だけです。"}},{"@type":"Question","name":"「接続できず」と出るのはなぜ？","acceptedAnswer":{"@type":"Answer","text":"問い合わせはブラウザから各リゾルバーへ直接送られます。中国本土では Cloudflare と Google の DNS が通常つながらず、他の一部も同じです。その行は「接続できず」と表示します。これは経路の問題で、レコードが空という意味ではありません。応答しなかったリゾルバーは不一致として数えません。"}},{"@type":"Question","name":"「同じ応答」と TTL は何ですか？","acceptedAnswer":{"@type":"Answer","text":"「同じ応答」は、応答したリゾルバーのうち、最も多い応答を返した数を数えたものです。TTL はそのリゾルバーがレコードを保持できる残り時間で、zone の値から減っていきます。リゾルバーごとに残り時間が違うのは正常で、不一致ではありません。"}},{"@type":"Question","name":"SPF と DMARC はどう確認しますか？","acceptedAnswer":{"@type":"Answer","text":"SPF はドメインの TXT レコードから読みます。v=spf1 が複数ないか、末尾が +all、-all、~all、?all のどれか、もう一度 DNS を引く仕組み（include、a、mx、ptr、exists、redirect）がいくつあるか（上限 10）を確認します。include の先までは追わないため、この数は下限です。DMARC は _dmarc.\u003cドメイン> から、p= の方針、報告先（rua）の有無、pct を読みます。"}},{"@type":"Question","name":"レジストリの NS とリゾルバーの NS が違うのはなぜ？","acceptedAnswer":{"@type":"Answer","text":"レジストリ側（RDAP）は登録された情報で、リゾルバーが返すのはドメインが実際に公開している NS レコードです。違う場合は、変更がまだ反映中か、レジストリの情報が古いかのどちらかです。両方をそのまま表示します。"}},{"@type":"Question","name":"RDAP とは？ 項目が空なのはなぜ？","acceptedAnswer":{"@type":"Answer","text":"RDAP はレジストリが提供する構造化された WHOIS です。公開する情報が少ないレジストリもあり、プライバシー保護サービスが登録者情報を置き換えることもあります。欠けている項目は「なし」ではなく「不明」として表示します。"}},{"@type":"Question","name":"問い合わせはどこに送られますか？","acceptedAnswer":{"@type":"Answer","text":"DNS の問い合わせはブラウザから「リゾルバーの応答」に並ぶ各リゾルバーへ直接送られます。RDAP は rdap.org に送られ、そこからレジストリへ転送されます。当社のサーバーは通りませんし、ログも残しません。共有リンクにはドメイン自身の公開レコードと表示した登録情報が入り、あなたの IP は入りません。"}},{"@type":"Question","name":"共有リンクを開いても数値が変わらないのはなぜ？","acceptedAnswer":{"@type":"Answer","text":"共有された結果はスナップショットで、その時点でリゾルバーが返した内容を表示します。二人が同じデータを見られるようにするためです。今の値を調べるには「自分の結果を調べる」を押してください。"}}]}]}</script>
 <link rel="preload" href="/assets/fonts/geist-latin.woff2" as="font" type="font/woff2" crossorigin>
-<link rel="stylesheet" href="/assets/app.45d9c706a6.css">
+<link rel="stylesheet" href="/assets/app.548f6a76d3.css">
 </head>
 <body>
 <div class="app">
   <div class="top">
-    <a class="brand" href="/ja/"><span class="logo"><img class="logo-light" src="/assets/logo-light.svg" width="90" height="36" alt="1ms" loading="lazy"><img class="logo-dark" src="/assets/logo-dark.svg" width="90" height="36" alt="1ms" loading="lazy"></span><span class="brand-name">DNS レコード検索</span></a>
+    <a class="brand" href="/ja/"><span class="logo"><img class="logo-light" src="/assets/logo-light.svg" width="90" height="36" alt="1ms" loading="lazy"><img class="logo-dark" src="/assets/logo-dark.svg" width="90" height="36" alt="1ms" loading="lazy"></span><span class="brand-name">ドメイン透視</span></a>
     <div class="top-acts">
       <label class="sel"><svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="6.2"/><path d="M1.8 8h12.4M8 1.8c1.8 1.7 2.7 3.8 2.7 6.2S9.8 12.5 8 14.2C6.2 12.5 5.3 10.4 5.3 8S6.2 3.5 8 1.8z"/></svg><span class="sr" data-i="lang_label">言語</span>
         <select id="lang"><option value="en">English</option><option value="zh-CN">简体中文</option><option value="zh-TW">繁體中文</option><option value="ja" selected>日本語</option><option value="ko">한국어</option><option value="es">Español</option><option value="fr">Français</option><option value="de">Deutsch</option><option value="pt">Português</option><option value="ru">Русский</option></select></label>
@@ -65,8 +65,8 @@
   <!-- 1. the domain, and the answer right under it -->
   <div class="card main">
     <header class="hero">
-      <h1>DNS レコード検索と反映確認</h1>
-      <p class="intro" data-i="intro">ドメインかリンクを入力すると、12 の公共 DNS サーバーに同時に問い合わせます。レコードの内容、新しい値が届いているサーバー、メールと登録レコードの状態が分かります。</p>
+      <h1>DNS レコード検索・リゾルバーの応答・ドメイン健診</h1>
+      <p class="intro" data-i="intro">ドメインかリンクを入力すると、12 の公共リゾルバーに同時に問い合わせます。DNS レコード、各リゾルバーがいま返している応答、そして応答・メール設定・DNSSEC から出した健診の評価が分かります。</p>
       <form id="f" class="form" autocomplete="off">
         <div class="row">
           <label class="fld grow"><span data-i="f_domain">ドメインまたは URL</span>
@@ -94,36 +94,37 @@
       </div>
       <p class="v-sub m" id="vSub">&nbsp;</p>
       <div class="facts">
-        <div class="fact"><span data-i="k_agree">一致率</span><b id="kAgree">—</b><i id="kAgreeWho"></i></div>
-        <div class="fact"><span data-i="k_records">レコード</span><b id="kRecords">—</b><i id="kRecordsWho"></i></div>
-        <div class="fact"><span data-i="k_resolvers">応答した DNS サーバー</span><b id="kResolvers">—</b><i id="kResolversWho"></i></div>
+        <div class="fact"><span data-i="k_agree">応答の一致</span><b id="kAgree">—</b><i id="kAgreeWho"></i></div>
+        <div class="fact"><span data-i="k_mail">メール評価</span><b id="kMail">—</b><i id="kMailWho"></i></div>
+        <div class="fact"><span data-i="k_dnssec">DNSSEC</span><b id="kDnssec">—</b><i id="kDnssecWho"></i></div>
       </div>
       <ul class="findings" id="findings"></ul>
+      <p class="badges" id="badges" hidden></p>
       <p class="links" id="links" hidden></p>
     </section>
   </div>
 
   <!-- 3. the evidence: merged records, then what each resolver returned -->
   <section class="card sec" id="records" hidden>
-    <div class="sec-h"><h3 data-i="h_records">レコード</h3><span class="m rec-count" id="recCount"></span></div>
+    <div class="sec-h"><h3 data-i="h_records">DNS レコード</h3><span class="m rec-count" id="recCount"></span></div>
     <div class="table-wrap">
       <table class="rec">
-        <thead><tr><th data-i="th_type">種類</th><th data-i="th_value">値</th><th data-i="th_ttl">TTL</th><th data-i="th_from">DNS サーバー</th></tr></thead>
+        <thead><tr><th data-i="th_type">種類</th><th data-i="th_value">値</th><th data-i="th_ttl">TTL</th><th data-i="th_from">この値を返したリゾルバー</th></tr></thead>
         <tbody id="recBody"></tbody>
       </table>
     </div>
-    <p class="note m" data-i="records_note">同じ値はまとめて表示しています。TTL は各 DNS サーバーに残っている時間です。</p>
+    <p class="note m" data-i="records_note">同じ値はまとめて表示しています。TTL は各リゾルバーに残っている時間です。</p>
   </section>
 
   <section class="card sec" id="prop" hidden>
-    <div class="sec-h"><h3 data-i="h_prop">反映状況</h3><div class="tabs" id="propTabs" role="tablist"></div><span class="m prop-sum" id="propSum"></span></div>
-    <p class="m prop-hint" data-i="prop_hint">各 DNS サーバーが今返している値</p>
+    <div class="sec-h"><h3 data-i="h_prop">リゾルバーの応答</h3><div class="tabs" id="propTabs" role="tablist"></div><span class="m prop-sum" id="propSum"></span></div>
+    <p class="m prop-hint" data-i="prop_hint">各リゾルバーがいま返している応答</p>
     <div class="prop-rows" id="propRows"></div>
   </section>
 
   <div class="grid2">
     <section class="card sec" id="mail" hidden>
-      <div class="sec-h"><h3 data-i="h_mail">メール</h3></div>
+      <div class="sec-h"><h3 data-i="h_mail">メール</h3><span class="st grade" id="mailGrade"></span></div>
       <div id="mailBody"></div>
     </section>
     <section class="card sec" id="rdap" hidden>
@@ -132,7 +133,7 @@
     </section>
   </div>
 
-  <p class="foot m" data-i="foot_src">データ：12 の公共 DNS サーバー（DNS over HTTPS）と、rdap.org 経由の RDAP。</p>
+  <p class="foot m" data-i="foot_src">データ：12 の公共 DNS リゾルバー（DNS over HTTPS）と、rdap.org 経由の RDAP。</p>
 
   <!-- the shell puts the list of the other 1ms.dog tools here (tool-contract §4), before the dialogs -->
   <div data-ms-more></div>
@@ -143,18 +144,18 @@
     <div class="dlg-h"><h2 id="helpT" data-i="help_h">ヘルプ</h2>
       <button class="icon-btn" data-close type="button" aria-label="閉じる"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M4 4l8 8M12 4l-8 8"/></svg></button></div>
     <div class="help-b">
-      <nav class="help-nav" id="helpNav" role="tablist"><button type="button" role="tab" data-hq="0" aria-selected="true">このページは何を調べますか？</button><button type="button" role="tab" data-hq="1" aria-selected="false">DNS の反映（伝播）とは？</button><button type="button" role="tab" data-hq="2" aria-selected="false">「接続できず」と出るのはなぜ？</button><button type="button" role="tab" data-hq="3" aria-selected="false">一致率と TTL は何ですか？</button><button type="button" role="tab" data-hq="4" aria-selected="false">SPF と DMARC はどう確認しますか？</button><button type="button" role="tab" data-hq="5" aria-selected="false">レジストリの NS と DNS サーバーの NS が違うのはなぜ？</button><button type="button" role="tab" data-hq="6" aria-selected="false">RDAP とは？ 項目が空なのはなぜ？</button><button type="button" role="tab" data-hq="7" aria-selected="false">問い合わせはどこに送られますか？</button><button type="button" role="tab" data-hq="8" aria-selected="false">共有リンクを開いても数値が変わらないのはなぜ？</button><button type="button" role="tab" data-hq="9" aria-selected="false">DNSSEC、DKIM、証明書も確認しますか？</button></nav>
+      <nav class="help-nav" id="helpNav" role="tablist"><button type="button" role="tab" data-hq="0" aria-selected="true">このページは何を調べますか？</button><button type="button" role="tab" data-hq="1" aria-selected="false">健診の評価はどう決まりますか？</button><button type="button" role="tab" data-hq="2" aria-selected="false">DNSSEC で何が分かりますか？</button><button type="button" role="tab" data-hq="3" aria-selected="false">レコードの変更はいつ反映されますか？</button><button type="button" role="tab" data-hq="4" aria-selected="false">「接続できず」と出るのはなぜ？</button><button type="button" role="tab" data-hq="5" aria-selected="false">「同じ応答」と TTL は何ですか？</button><button type="button" role="tab" data-hq="6" aria-selected="false">SPF と DMARC はどう確認しますか？</button><button type="button" role="tab" data-hq="7" aria-selected="false">レジストリの NS とリゾルバーの NS が違うのはなぜ？</button><button type="button" role="tab" data-hq="8" aria-selected="false">RDAP とは？ 項目が空なのはなぜ？</button><button type="button" role="tab" data-hq="9" aria-selected="false">問い合わせはどこに送られますか？</button><button type="button" role="tab" data-hq="10" aria-selected="false">共有リンクを開いても数値が変わらないのはなぜ？</button></nav>
       <div class="help-pick">
         <button class="icon-btn" type="button" data-hstep="-1" aria-label="前へ"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M10 4L6 8l4 4"/></svg></button>
         <select id="helpSel" aria-labelledby="helpT"></select>
         <button class="icon-btn" type="button" data-hstep="1" aria-label="次へ"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M6 4l4 4-4 4"/></svg></button>
       </div>
-      <div class="help-c" id="helpC"><article data-hqb="0"><h3>このページは何を調べますか？</h3><p>ドメインを入力すると、9 種類のレコード（A、AAAA、CNAME、MX、NS、TXT、CAA、SRV、SOA）を 12 の公共 DNS サーバーに、ブラウザから DNS over HTTPS（DoH、暗号化された DNS）で同時に問い合わせます。同じ値はまとめ、各サーバーの回答は「反映状況」に表示します。登録情報は RDAP（構造化された WHOIS）から取得します。</p></article><article data-hqb="1" hidden><h3>DNS の反映（伝播）とは？</h3><p>レコードを変更しても、各 DNS サーバーは TTL（有効期間）が切れるまで古いコピーを使います。そのため変更直後は、新しい値を返すサーバーと古い値を返すサーバーが混ざり、「反映状況」にどちらかが表示されます。ブラウザはドメイン自身の権威サーバー（53 番ポート）に接続できないため、ここで分かるのは公共 DNS サーバーのキャッシュの状態だけです。</p></article><article data-hqb="2" hidden><h3>「接続できず」と出るのはなぜ？</h3><p>問い合わせはブラウザから各 DNS サーバーへ直接送られます。中国本土では Cloudflare と Google の DNS が通常つながらず、他の一部も同じです。その行は「接続できず」と表示します。これは経路の問題で、レコードが空という意味ではありません。応答しなかったサーバーは不一致として数えません。</p></article><article data-hqb="3" hidden><h3>一致率と TTL は何ですか？</h3><p>一致率は、応答した DNS サーバーのうち最も多い回答を返した割合です。TTL はそのサーバーがレコードを保持できる残り時間で、zone の値から減っていきます。サーバーごとに残り時間が違うのは正常で、不一致ではありません。</p></article><article data-hqb="4" hidden><h3>SPF と DMARC はどう確認しますか？</h3><p>SPF はドメインの TXT レコードから読みます。v=spf1 が複数ないか、末尾が +all、-all、~all、?all のどれか、もう一度 DNS を引く仕組み（include、a、mx、ptr、exists、redirect）がいくつあるか（上限 10）を確認します。include の先までは追わないため、この数は下限です。DMARC は _dmarc.&lt;ドメイン&gt; から、p= の方針、報告先（rua）の有無、pct を読みます。</p></article><article data-hqb="5" hidden><h3>レジストリの NS と DNS サーバーの NS が違うのはなぜ？</h3><p>レジストリ側（RDAP）は登録された情報で、DNS サーバーが返すのはドメインが実際に公開している NS レコードです。違う場合は、変更がまだ反映中か、レジストリの情報が古いかのどちらかです。両方をそのまま表示します。</p></article><article data-hqb="6" hidden><h3>RDAP とは？ 項目が空なのはなぜ？</h3><p>RDAP はレジストリが提供する構造化された WHOIS です。公開する情報が少ないレジストリもあり、プライバシー保護サービスが登録者情報を置き換えることもあります。欠けている項目は「なし」ではなく「不明」として表示します。</p></article><article data-hqb="7" hidden><h3>問い合わせはどこに送られますか？</h3><p>DNS の問い合わせはブラウザから「反映状況」に並ぶ各サーバーへ直接送られます。RDAP は rdap.org に送られ、そこからレジストリへ転送されます。当社のサーバーは通りませんし、ログも残しません。共有リンクにはドメイン、表示したレコード、登録情報だけが入り、あなたの IP は入りません。</p></article><article data-hqb="8" hidden><h3>共有リンクを開いても数値が変わらないのはなぜ？</h3><p>共有された結果はスナップショットで、その時点で DNS サーバーが返した内容を表示します。二人が同じデータを見られるようにするためです。今の値を調べるには「自分の結果を調べる」を押してください。</p></article><article data-hqb="9" hidden><h3>DNSSEC、DKIM、証明書も確認しますか？</h3><p>この版では確認しません。表示するのは DNS サーバーが返したレコードです。DNSSEC の検証、DKIM セレクタ、証明書は別の確認項目で、別のツールで扱う予定です。</p></article></div>
+      <div class="help-c" id="helpC"><article data-hqb="0"><h3>このページは何を調べますか？</h3><p>ドメインを入力すると、9 種類のレコード（A、AAAA、CNAME、MX、NS、TXT、CAA、SRV、SOA）を 12 の公共リゾルバーに、ブラウザから DNS over HTTPS（DoH、暗号化された DNS）で同時に問い合わせます。同じ値はまとめ、各リゾルバーの応答は「リゾルバーの応答」に表示します。登録情報は RDAP（構造化された WHOIS）から取得します。</p></article><article data-hqb="1" hidden><h3>健診の評価はどう決まりますか？</h3><p>評価は 2 つのうち低いほうです。1 つは応答がどれだけ揃っているか、もう 1 つはメール設定です。応答は、12 台すべてが応答し、しかも全部同じときだけ A になります。半分がつながらないと B です。メール評価は SPF と DMARC から出し、メールを受け取れる MX があるときだけ付けます。署名済みで DNSSEC の検証に失敗するドメインはもう 1 段下がります。CAA と IPv6 はバッジだけで、評価は変わりません。</p></article><article data-hqb="2" hidden><h3>DNSSEC で何が分かりますか？</h3><p>DNSSEC があると、リゾルバーは応答が本当にそのドメインのもので、途中で書き換えられていないことを証明できます。ページは親ゾーンに DS レコードを問い合わせ、検証すると分かっているリゾルバーの AD ビットを読みます。「有効、検証済み」はドメインが署名済みで、そのリゾルバーがすべて認めたという意味です。「有効だが検証に失敗」は、署名済みのドメインの応答が検証を通らず、確認するリゾルバーやブラウザーが拒否する状態です。無効はよくある状態で、評価は下がりません。材料が足りないときは「判断できません」と書きます。</p></article><article data-hqb="3" hidden><h3>レコードの変更はいつ反映されますか？</h3><p>レコードを変更しても、各リゾルバーは TTL（有効期間）が切れるまで古いコピーを使います。そのため変更直後は、新しい値を返すリゾルバーと古い値を返すリゾルバーが混ざり、「リゾルバーの応答」にどちらかが表示されます。ブラウザはドメイン自身の権威サーバー（53 番ポート）に接続できないため、ここで分かるのは公共リゾルバーのキャッシュの状態だけです。</p></article><article data-hqb="4" hidden><h3>「接続できず」と出るのはなぜ？</h3><p>問い合わせはブラウザから各リゾルバーへ直接送られます。中国本土では Cloudflare と Google の DNS が通常つながらず、他の一部も同じです。その行は「接続できず」と表示します。これは経路の問題で、レコードが空という意味ではありません。応答しなかったリゾルバーは不一致として数えません。</p></article><article data-hqb="5" hidden><h3>「同じ応答」と TTL は何ですか？</h3><p>「同じ応答」は、応答したリゾルバーのうち、最も多い応答を返した数を数えたものです。TTL はそのリゾルバーがレコードを保持できる残り時間で、zone の値から減っていきます。リゾルバーごとに残り時間が違うのは正常で、不一致ではありません。</p></article><article data-hqb="6" hidden><h3>SPF と DMARC はどう確認しますか？</h3><p>SPF はドメインの TXT レコードから読みます。v=spf1 が複数ないか、末尾が +all、-all、~all、?all のどれか、もう一度 DNS を引く仕組み（include、a、mx、ptr、exists、redirect）がいくつあるか（上限 10）を確認します。include の先までは追わないため、この数は下限です。DMARC は _dmarc.&lt;ドメイン&gt; から、p= の方針、報告先（rua）の有無、pct を読みます。</p></article><article data-hqb="7" hidden><h3>レジストリの NS とリゾルバーの NS が違うのはなぜ？</h3><p>レジストリ側（RDAP）は登録された情報で、リゾルバーが返すのはドメインが実際に公開している NS レコードです。違う場合は、変更がまだ反映中か、レジストリの情報が古いかのどちらかです。両方をそのまま表示します。</p></article><article data-hqb="8" hidden><h3>RDAP とは？ 項目が空なのはなぜ？</h3><p>RDAP はレジストリが提供する構造化された WHOIS です。公開する情報が少ないレジストリもあり、プライバシー保護サービスが登録者情報を置き換えることもあります。欠けている項目は「なし」ではなく「不明」として表示します。</p></article><article data-hqb="9" hidden><h3>問い合わせはどこに送られますか？</h3><p>DNS の問い合わせはブラウザから「リゾルバーの応答」に並ぶ各リゾルバーへ直接送られます。RDAP は rdap.org に送られ、そこからレジストリへ転送されます。当社のサーバーは通りませんし、ログも残しません。共有リンクにはドメイン自身の公開レコードと表示した登録情報が入り、あなたの IP は入りません。</p></article><article data-hqb="10" hidden><h3>共有リンクを開いても数値が変わらないのはなぜ？</h3><p>共有された結果はスナップショットで、その時点でリゾルバーが返した内容を表示します。二人が同じデータを見られるようにするためです。今の値を調べるには「自分の結果を調べる」を押してください。</p></article></div>
     </div>
   </div>
 </div>
 <script type="application/json" id="data">{"lang":"ja","paths":{"en":"/","zh-CN":"/zh-cn/","zh-TW":"/zh-tw/","ja":"/ja/","ko":"/ko/","es":"/es/","fr":"/fr/","de":"/de/","pt":"/pt/","ru":"/ru/"}}</script>
-<script src="/assets/l.ja.3b118d47b7.js"></script>
-<script src="/assets/app.054b5de36d.js"></script>
+<script src="/assets/l.ja.aea32985e9.js"></script>
+<script src="/assets/app.997acfb0d5.js"></script>
 </body>
 </html>

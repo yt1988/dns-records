@@ -4,6 +4,8 @@ import { RESOLVERS, ALL_TYPES } from "./resolvers.mjs";
 import { dohURL, parse, answerOf, answerKey } from "./dns.mjs";
 import { mergeType, mergeAll, mergeRecords, primaryType, OK } from "./merge.mjs";
 import { spfCheck, dmarcCheck, compareNs } from "./mail.mjs";
+import { dnssecVerdict, dsFound, dsAskers, dnssecRows } from "./dnssec.mjs";
+import { resolveGrade, mailGrade, overallGrade } from "./grade.mjs";
 import { fetchRdap } from "./rdap.mjs";
 import { encodeResult, decodeResult, sharePath, resultsFromSnapshot, CODES } from "./code.mjs";
 
@@ -99,7 +101,8 @@ import { encodeResult, decodeResult, sharePath, resultsFromSnapshot, CODES } fro
 
   function fresh() {
     return { domain: "", types: [], results: {}, dmarc: [], rdap: null, startedAt: 0, finished: false,
-      tab: "A", merged: null, records: [], shareCode: "", shared: false, findings: [] };
+      tab: "A", merged: null, records: [], shareCode: "", shared: false, findings: [],
+      ds: null, dnssec: null, grade: null };
   }
 
   const chips = all("#types input");
@@ -114,13 +117,13 @@ import { encodeResult, decodeResult, sharePath, resultsFromSnapshot, CODES } fro
   });
 
   /* ---------------- querying ---------------- */
-  function queryOne(r, name, type, signal) {
+  function queryOne(r, name, type, signal, opts) {
     const c = new AbortController();
     let timedOut = false, stopped = false;
     const timer = setTimeout(() => { timedOut = true; c.abort(); }, TIMEOUT);
     const onStop = () => { stopped = true; c.abort(); };
     if (signal) { if (signal.aborted) onStop(); else signal.addEventListener("abort", onStop); }
-    return fetch(dohURL(r.doh, name, type), {
+    return fetch(dohURL(r.doh, name, type, opts), {
       mode: "cors", cache: "no-store", credentials: "omit", referrerPolicy: "no-referrer",
       headers: { accept: "application/dns-message" }, signal: c.signal,
     }).then(res => {
@@ -179,7 +182,7 @@ import { encodeResult, decodeResult, sharePath, resultsFromSnapshot, CODES } fro
     $("prog").textContent = t("running");
 
     const wantDmarc = types.indexOf("TXT") >= 0;
-    const total = RESOLVERS.length * (types.length + (wantDmarc ? 1 : 0));
+    const total = RESOLVERS.length * (types.length + (wantDmarc ? 1 : 0)) + 2;   // + the DS question, asked of two
     let done = 0;
     const tick = () => { done++; setProgress(done, total); };
     const rdapP = loadRdap(norm.name, my);
@@ -207,6 +210,21 @@ import { encodeResult, decodeResult, sharePath, resultsFromSnapshot, CODES } fro
     }));
 
     if (my !== runId) return;
+
+    // DNSSEC: the parent's DS record, asked of two resolvers that answered the record types (so a visitor whose
+    // network blocks Cloudflare and Google still gets an answer), then the AD bits already collected are folded in.
+    const answered = {};
+    Object.keys(state.results).forEach(type => state.results[type].forEach(r => { if (r.status === OK) answered[r.id] = 1; }));
+    const ids = dsAskers(Object.keys(answered));
+    const dsResults = await Promise.all(ids.map(id => {
+      const r = RESOLVERS.filter(x => x.id === id)[0];
+      return queryOne(r, norm.name, "DS", ctl.signal, { do: true }).then(res => { tick(); return res; });
+    }));
+    for (let i = ids.length; i < 2; i++) tick();
+    if (my !== runId) return;
+    state.ds = dsFound(dsResults);
+    state.dnssec = dnssecVerdict(state.ds, dnssecRows(state.results));
+
     state.finished = true;
     finish();
     await rdapP;
@@ -253,8 +271,12 @@ import { encodeResult, decodeResult, sharePath, resultsFromSnapshot, CODES } fro
     $("vDot").className = "dot";
     $("vTitle").textContent = " ";
     $("vSub").textContent = " ";
-    $("kAgree").textContent = $("kRecords").textContent = $("kResolvers").textContent = "—";
-    $("kAgreeWho").textContent = $("kRecordsWho").textContent = $("kResolversWho").textContent = "";
+    $("kAgree").textContent = $("kMail").textContent = $("kDnssec").textContent = "—";
+    $("kAgreeWho").textContent = $("kMailWho").textContent = $("kDnssecWho").textContent = "";
+    $("badges").textContent = "";
+    $("badges").hidden = true;
+    $("mailGrade").textContent = "";
+    $("mailGrade").className = "st grade";
     all(".shared-bar").forEach(n => n.parentNode.removeChild(n));
   }
 
@@ -357,18 +379,34 @@ import { encodeResult, decodeResult, sharePath, resultsFromSnapshot, CODES } fro
     return state.records.length ? state.records[0].type : first;
   }
 
+  // What the mail grade is made of: an MX that accepts mail, and both SPF and DMARC read in this lookup.
+  function mailFacts() {
+    const mx = majorityRecords("MX");
+    const nullMx = mx.length === 1 && /^0\s+\.?$/.test(mx[0].data.trim());
+    const spf = spfInfo(), dmarc = dmarcInfo();
+    return { mx: state.types.indexOf("MX") >= 0 && mx.length > 0 && !nullMx, checked: !!(spf.checked && dmarc.checked), spf, dmarc };
+  }
+
   function renderVerdict() {
     const total = RESOLVERS.length;
-    const answered = {};
-    Object.keys(state.results).forEach(type => state.results[type].forEach(r => { if (r.status === OK) answered[r.id] = 1; }));
-    const okCount = Object.keys(answered).length;
-    $("kResolvers").textContent = String(okCount);
-    $("kResolversWho").textContent = "/ " + total;
-    $("kRecords").textContent = String(state.records.length);
-    $("kRecordsWho").textContent = state.types.join(" ");
-
     const primary = heroType();
     const m = primary ? state.merged[primary] : null;
+
+    // The grade: the same numbers the three cards show, and the same function the card image uses.
+    const facts = mailFacts();
+    const resolve = resolveGrade({ ok: m ? m.ok.length : 0, total, consistency: m ? m.consistency : null, records: state.records.length });
+    const mail = mailGrade(facts);
+    const dn = state.dnssec || { state: "unknown", validators: 0, answered: 0 };
+    const grade = overallGrade({ resolve, mail, dnssec: dn.state });
+
+    const agree = m && m.ok.length ? m.majority.resolvers.length + "/" + m.ok.length : "—";
+    $("kAgree").textContent = agree;
+    $("kAgreeWho").textContent = m && m.consistency != null ? pct(m.consistency) : "";
+    $("kMail").textContent = mail || "—";
+    $("kMailWho").textContent = mail ? "SPF · DMARC" : "";
+    $("kDnssec").textContent = t("dn_card_" + dn.state);
+    $("kDnssecWho").textContent = dn.answered ? dn.answered + " / " + total : "";
+
     // Green only when most of the 12 answered: a handful of answers is not a healthy picture of propagation.
     const covered = !!m && m.ok.length * 2 >= total;
     let title = "", dot = "warn";
@@ -380,11 +418,14 @@ import { encodeResult, decodeResult, sharePath, resultsFromSnapshot, CODES } fro
     else if (m.consistency === 1) { title = t("v_all", { n: m.ok.length }); dot = "ok"; }
     else if (m.consistency != null) { title = t("v_most", { a: m.majority.resolvers.length, b: m.ok.length }); dot = "warn"; }
     else { title = t("v_one"); dot = ""; }
-    $("vTitle").textContent = title;
+    // The letter sets the colour when there is one (C and D are not green, A and B are).
+    if (grade === "A" || grade === "B") dot = "ok";
+    else if (grade === "C") dot = "warn";
+    else if (grade === "D") dot = "bad";
+    $("vTitle").textContent = grade ? t("v_grade", { grade }) + " · " + title : title;
     $("vDot").className = "dot " + dot;
-    $("kAgree").textContent = m && m.consistency != null ? pct(m.consistency) : "—";
-    $("kAgreeWho").textContent = m && m.majority && m.ok.length >= 2 ? m.majority.resolvers.length + " / " + m.ok.length : "";
     $("vSub").textContent = m ? t("v_sub", { ok: m.ok.length, tot: total, fail: m.errors.length }) : t("v_allfail");
+    state.grade = { resolve, mail, overall: grade, agree };
 
     // Findings, worst first, at most four.
     const F = [];
@@ -406,6 +447,7 @@ import { encodeResult, decodeResult, sharePath, resultsFromSnapshot, CODES } fro
       else if (dmarc.p === "none") add("warn", t("fd_dmarc_pnone"));
       else if (dmarc.issues.indexOf("noRua") >= 0) add("warn", t("fd_dmarc_norua"));
     }
+    if (dn.state === "broken") add("bad", t("dn_broken"));
     if (ns && ns.onlyRegistrar.length) add("warn", t("fd_ns", { names: ns.onlyRegistrar.slice(0, 3).join(", ") }));
     if (ns && ns.onlyResolver.length) add("warn", t("fd_ns_extra", { names: ns.onlyResolver.slice(0, 3).join(", ") }));
     if (!F.length && spf && spf.checked) add("ok", t("fd_ok"));
@@ -414,6 +456,13 @@ import { encodeResult, decodeResult, sharePath, resultsFromSnapshot, CODES } fro
     const ul = $("findings");
     ul.textContent = "";
     state.findings.forEach(x => { const li = el("li", x.level, x.text); ul.appendChild(li); });
+
+    // Badges, not grades: most domains have neither, so neither of them can lower the letter (docs/decisions.md).
+    const badges = $("badges");
+    badges.textContent = "";
+    if (state.types.indexOf("CAA") >= 0 && majorityRecords("CAA").length) badges.appendChild(el("span", "badge", t("bd_caa")));
+    if (state.types.indexOf("AAAA") >= 0 && majorityRecords("AAAA").length) badges.appendChild(el("span", "badge", t("bd_ipv6")));
+    badges.hidden = !badges.children.length;
     $("verdict").hidden = false;
   }
 
@@ -495,12 +544,26 @@ import { encodeResult, decodeResult, sharePath, resultsFromSnapshot, CODES } fro
     b.appendChild(p);
   }
 
+  // DNSSEC is about the domain, not about mail: it is shown even when no mail record was asked for.
+  function dnssecBlock(parent) {
+    const dn = state.dnssec;
+    if (!dn) return;
+    const cls = dn.state === "pass" ? "ok" : dn.state === "broken" ? "bad" : "";
+    const b = block(parent, t("dnssec_h"), t("dn_" + dn.state), cls);
+    line(b, t("dn_" + dn.state + "_why", { n: dn.answered, b: RESOLVERS.length }), "m");
+  }
+
   function renderMail() {
     const body = $("mailBody");
     body.textContent = "";
+    const grade = state.grade;
+    $("mailGrade").textContent = grade && grade.mail ? grade.mail : "";
+    $("mailGrade").title = t("k_mail");
+    $("mailGrade").className = "st grade " + (!grade || !grade.mail ? "" : grade.mail === "C" ? "warn" : grade.mail === "D" ? "bad" : "ok");
     const hasMx = state.types.indexOf("MX") >= 0, hasTxt = state.types.indexOf("TXT") >= 0, hasNs = state.types.indexOf("NS") >= 0;
     if (!hasMx && !hasTxt && !hasNs) {
       block(body, t("h_mail"), null).appendChild(el("p", "m", t("mail_unchecked")));
+      dnssecBlock(body);
       $("mail").hidden = false;
       return;
     }
@@ -564,6 +627,7 @@ import { encodeResult, decodeResult, sharePath, resultsFromSnapshot, CODES } fro
         if (diff.length) line(b, t("ns_diff", { names: diff.slice(0, 4).join(", ") }), "m");
       }
     }
+    dnssecBlock(body);
     $("mail").hidden = false;
   }
 
@@ -639,6 +703,8 @@ import { encodeResult, decodeResult, sharePath, resultsFromSnapshot, CODES } fro
     const first = m && m.majority && m.majority.records.length ? m.majority.records[0] : null;
     return {
       v: 1, d: state.domain, t: state.types, at: state.startedAt, r: rows, m: dm, x: d, xz,
+      // the DNSSEC verdict, so a shared link shows the same third number (an older link has none: "unknown")
+      dn: state.dnssec ? [state.dnssec.state, state.dnssec.answered] : ["unknown", 0],
       s: { ty: primary || state.types[0] || "A", val: first ? first.data : "", ok: m ? m.ok.length : 0,
         tot: RESOLVERS.length, n: state.records.length },
     };
@@ -657,62 +723,66 @@ import { encodeResult, decodeResult, sharePath, resultsFromSnapshot, CODES } fro
       link: () => location.origin + (D.paths && D.paths[LANG] ? D.paths[LANG] : "/") + "r/" + state.shareCode,
       home: location.origin + (D.paths && D.paths[LANG] ? D.paths[LANG] : "/"),
       text: () => { const s = snapshotOf().s; return s.val ? t("share_title", { domain: state.domain, type: s.ty, value: s.val }) : t("share_title_none", { domain: state.domain, n: s.n }); },
-      ts: state.startedAt, height: 760,
+      ts: state.startedAt, height: 720,
       draw: drawCard,
       foot: () => [t("card_foot")],
     }).open();
   };
 
-  // The card: the domain, how much of it answered the same, and the four values a DNS answer is usually read for.
-  // Values shrink before anything is dropped (docs/tool-contract.md, "Share card").
+  // The card: the verdict, not the data. A grade, the domain, three numbers from the page, and how many resolvers
+  // answered. No record values and no IPs — a card that carries a domain's addresses is a privacy problem the link
+  // already does not have. Everything shrinks or wraps before anything is clipped (docs/tool-contract.md).
   function drawCard(x, kit) {
-    const W = kit.W, P = kit.P, w = W - P * 2, F = kit.F, M = kit.M, v = kit.v;
+    const P = kit.P, w = kit.W - P * 2, F = kit.F, M = kit.M, v = kit.v;
+    const g = state.grade || {};
+    const grade = g.overall || null;
+    const dn = state.dnssec || { state: "unknown" };
     x.textBaseline = "alphabetic"; x.textAlign = "left";
-    let z = 52;
-    x.font = "700 " + z + "px " + F;
-    while (z > 28 && x.measureText(state.domain).width > w) { z -= 2; x.font = "700 " + z + "px " + F; }
-    let y = kit.top + 14;
-    x.fillStyle = v("fg");
-    const dl = kit.wrap(x, state.domain, w, 2);
-    dl.forEach(l => { x.fillText(l, P, y); y += z + 8; });
 
+    // the grade, in its own square, with the domain beside it
+    const S = 132, gx = P, gy = kit.top + 2;
+    x.fillStyle = v("line"); kit.roundRect(x, gx, gy, S, S, 18); x.fill();
+    x.fillStyle = grade ? v(grade === "D" ? "bad" : grade === "C" ? "warn" : "ok") : v("muted");
+    x.font = "700 84px " + M;
+    const letter = grade || "—";
+    const lw = x.measureText(letter).width;
+    x.fillText(letter, gx + (S - lw) / 2, gy + S / 2 + 30);
+
+    x.fillStyle = v("fg");
+    let dz = 46;
+    x.font = "700 " + dz + "px " + F;
+    while (dz > 24 && x.measureText(state.domain).width > w - S - 28) { dz -= 2; x.font = "700 " + dz + "px " + F; }
+    x.fillText(state.domain, gx + S + 28, gy + 58);
+    x.fillStyle = v("muted"); x.font = "400 24px " + F;
+    x.fillText(t("card_grade"), gx + S + 28, gy + 98);
+
+    // three numbers, each the one the page shows
+    const bw = (w - 40) / 3, bh = 138, by = gy + S + 32;
+    const boxes = [[g.agree || "—", t("k_agree")], [g.mail || "—", t("k_mail")], [t("dn_card_" + dn.state), t("k_dnssec")]];
+    boxes.forEach((box, i) => {
+      const bx = P + i * (bw + 20);
+      x.fillStyle = v("line"); kit.roundRect(x, bx, by, bw, bh, 16); x.fill();
+      let vs = 44;
+      x.font = "700 " + vs + "px " + M;
+      while (vs > 24 && x.measureText(box[0]).width > bw - 28) { vs -= 2; x.font = "700 " + vs + "px " + M; }
+      x.fillStyle = v("fg");
+      const vw = x.measureText(box[0]).width;
+      x.fillText(box[0], bx + (bw - vw) / 2, by + 78);
+      x.fillStyle = v("muted");
+      kit.fit(x, box[1], bw - 24, 21, 14, 400);
+      const lw2 = x.measureText(box[1]).width;
+      x.fillText(box[1], bx + (bw - lw2) / 2, by + 113);
+    });
+
+    // how much of the picture the numbers are based on, and how many things are worth fixing
     const primary = heroType();
     const m = primary && state.merged ? state.merged[primary] : null;
-    y += 34;
-    x.fillStyle = m && m.consistency != null && m.ok.length * 2 >= RESOLVERS.length ? v("ok") : v("muted");
-    x.font = "700 64px " + M;
-    const pctText = m && m.consistency != null ? pct(m.consistency) : "—";
-    const pctW = x.measureText(pctText).width;
-    x.fillText(pctText, P, y);
-    x.fillStyle = v("muted"); x.font = "400 26px " + F;
-    x.fillText(t("k_agree"), P + pctW + 20, y - 16);
-    y += 40;
-    const agree = m && m.consistency != null
-      ? t("card_line", { a: m.majority.resolvers.length, b: m.ok.length, n: state.records.length })
-      : t("card_line", { a: 0, b: RESOLVERS.length, n: state.records.length });
-    x.fillStyle = v("muted"); x.font = "400 26px " + F;
-    kit.wrap(x, agree, w, 1).forEach(l => { x.fillText(l, P, y); });
-
-    // one value per type first (A, AAAA, CNAME, MX, NS…), then a second value of a type if there is room
-    const order = ["A", "AAAA", "CNAME", "MX", "NS"];
-    const rows = [];
-    for (const ty of order) {
-      const r = state.records.find(x => x.type === ty);
-      if (r && rows.length < 4) rows.push(r);
-    }
-    state.records.forEach(r => { if (rows.length < 4 && rows.indexOf(r) < 0) rows.push(r); });
-    let ry = kit.top + 232;
-    rows.forEach(r => {
-      x.fillStyle = v("muted"); x.font = "600 20px " + M;
-      x.fillText(r.type, P, ry);
-      x.fillStyle = v("fg");
-      let size = 26;
-      x.font = "500 " + size + "px " + M;
-      while (size > 14 && x.measureText(r.data).width > w - 96) { size -= 1; x.font = "500 " + size + "px " + M; }
-      const lines = kit.wrap(x, r.data, w - 96, 2);
-      lines.forEach((l, i) => x.fillText(l, P + 84, ry + i * (size + 6)));
-      ry += Math.max(58, lines.length * (size + 6) + 20);
-    });
+    const problems = (state.findings || []).filter(f => f.level !== "ok").length;
+    const cov = m
+      ? t("card_cov", { ok: m.ok.length, tot: RESOLVERS.length, fail: m.errors.length }) + " · " + (problems ? t("card_findings", { n: problems }) : t("card_clean"))
+      : t("v_allfail");
+    x.fillStyle = v("muted"); x.font = "400 24px " + F;
+    kit.wrap(x, cov, w, 2).forEach((l, i) => x.fillText(l, P, by + bh + 46 + i * 34));
   }
 
   /* ---------------- shared result ---------------- */
@@ -745,6 +815,9 @@ import { encodeResult, decodeResult, sharePath, resultsFromSnapshot, CODES } fro
     state.tab = state.types[0] || "A";
     state.startedAt = snap.at || Date.now();
     state.results = resultsFromSnapshot(snap);
+    // Older links were made before DNSSEC was checked; they keep opening and say "unknown", never "off".
+    const dn = snap.dn || ["unknown", 0];
+    state.dnssec = { state: dn[0] === "pass" || dn[0] === "broken" || dn[0] === "off" ? dn[0] : "unknown", answered: Number(dn[1]) || 0, validators: 0 };
     state.dmarc = snap.m && snap.m.length
       ? (resultsFromSnapshot({ r: snap.m.map(a => [a[0], "TXT", a[1], a[2] || []]) }).TXT || [])
       : [];

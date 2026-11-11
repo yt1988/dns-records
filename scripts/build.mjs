@@ -137,7 +137,8 @@ export async function build({ check = false } = {}) {
 
 > DNS records for any domain, looked up from the visitor's browser over DNS over HTTPS: A, AAAA, CNAME, MX, NS,
 > TXT, CAA, SRV and SOA at 12 public resolvers at once, merged by value, with each resolver's own answer under
-> Propagation. The page also reads SPF and DMARC, compares the registrar's name servers (RDAP) with the ones the
+> Resolver answers. From that the page gives a checkup grade: how far the resolvers agree, how the mail setup looks
+> (SPF, DMARC), and whether DNSSEC validates. It also compares the registrar's name servers (RDAP) with the ones the
 > resolvers return, and shows registration data (registrar, dates, status). Nothing is stored, no account is needed,
 > and the queries never pass through 1ms.dog's servers.
 

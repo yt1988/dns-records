@@ -27,7 +27,27 @@ test("query builds a wire-format question with EDNS and the AD bit", () => {
   assert.deepEqual([...q.slice(24, 29)], [0, 0, 15, 0, 1]);   // root label, MX, IN
   assert.equal(q[29], 0);                       // OPT owner
   assert.deepEqual([...q.slice(30, 34)], [0, 41, 4, 0xd0]);
+  assert.deepEqual([...q.slice(34, 38)], [0, 0, 0, 0]);   // OPT TTL: no DO bit unless asked
   assert.throws(() => query("例え.テスト", "A"), /punycode/);
+});
+
+test("only a DS query sets the EDNS DO bit", () => {
+  const q = query("example.com", "DS", { do: true });
+  assert.deepEqual([...q.slice(25, 27)], [0, 43]);   // DS
+  assert.deepEqual([...q.slice(34, 38)], [0, 0, 0x80, 0]);   // OPT TTL: flags 0x8000, DO in the high byte
+  assert.deepEqual([...query("example.com", "DS").slice(34, 38)], [0, 0, 0, 0]);
+});
+
+test("parse reads DS and DNSKEY records", () => {
+  const digest = [0xde, 0xad, 0xbe, 0xef].concat(Array(28).fill(7));
+  const ds = [...u16(2371), 13, 2, ...digest];
+  const dnskey = [...u16(257), 3, 8, ...Array(16).fill(9)];
+  const by = Object.fromEntries(parse(response([rr(null, 43, 3600, ds), rr(null, 48, 3600, dnskey)])).answers.map(r => [r.type, r]));
+  assert.deepEqual([by.DS.keyTag, by.DS.algorithm, by.DS.digestType], [2371, 13, 2]);
+  assert.equal(by.DS.digest.length, 64);
+  assert.equal(by.DS.data, "2371 13 2 " + by.DS.digest);
+  assert.deepEqual([by.DNSKEY.flags, by.DNSKEY.protocol, by.DNSKEY.algorithm], [257, 3, 8]);
+  assert.equal(by.DNSKEY.data, "257 3 8 …");
 });
 
 test("dohURL encodes the query as base64url without padding", () => {

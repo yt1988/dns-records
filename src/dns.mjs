@@ -4,10 +4,10 @@
 // for their answers, and that is about this file. It is shared by the page, the Worker (it only decodes shared
 // results, never queries) and the tests.
 //
-// Supported answer types: A, NS, CNAME, SOA, PTR, MX, TXT, AAAA, SRV, CAA. Anything else in an answer is ignored (a
-// resolver that adds RRSIG or OPT records does not confuse the rest).
+// Supported answer types: A, NS, CNAME, SOA, PTR, MX, TXT, AAAA, SRV, DS, DNSKEY, CAA. Anything else in an answer is
+// ignored (a resolver that adds RRSIG records when DO is set does not confuse the rest).
 
-export const TYPES = { A: 1, NS: 2, CNAME: 5, SOA: 6, PTR: 12, MX: 15, TXT: 16, AAAA: 28, SRV: 33, CAA: 257 };
+export const TYPES = { A: 1, NS: 2, CNAME: 5, SOA: 6, PTR: 12, MX: 15, TXT: 16, AAAA: 28, SRV: 33, DS: 43, DNSKEY: 48, CAA: 257 };
 export const TYPE_NAMES = Object.fromEntries(Object.entries(TYPES).map(([k, v]) => [v, k]));
 export const RCODE = { NOERROR: 0, FORMERR: 1, SERVFAIL: 2, NXDOMAIN: 3, NOTIMP: 4, REFUSED: 5 };
 export const RCODE_NAME = { 0: "NOERROR", 1: "FORMERR", 2: "SERVFAIL", 3: "NXDOMAIN", 4: "NOTIMP", 5: "REFUSED" };
@@ -20,7 +20,9 @@ export function typeCode(type) {
 
 // A recursive query with EDNS (1232-byte UDP size) and the AD bit set, which asks a validating resolver to say
 // whether the answer passed DNSSEC validation (RFC 6840). ID 0, as RFC 8484 recommends for GET.
-export function query(name, type = "A") {
+// `do` adds the EDNS DO bit. The page sets it only for the DS question: the AD bit in the header is enough for the
+// answer, and Quad9 answers a GET with DO with HTTP 505 (scripts/dnssec-probe.mjs, docs/decisions.md).
+export function query(name, type = "A", { do: doBit = false } = {}) {
   const labels = String(name).replace(/\.$/, "").split(".");
   if (!labels.length || labels.some(l => !l.length || l.length > 63)) throw new Error("dns: bad name");
   const t = typeCode(type);
@@ -35,7 +37,8 @@ export function query(name, type = "A") {
   }
   b[i++] = 0;
   b.set([t >> 8, t & 255, 0, 1], i); i += 4;
-  b.set([0, 0, 41, 0x04, 0xd0, 0, 0, 0, 0, 0, 0], i);   // OPT: root name, type 41, UDP size 1232, no flags, no options
+  // OPT: root name, type 41, UDP size 1232, TTL (ext rcode 0, version 0, flags: DO = 0x8000), no options
+  b.set([0, 0, 41, 0x04, 0xd0, 0, 0, doBit ? 0x80 : 0, 0, 0, 0], i);
   return b;
 }
 
@@ -46,8 +49,8 @@ export function b64url(bytes) {
 }
 
 // The GET URL for a query to a DoH endpoint
-export const dohURL = (endpoint, name, type = "A") =>
-  endpoint + (endpoint.includes("?") ? "&" : "?") + "dns=" + b64url(query(name, type));
+export const dohURL = (endpoint, name, type = "A", opts) =>
+  endpoint + (endpoint.includes("?") ? "&" : "?") + "dns=" + b64url(query(name, type, opts));
 
 const u16 = (b, i) => (b[i] << 8) | b[i + 1];
 const u32 = (b, i) => ((b[i] << 24) | (b[i + 1] << 16) | (b[i + 2] << 8) | b[i + 3]) >>> 0;
@@ -169,6 +172,22 @@ function readRecord(b, i) {
       const value = decodeText(b.subarray(rd + 2 + tagLen, end));
       Object.assign(rec, { flags, tag, value });
       rec.data = flags + " " + tag + " \"" + value + "\"";
+      break;
+    }
+    // DS and DNSKEY are only asked for, never shown in the record table: the page reads whether they exist, and
+    // nothing about the signature itself (docs/decisions.md, the DNSSEC section).
+    case TYPES.DS: {
+      if (rdlen < 4) throw new Error("dns: short DS");
+      const keyTag = u16(b, rd), algorithm = b[rd + 2], digestType = b[rd + 3];
+      const digest = [...b.subarray(rd + 4, end)].map(x => x.toString(16).padStart(2, "0")).join("");
+      Object.assign(rec, { keyTag, algorithm, digestType, digest });
+      rec.data = keyTag + " " + algorithm + " " + digestType + " " + digest;
+      break;
+    }
+    case TYPES.DNSKEY: {
+      if (rdlen < 4) throw new Error("dns: short DNSKEY");
+      Object.assign(rec, { flags: u16(b, rd), protocol: b[rd + 2], algorithm: b[rd + 3] });
+      rec.data = rec.flags + " " + rec.protocol + " " + rec.algorithm + " …";
       break;
     }
     default:

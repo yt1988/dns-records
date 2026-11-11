@@ -60,10 +60,11 @@
       <p class="v-sub m" id="vSub">&nbsp;</p>
       <div class="facts">
         <div class="fact"><span data-i="k_agree"></span><b id="kAgree">—</b><i id="kAgreeWho"></i></div>
-        <div class="fact"><span data-i="k_records"></span><b id="kRecords">—</b><i id="kRecordsWho"></i></div>
-        <div class="fact"><span data-i="k_resolvers"></span><b id="kResolvers">—</b><i id="kResolversWho"></i></div>
+        <div class="fact"><span data-i="k_mail"></span><b id="kMail">—</b><i id="kMailWho"></i></div>
+        <div class="fact"><span data-i="k_dnssec"></span><b id="kDnssec">—</b><i id="kDnssecWho"></i></div>
       </div>
       <ul class="findings" id="findings"></ul>
+      <p class="badges" id="badges" hidden></p>
       <p class="links" id="links" hidden></p>
     </section>
   </div>
@@ -88,7 +89,7 @@
 
   <div class="grid2">
     <section class="card sec" id="mail" hidden>
-      <div class="sec-h"><h3 data-i="h_mail"></h3></div>
+      <div class="sec-h"><h3 data-i="h_mail"></h3><span class="st grade" id="mailGrade"></span></div>
       <div id="mailBody"></div>
     </section>
     <section class="card sec" id="rdap" hidden>
