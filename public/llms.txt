@@ -1,0 +1,13 @@
+# DNS Records · 1ms.dog
+
+> DNS records for any domain, looked up from the visitor's browser over DNS over HTTPS: A, AAAA, CNAME, MX, NS,
+> TXT, CAA, SRV and SOA at 12 public resolvers at once, merged by value, with each resolver's own answer under
+> Propagation. The page also reads SPF and DMARC, compares the registrar's name servers (RDAP) with the ones the
+> resolvers return, and shows registration data (registrar, dates, status). Nothing is stored, no account is needed,
+> and the queries never pass through 1ms.dog's servers.
+
+- Page: https://dig.1ms.dog/ (also /zh-cn/, /zh-tw/, /ja/, /ko/, /es/, /fr/, /de/, /pt/, /ru/)
+- Source code: https://github.com/yt1988/dns-records
+- Uses RDAP through rdap.org: https://rdap.org/
+- Resolvers: Cloudflare, Google, Quad9, Control D, DNS.SB, CleanBrowsing, Rethink DNS, DNS4EU, CZ.NIC ODVR,
+  DNSForge, Tiarap, IIJ

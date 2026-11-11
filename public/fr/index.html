@@ -1,0 +1,160 @@
+<!doctype html>
+<html lang="fr" data-paths="{&quot;en&quot;:&quot;/&quot;,&quot;zh-CN&quot;:&quot;/zh-cn/&quot;,&quot;zh-TW&quot;:&quot;/zh-tw/&quot;,&quot;ja&quot;:&quot;/ja/&quot;,&quot;ko&quot;:&quot;/ko/&quot;,&quot;es&quot;:&quot;/es/&quot;,&quot;fr&quot;:&quot;/fr/&quot;,&quot;de&quot;:&quot;/de/&quot;,&quot;pt&quot;:&quot;/pt/&quot;,&quot;ru&quot;:&quot;/ru/&quot;}">
+<head>
+<meta charset="utf-8">
+<script>(function(){var d=document.documentElement,th=null,s=null;try{th=localStorage.getItem("dig:theme");s=localStorage.getItem("dig:lang")}catch(e){}if(th==="light"||th==="dark")d.setAttribute("data-theme",th);if(!d.hasAttribute("data-root"))return;var P=JSON.parse(d.getAttribute("data-paths")||"{}"),l=null;try{var q=new URLSearchParams(location.search).get("lang");if(P[q])l=q}catch(e){}if(!l&&P[s])l=s;for(var ls=navigator.languages||[navigator.language||"en"],i=0;!l&&!s&&i<ls.length;i++){var x=String(ls[i]).toLowerCase(),b=x.split("-")[0];l=b==="zh"?(/tw|hk|mo|hant/.test(x)?"zh-TW":"zh-CN"):P[b]?b:null}if(l&&l!=="en"&&location.pathname===P.en)location.replace(P[l]+location.search+location.hash)})();</script>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Recherche DNS : enregistrements, propagation, MX, SPF, DMARC et registre</title>
+<meta name="description" content="Consultez les enregistrements DNS d’un domaine (A, AAAA, CNAME, MX, NS, TXT, CAA, SRV, SOA) sur 12 résolveurs DNS publics à la fois. Voyez la propagation, les problèmes SPF et DMARC, les serveurs de noms du registraire et les données de registre RDAP. Gratuit, dans votre navigateur.">
+<meta name="keywords" content="recherche dns, enregistrements dns, vérifier la propagation dns, recherche mx, vérifier spf, vérifier dmarc, enregistrements txt, recherche ns, whois, rdap">
+<meta name="robots" content="index, follow">
+<meta name="application-name" content="Enregistrements DNS">
+<meta name="theme-color" content="#f6f6f7" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#121316" media="(prefers-color-scheme: dark)">
+<link rel="canonical" href="https://dig.1ms.dog/fr/">
+<link rel="alternate" hreflang="en" href="https://dig.1ms.dog/">
+<link rel="alternate" hreflang="zh-CN" href="https://dig.1ms.dog/zh-cn/">
+<link rel="alternate" hreflang="zh-TW" href="https://dig.1ms.dog/zh-tw/">
+<link rel="alternate" hreflang="ja" href="https://dig.1ms.dog/ja/">
+<link rel="alternate" hreflang="ko" href="https://dig.1ms.dog/ko/">
+<link rel="alternate" hreflang="es" href="https://dig.1ms.dog/es/">
+<link rel="alternate" hreflang="fr" href="https://dig.1ms.dog/fr/">
+<link rel="alternate" hreflang="de" href="https://dig.1ms.dog/de/">
+<link rel="alternate" hreflang="pt" href="https://dig.1ms.dog/pt/">
+<link rel="alternate" hreflang="ru" href="https://dig.1ms.dog/ru/">
+<link rel="alternate" hreflang="x-default" href="https://dig.1ms.dog/">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="1ms.dog">
+<meta property="og:title" content="Recherche DNS : enregistrements, propagation, MX, SPF, DMARC et registre">
+<meta property="og:description" content="12 résolveurs DNS, le courrier et les données de registre d’un coup">
+<meta property="og:url" content="https://dig.1ms.dog/fr/">
+<meta property="og:locale" content="fr_FR">
+<link rel="icon" href="/favicon.ico" sizes="any">
+<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png">
+<meta property="og:image" content="https://dig.1ms.dog/og/fr.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="Recherche DNS : enregistrements, propagation, MX, SPF, DMARC et registre">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="https://dig.1ms.dog/og/fr.png">
+<meta name="twitter:title" content="Recherche DNS : enregistrements, propagation, MX, SPF, DMARC et registre">
+<meta name="twitter:description" content="12 résolveurs DNS, le courrier et les données de registre d’un coup">
+<script type="application/ld+json">{"@context":"https://schema.org","@graph":[{"@type":"WebApplication","name":"Enregistrements DNS · 1ms.dog","url":"https://dig.1ms.dog/fr/","applicationCategory":"UtilitiesApplication","operatingSystem":"Any","browserRequirements":"Requires JavaScript","description":"Consultez les enregistrements DNS d’un domaine (A, AAAA, CNAME, MX, NS, TXT, CAA, SRV, SOA) sur 12 résolveurs DNS publics à la fois. Voyez la propagation, les problèmes SPF et DMARC, les serveurs de noms du registraire et les données de registre RDAP. Gratuit, dans votre navigateur.","inLanguage":"fr","isAccessibleForFree":true,"offers":{"@type":"Offer","price":"0","priceCurrency":"USD"}},{"@type":"FAQPage","mainEntity":[{"@type":"Question","name":"Que recherche cette page ?","acceptedAnswer":{"@type":"Answer","text":"Saisissez un domaine : neuf types d’enregistrement (A, AAAA, CNAME, MX, NS, TXT, CAA, SRV, SOA) sont demandés à 12 résolveurs DNS publics, chacun via DNS over HTTPS depuis votre navigateur. Les valeurs sont fusionnées et la réponse de chaque résolveur apparaît dans Propagation. Les données de registre viennent de RDAP, la version JSON de WHOIS."}},{"@type":"Question","name":"Qu’est-ce que la propagation DNS ?","acceptedAnswer":{"@type":"Answer","text":"Quand un enregistrement change, chaque résolveur garde son ancienne copie jusqu’à l’expiration du TTL (durée de vie). Juste après un changement, certains renvoient donc encore l’ancienne valeur, et le panneau de propagation montre lesquels. La page ne voit que ce que les résolveurs publics ont en cache : un navigateur ne peut pas joindre le serveur autoritatif du domaine sur le port 53, donc il ne peut pas montrer la vérité actuelle de la zone."}},{"@type":"Question","name":"Pourquoi certains résolveurs disent-ils qu’ils n’ont pas pu se connecter ?","acceptedAnswer":{"@type":"Answer","text":"Les requêtes partent de votre navigateur directement vers chaque résolveur. En Chine continentale, Cloudflare et Google DNS sont généralement bloqués, et d’autres aussi, donc ces lignes indiquent une connexion impossible. C’est un fait sur le chemin, pas un ensemble d’enregistrements vide : un résolveur qui n’a pas répondu n’est jamais compté comme divergent."}},{"@type":"Question","name":"Que signifient la concordance et le TTL ?","acceptedAnswer":{"@type":"Answer","text":"La concordance est la part des résolveurs ayant répondu qui ont donné la réponse la plus fréquente. Le TTL est le nombre de secondes pendant lesquelles ce résolveur peut encore garder l’enregistrement ; il décompte depuis la valeur de la zone et diffère d’un résolveur à l’autre : ce n’est donc pas une divergence."}},{"@type":"Question","name":"Comment SPF et DMARC sont-ils vérifiés ?","acceptedAnswer":{"@type":"Answer","text":"SPF est lu dans les enregistrements TXT du domaine : la page cherche plus d’un enregistrement v=spf1, regarde sa terminaison (+all, -all, ~all ou ?all) et compte les mécanismes qui demandent une autre requête DNS (include, a, mx, ptr, exists, redirect), avec une limite de 10. Elle ne suit pas les include, donc ce nombre est un minimum. DMARC est lu dans _dmarc.\u003cdomaine> : la politique p=, la présence de rapports (rua) et pct."}},{"@type":"Question","name":"Pourquoi la liste de serveurs de noms du registraire diffère-t-elle ?","acceptedAnswer":{"@type":"Answer","text":"La liste du registraire (RDAP) est ce que le registre a enregistré ; les résolveurs renvoient ce que le domaine publie réellement dans ses enregistrements NS. Une différence signifie souvent qu’un changement se propage encore ou que les données du registre sont anciennes. Les deux côtés sont affichés tels quels."}},{"@type":"Question","name":"Qu’est-ce que RDAP, et pourquoi des champs manquent-ils ?","acceptedAnswer":{"@type":"Answer","text":"RDAP est le remplaçant structuré de WHOIS, servi par le registre. Certains registres publient peu, et les services de confidentialité remplacent les données du titulaire ; un champ absent est affiché comme inconnu, pas comme « aucun »."}},{"@type":"Question","name":"Où vont mes requêtes ?","acceptedAnswer":{"@type":"Answer","text":"Chaque requête DNS part de votre navigateur directement vers les résolveurs listés dans Propagation ; RDAP va à rdap.org, qui redirige vers le registre. Rien ne passe par notre serveur et nous ne gardons aucun journal. Un lien partagé contient le domaine, ses enregistrements et les données de registre affichées, jamais votre IP."}},{"@type":"Question","name":"Pourquoi un lien partagé ne change-t-il pas quand je l’ouvre ?","acceptedAnswer":{"@type":"Answer","text":"Un résultat partagé est un instantané : il montre ce que les résolveurs renvoyaient à ce moment-là, pour que deux personnes comparent les mêmes données. Appuyez sur « Rechercher le mien » pour interroger à nouveau."}},{"@type":"Question","name":"Vérifie-t-il DNSSEC, DKIM ou les certificats ?","acceptedAnswer":{"@type":"Answer","text":"Pas dans cette version. La page montre les enregistrements renvoyés par un résolveur ; la validation DNSSEC, les sélecteurs DKIM et les certificats sont des vérifications séparées, prévues dans d’autres outils."}}]}]}</script>
+<link rel="preload" href="/assets/fonts/geist-latin.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="/assets/app.69d340d232.css">
+</head>
+<body>
+<div class="app">
+  <div class="top">
+    <a class="brand" href="/fr/"><span class="logo"><img class="logo-light" src="/assets/logo-light.svg" width="90" height="36" alt="1ms" loading="lazy"><img class="logo-dark" src="/assets/logo-dark.svg" width="90" height="36" alt="1ms" loading="lazy"></span><span class="brand-name">Enregistrements DNS</span></a>
+    <div class="top-acts">
+      <label class="sel"><svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="6.2"/><path d="M1.8 8h12.4M8 1.8c1.8 1.7 2.7 3.8 2.7 6.2S9.8 12.5 8 14.2C6.2 12.5 5.3 10.4 5.3 8S6.2 3.5 8 1.8z"/></svg><span class="sr" data-i="lang_label">Langue</span>
+        <select id="lang"><option value="en">English</option><option value="zh-CN">简体中文</option><option value="zh-TW">繁體中文</option><option value="ja">日本語</option><option value="ko">한국어</option><option value="es">Español</option><option value="fr" selected>Français</option><option value="de">Deutsch</option><option value="pt">Português</option><option value="ru">Русский</option></select></label>
+      <button class="icon-btn" id="helpBtn" type="button" aria-haspopup="dialog" aria-controls="help" aria-label="Aide">
+        <svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="6.2"/><path d="M6.3 6.2a1.8 1.8 0 1 1 2.5 1.7c-.5.2-.8.6-.8 1.1v.4M8 11.3v.1"/></svg>
+      </button>
+      <a class="icon-btn gh" href="https://github.com/yt1988/dns-records" target="_blank" rel="noopener noreferrer" title="GitHub" aria-label="GitHub"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 .2a8 8 0 0 0-2.5 15.6c.4 0 .5-.2.5-.4v-1.5c-2.2.5-2.7-1-2.7-1-.4-.9-.9-1.2-.9-1.2-.7-.5.1-.5.1-.5.8.1 1.2.8 1.2.8.7 1.3 1.9.9 2.4.7 0-.5.3-.9.5-1.1-1.8-.2-3.6-.9-3.6-4 0-.9.3-1.6.8-2.1-.1-.2-.4-1 .1-2.1 0 0 .7-.2 2.2.8a7.4 7.4 0 0 1 4 0c1.5-1 2.2-.8 2.2-.8.4 1.1.2 1.9.1 2.1.5.6.8 1.3.8 2.1 0 3.1-1.9 3.7-3.6 3.9.3.3.6.8.6 1.5v2.2c0 .2.1.5.6.4A8 8 0 0 0 8 .2z"/></svg></a>
+      <button class="icon-btn" id="theme" type="button" aria-label="Thème">
+        <svg class="i-sys" viewBox="0 0 16 16" aria-hidden="true"><rect x="2" y="3" width="12" height="8.5" rx="1.5"/><path d="M6 14h4M8 11.5V14"/></svg>
+        <svg class="i-light" viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="3"/><path d="M8 1.5v1.5M8 13v1.5M1.5 8H3M13 8h1.5M3.4 3.4l1 1M11.6 11.6l1 1M3.4 12.6l1-1M11.6 4.4l1-1"/></svg>
+        <svg class="i-dark" viewBox="0 0 16 16" aria-hidden="true"><path d="M13.5 9.5A5.5 5.5 0 0 1 6.5 2.5a5.5 5.5 0 1 0 7 7z"/></svg>
+      </button>
+    </div>
+  </div>
+
+  <!-- 1. the domain, and the answer right under it -->
+  <div class="card main">
+    <header class="hero">
+      <h1>Recherche et propagation DNS</h1>
+      <p class="intro" data-i="intro">Saisissez un domaine ou un lien : 12 résolveurs DNS publics sont interrogés en même temps, pour voir les enregistrements, ceux qui ont déjà la nouvelle valeur et ce que disent les enregistrements de courrier et de registre.</p>
+      <form id="f" class="form" autocomplete="off">
+        <div class="row">
+          <label class="fld grow"><span data-i="f_domain">Domaine ou URL</span>
+            <input id="domain" name="d" type="search" inputmode="url" placeholder="example.com" spellcheck="false" autocapitalize="off" autocomplete="off" enterkeyhint="go" data-1p-ignore data-lpignore="true" data-bwignore data-form-type="other" required>
+          </label>
+          <button id="go" class="btn" type="submit" data-i="go">Rechercher</button>
+        </div>
+        <div class="types">
+          <span class="types-h" data-i="f_types">Types d’enregistrement</span>
+          <div id="types" class="chips"><label class="chip"><input type="checkbox" value="A" checked><span>A</span></label><label class="chip"><input type="checkbox" value="AAAA" checked><span>AAAA</span></label><label class="chip"><input type="checkbox" value="CNAME"><span>CNAME</span></label><label class="chip"><input type="checkbox" value="MX" checked><span>MX</span></label><label class="chip"><input type="checkbox" value="NS" checked><span>NS</span></label><label class="chip"><input type="checkbox" value="TXT" checked><span>TXT</span></label><label class="chip"><input type="checkbox" value="CAA" checked><span>CAA</span></label><label class="chip"><input type="checkbox" value="SRV"><span>SRV</span></label><label class="chip"><input type="checkbox" value="SOA"><span>SOA</span></label></div>
+          <span class="m hint" data-i="f_types_hint">6 par défaut</span>
+        </div>
+        <div class="sub"><span id="err" class="m bad" hidden>&nbsp;</span><span id="prog" class="m prog" aria-live="polite"></span></div>
+      </form>
+    </header>
+
+    <!-- 2. the answer: one conclusion, one line of numbers, three numbers, at most four findings -->
+    <section class="verdict" id="verdict" hidden>
+      <div class="v-head">
+        <span class="dot" id="vDot"></span><h2 id="vTitle" aria-live="polite">&nbsp;</h2>
+        <div class="v-acts">
+          <button class="btn sm" id="shareBtn" type="button" hidden data-i="share">Partager</button>
+          <button class="btn sm ghost" id="reportBtn" type="button" hidden data-ms-report="Le résultat DNS est erroné :" data-i="report_result">Résultat erroné ?</button>
+        </div>
+      </div>
+      <p class="v-sub m" id="vSub">&nbsp;</p>
+      <div class="facts">
+        <div class="fact"><span data-i="k_agree">Concordance</span><b id="kAgree">—</b><i id="kAgreeWho"></i></div>
+        <div class="fact"><span data-i="k_records">Enregistrements</span><b id="kRecords">—</b><i id="kRecordsWho"></i></div>
+        <div class="fact"><span data-i="k_resolvers">Résolveurs ayant répondu</span><b id="kResolvers">—</b><i id="kResolversWho"></i></div>
+      </div>
+      <ul class="findings" id="findings"></ul>
+      <p class="links" id="links" hidden></p>
+    </section>
+  </div>
+
+  <!-- 3. the evidence: merged records, then what each resolver returned -->
+  <section class="card sec" id="records" hidden>
+    <div class="sec-h"><h3 data-i="h_records">Enregistrements</h3><span class="m rec-count" id="recCount"></span></div>
+    <div class="table-wrap">
+      <table class="rec">
+        <thead><tr><th data-i="th_type">Type</th><th data-i="th_value">Valeur</th><th data-i="th_ttl">TTL</th><th data-i="th_from">Résolveurs</th></tr></thead>
+        <tbody id="recBody"></tbody>
+      </table>
+    </div>
+    <p class="note m" data-i="records_note">Les valeurs sont fusionnées entre résolveurs ; le TTL est ce qu’il reste à chacun.</p>
+  </section>
+
+  <section class="card sec" id="prop" hidden>
+    <div class="sec-h"><h3 data-i="h_prop">Propagation</h3><div class="tabs" id="propTabs" role="tablist"></div><span class="m prop-sum" id="propSum"></span></div>
+    <p class="m prop-hint" data-i="prop_hint">Ce que chaque résolveur renvoie maintenant</p>
+    <div class="prop-rows" id="propRows"></div>
+  </section>
+
+  <div class="grid2">
+    <section class="card sec" id="mail" hidden>
+      <div class="sec-h"><h3 data-i="h_mail">Courrier</h3></div>
+      <div id="mailBody"></div>
+    </section>
+    <section class="card sec" id="rdap" hidden>
+      <div class="sec-h"><h3 data-i="h_rdap">Registre</h3><span class="m" id="rdapState"></span></div>
+      <div id="rdapBody"></div>
+    </section>
+  </div>
+
+  <p class="foot m" data-i="foot_src">Sources : 12 résolveurs DNS publics via DNS over HTTPS, et RDAP via rdap.org.</p>
+
+  <!-- the shell puts the list of the other 1ms.dog tools here (tool-contract §4), before the dialogs -->
+  <div data-ms-more></div>
+</div>
+
+<div class="scrim" id="help" hidden>
+  <div class="dialog help" role="dialog" aria-modal="true" aria-labelledby="helpT">
+    <div class="dlg-h"><h2 id="helpT" data-i="help_h">Aide</h2>
+      <button class="icon-btn" data-close type="button" aria-label="Fermer"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M4 4l8 8M12 4l-8 8"/></svg></button></div>
+    <div class="help-b">
+      <nav class="help-nav" id="helpNav" role="tablist"><button type="button" role="tab" data-hq="0" aria-selected="true">Que recherche cette page ?</button><button type="button" role="tab" data-hq="1" aria-selected="false">Qu’est-ce que la propagation DNS ?</button><button type="button" role="tab" data-hq="2" aria-selected="false">Pourquoi certains résolveurs disent-ils qu’ils n’ont pas pu se connecter ?</button><button type="button" role="tab" data-hq="3" aria-selected="false">Que signifient la concordance et le TTL ?</button><button type="button" role="tab" data-hq="4" aria-selected="false">Comment SPF et DMARC sont-ils vérifiés ?</button><button type="button" role="tab" data-hq="5" aria-selected="false">Pourquoi la liste de serveurs de noms du registraire diffère-t-elle ?</button><button type="button" role="tab" data-hq="6" aria-selected="false">Qu’est-ce que RDAP, et pourquoi des champs manquent-ils ?</button><button type="button" role="tab" data-hq="7" aria-selected="false">Où vont mes requêtes ?</button><button type="button" role="tab" data-hq="8" aria-selected="false">Pourquoi un lien partagé ne change-t-il pas quand je l’ouvre ?</button><button type="button" role="tab" data-hq="9" aria-selected="false">Vérifie-t-il DNSSEC, DKIM ou les certificats ?</button></nav>
+      <div class="help-pick">
+        <button class="icon-btn" type="button" data-hstep="-1" aria-label="Précédent"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M10 4L6 8l4 4"/></svg></button>
+        <select id="helpSel" aria-labelledby="helpT"></select>
+        <button class="icon-btn" type="button" data-hstep="1" aria-label="Suivant"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M6 4l4 4-4 4"/></svg></button>
+      </div>
+      <div class="help-c" id="helpC"><article data-hqb="0"><h3>Que recherche cette page ?</h3><p>Saisissez un domaine : neuf types d’enregistrement (A, AAAA, CNAME, MX, NS, TXT, CAA, SRV, SOA) sont demandés à 12 résolveurs DNS publics, chacun via DNS over HTTPS depuis votre navigateur. Les valeurs sont fusionnées et la réponse de chaque résolveur apparaît dans Propagation. Les données de registre viennent de RDAP, la version JSON de WHOIS.</p></article><article data-hqb="1" hidden><h3>Qu’est-ce que la propagation DNS ?</h3><p>Quand un enregistrement change, chaque résolveur garde son ancienne copie jusqu’à l’expiration du TTL (durée de vie). Juste après un changement, certains renvoient donc encore l’ancienne valeur, et le panneau de propagation montre lesquels. La page ne voit que ce que les résolveurs publics ont en cache : un navigateur ne peut pas joindre le serveur autoritatif du domaine sur le port 53, donc il ne peut pas montrer la vérité actuelle de la zone.</p></article><article data-hqb="2" hidden><h3>Pourquoi certains résolveurs disent-ils qu’ils n’ont pas pu se connecter ?</h3><p>Les requêtes partent de votre navigateur directement vers chaque résolveur. En Chine continentale, Cloudflare et Google DNS sont généralement bloqués, et d’autres aussi, donc ces lignes indiquent une connexion impossible. C’est un fait sur le chemin, pas un ensemble d’enregistrements vide : un résolveur qui n’a pas répondu n’est jamais compté comme divergent.</p></article><article data-hqb="3" hidden><h3>Que signifient la concordance et le TTL ?</h3><p>La concordance est la part des résolveurs ayant répondu qui ont donné la réponse la plus fréquente. Le TTL est le nombre de secondes pendant lesquelles ce résolveur peut encore garder l’enregistrement ; il décompte depuis la valeur de la zone et diffère d’un résolveur à l’autre : ce n’est donc pas une divergence.</p></article><article data-hqb="4" hidden><h3>Comment SPF et DMARC sont-ils vérifiés ?</h3><p>SPF est lu dans les enregistrements TXT du domaine : la page cherche plus d’un enregistrement v=spf1, regarde sa terminaison (+all, -all, ~all ou ?all) et compte les mécanismes qui demandent une autre requête DNS (include, a, mx, ptr, exists, redirect), avec une limite de 10. Elle ne suit pas les include, donc ce nombre est un minimum. DMARC est lu dans _dmarc.&lt;domaine&gt; : la politique p=, la présence de rapports (rua) et pct.</p></article><article data-hqb="5" hidden><h3>Pourquoi la liste de serveurs de noms du registraire diffère-t-elle ?</h3><p>La liste du registraire (RDAP) est ce que le registre a enregistré ; les résolveurs renvoient ce que le domaine publie réellement dans ses enregistrements NS. Une différence signifie souvent qu’un changement se propage encore ou que les données du registre sont anciennes. Les deux côtés sont affichés tels quels.</p></article><article data-hqb="6" hidden><h3>Qu’est-ce que RDAP, et pourquoi des champs manquent-ils ?</h3><p>RDAP est le remplaçant structuré de WHOIS, servi par le registre. Certains registres publient peu, et les services de confidentialité remplacent les données du titulaire ; un champ absent est affiché comme inconnu, pas comme « aucun ».</p></article><article data-hqb="7" hidden><h3>Où vont mes requêtes ?</h3><p>Chaque requête DNS part de votre navigateur directement vers les résolveurs listés dans Propagation ; RDAP va à rdap.org, qui redirige vers le registre. Rien ne passe par notre serveur et nous ne gardons aucun journal. Un lien partagé contient le domaine, ses enregistrements et les données de registre affichées, jamais votre IP.</p></article><article data-hqb="8" hidden><h3>Pourquoi un lien partagé ne change-t-il pas quand je l’ouvre ?</h3><p>Un résultat partagé est un instantané : il montre ce que les résolveurs renvoyaient à ce moment-là, pour que deux personnes comparent les mêmes données. Appuyez sur « Rechercher le mien » pour interroger à nouveau.</p></article><article data-hqb="9" hidden><h3>Vérifie-t-il DNSSEC, DKIM ou les certificats ?</h3><p>Pas dans cette version. La page montre les enregistrements renvoyés par un résolveur ; la validation DNSSEC, les sélecteurs DKIM et les certificats sont des vérifications séparées, prévues dans d’autres outils.</p></article></div>
+    </div>
+  </div>
+</div>
+<script type="application/json" id="data">{"lang":"fr","paths":{"en":"/","zh-CN":"/zh-cn/","zh-TW":"/zh-tw/","ja":"/ja/","ko":"/ko/","es":"/es/","fr":"/fr/","de":"/de/","pt":"/pt/","ru":"/ru/"}}</script>
+<script src="/assets/l.fr.d95bea10d2.js"></script>
+<script src="/assets/app.0987ee0615.js"></script>
+</body>
+</html>

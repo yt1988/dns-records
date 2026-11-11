@@ -1,0 +1,125 @@
+<!doctype html>
+<html lang="{{lang}}" data-paths="{{pathsAttr}}"{{rootAttr}}>
+<head>
+<meta charset="utf-8">
+<script>{{prepaint}}</script>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+{{head}}
+<link rel="preload" href="/assets/fonts/geist-latin.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="/assets/{{css}}">
+</head>
+<body>
+<div class="app">
+  <div class="top">
+    <a class="brand" href="{{homeHref}}"><span class="logo"><img class="logo-light" src="/assets/logo-light.svg" width="90" height="36" alt="1ms" loading="lazy"><img class="logo-dark" src="/assets/logo-dark.svg" width="90" height="36" alt="1ms" loading="lazy"></span><span class="brand-name">{{appName}}</span></a>
+    <div class="top-acts">
+      <label class="sel"><svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="6.2"/><path d="M1.8 8h12.4M8 1.8c1.8 1.7 2.7 3.8 2.7 6.2S9.8 12.5 8 14.2C6.2 12.5 5.3 10.4 5.3 8S6.2 3.5 8 1.8z"/></svg><span class="sr" data-i="lang_label"></span>
+        <select id="lang">{{langOpts}}</select></label>
+      <button class="icon-btn" id="helpBtn" type="button" aria-haspopup="dialog" aria-controls="help" aria-label="{{a:a_help}}">
+        <svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="6.2"/><path d="M6.3 6.2a1.8 1.8 0 1 1 2.5 1.7c-.5.2-.8.6-.8 1.1v.4M8 11.3v.1"/></svg>
+      </button>
+      <a class="icon-btn gh" href="https://github.com/yt1988/dns-records" target="_blank" rel="noopener noreferrer" title="GitHub" aria-label="GitHub"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 .2a8 8 0 0 0-2.5 15.6c.4 0 .5-.2.5-.4v-1.5c-2.2.5-2.7-1-2.7-1-.4-.9-.9-1.2-.9-1.2-.7-.5.1-.5.1-.5.8.1 1.2.8 1.2.8.7 1.3 1.9.9 2.4.7 0-.5.3-.9.5-1.1-1.8-.2-3.6-.9-3.6-4 0-.9.3-1.6.8-2.1-.1-.2-.4-1 .1-2.1 0 0 .7-.2 2.2.8a7.4 7.4 0 0 1 4 0c1.5-1 2.2-.8 2.2-.8.4 1.1.2 1.9.1 2.1.5.6.8 1.3.8 2.1 0 3.1-1.9 3.7-3.6 3.9.3.3.6.8.6 1.5v2.2c0 .2.1.5.6.4A8 8 0 0 0 8 .2z"/></svg></a>
+      <button class="icon-btn" id="theme" type="button" aria-label="{{a:a_theme}}">
+        <svg class="i-sys" viewBox="0 0 16 16" aria-hidden="true"><rect x="2" y="3" width="12" height="8.5" rx="1.5"/><path d="M6 14h4M8 11.5V14"/></svg>
+        <svg class="i-light" viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="3"/><path d="M8 1.5v1.5M8 13v1.5M1.5 8H3M13 8h1.5M3.4 3.4l1 1M11.6 11.6l1 1M3.4 12.6l1-1M11.6 4.4l1-1"/></svg>
+        <svg class="i-dark" viewBox="0 0 16 16" aria-hidden="true"><path d="M13.5 9.5A5.5 5.5 0 0 1 6.5 2.5a5.5 5.5 0 1 0 7 7z"/></svg>
+      </button>
+    </div>
+  </div>
+
+  <!-- 1. the domain, and the answer right under it -->
+  <div class="card main">
+    <header class="hero">
+      <h1>{{h1}}</h1>
+      <p class="intro" data-i="intro"></p>
+      <form id="f" class="form" autocomplete="off">
+        <div class="row">
+          <label class="fld grow"><span data-i="f_domain"></span>
+            <input id="domain" name="d" type="search" inputmode="url" placeholder="{{a:f_domain_ph}}" spellcheck="false" autocapitalize="off" autocomplete="off" enterkeyhint="go" data-1p-ignore data-lpignore="true" data-bwignore data-form-type="other" required>
+          </label>
+          <button id="go" class="btn" type="submit" data-i="go"></button>
+        </div>
+        <div class="types">
+          <span class="types-h" data-i="f_types"></span>
+          <div id="types" class="chips">{{typeChips}}</div>
+          <span class="m hint" data-i="f_types_hint"></span>
+        </div>
+        <div class="sub"><span id="err" class="m bad" hidden>&nbsp;</span><span id="prog" class="m prog" aria-live="polite"></span></div>
+      </form>
+    </header>
+
+    <!-- 2. the answer: one conclusion, one line of numbers, three numbers, at most four findings -->
+    <section class="verdict" id="verdict" hidden>
+      <div class="v-head">
+        <span class="dot" id="vDot"></span><h2 id="vTitle" aria-live="polite">&nbsp;</h2>
+        <div class="v-acts">
+          <button class="btn sm" id="shareBtn" type="button" hidden data-i="share"></button>
+          <button class="btn sm ghost" id="reportBtn" type="button" hidden data-ms-report="{{a:report_prefill}}" data-i="report_result"></button>
+        </div>
+      </div>
+      <p class="v-sub m" id="vSub">&nbsp;</p>
+      <div class="facts">
+        <div class="fact"><span data-i="k_agree"></span><b id="kAgree">—</b><i id="kAgreeWho"></i></div>
+        <div class="fact"><span data-i="k_records"></span><b id="kRecords">—</b><i id="kRecordsWho"></i></div>
+        <div class="fact"><span data-i="k_resolvers"></span><b id="kResolvers">—</b><i id="kResolversWho"></i></div>
+      </div>
+      <ul class="findings" id="findings"></ul>
+      <p class="links" id="links" hidden></p>
+    </section>
+  </div>
+
+  <!-- 3. the evidence: merged records, then what each resolver returned -->
+  <section class="card sec" id="records" hidden>
+    <div class="sec-h"><h3 data-i="h_records"></h3><span class="m rec-count" id="recCount"></span></div>
+    <div class="table-wrap">
+      <table class="rec">
+        <thead><tr><th data-i="th_type"></th><th data-i="th_value"></th><th data-i="th_ttl"></th><th data-i="th_from"></th></tr></thead>
+        <tbody id="recBody"></tbody>
+      </table>
+    </div>
+    <p class="note m" data-i="records_note"></p>
+  </section>
+
+  <section class="card sec" id="prop" hidden>
+    <div class="sec-h"><h3 data-i="h_prop"></h3><div class="tabs" id="propTabs" role="tablist"></div><span class="m prop-sum" id="propSum"></span></div>
+    <p class="m prop-hint" data-i="prop_hint"></p>
+    <div class="prop-rows" id="propRows"></div>
+  </section>
+
+  <div class="grid2">
+    <section class="card sec" id="mail" hidden>
+      <div class="sec-h"><h3 data-i="h_mail"></h3></div>
+      <div id="mailBody"></div>
+    </section>
+    <section class="card sec" id="rdap" hidden>
+      <div class="sec-h"><h3 data-i="h_rdap"></h3><span class="m" id="rdapState"></span></div>
+      <div id="rdapBody"></div>
+    </section>
+  </div>
+
+  <p class="foot m" data-i="foot_src"></p>
+
+  <!-- the shell puts the list of the other 1ms.dog tools here (tool-contract §4), before the dialogs -->
+  <div data-ms-more></div>
+</div>
+
+<div class="scrim" id="help" hidden>
+  <div class="dialog help" role="dialog" aria-modal="true" aria-labelledby="helpT">
+    <div class="dlg-h"><h2 id="helpT" data-i="help_h"></h2>
+      <button class="icon-btn" data-close type="button" aria-label="{{a:a_close}}"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M4 4l8 8M12 4l-8 8"/></svg></button></div>
+    <div class="help-b">
+      <nav class="help-nav" id="helpNav" role="tablist">{{helpNav}}</nav>
+      <div class="help-pick">
+        <button class="icon-btn" type="button" data-hstep="-1" aria-label="{{a:a_prev}}"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M10 4L6 8l4 4"/></svg></button>
+        <select id="helpSel" aria-labelledby="helpT"></select>
+        <button class="icon-btn" type="button" data-hstep="1" aria-label="{{a:a_next}}"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M6 4l4 4-4 4"/></svg></button>
+      </div>
+      <div class="help-c" id="helpC">{{helpC}}</div>
+    </div>
+  </div>
+</div>
+<script type="application/json" id="data">{{data}}</script>
+<script src="/assets/{{strings}}"></script>
+<script src="/assets/{{js}}"></script>
+</body>
+</html>

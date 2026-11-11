@@ -1,0 +1,23 @@
+{
+  "name": "dns-records",
+  "private": true,
+  "type": "module",
+  "description": "DNS records, propagation, registration and mail records for any domain, looked up in your browser over DNS over HTTPS",
+  "scripts": {
+    "build": "node scripts/build.mjs",
+    "test": "node scripts/build.mjs --check && node --test \"test/*.test.mjs\"",
+    "assets": "node scripts/assets.mjs",
+    "dev": "wrangler dev --port 8794",
+    "deploy": "wrangler deploy"
+  },
+  "devDependencies": {
+    "@resvg/resvg-js": "^2.6.2",
+    "esbuild": "0.25.10"
+  },
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/yt1988/dns-records"
+  },
+  "homepage": "https://dig.1ms.dog"
+}

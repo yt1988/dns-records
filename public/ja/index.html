@@ -1,0 +1,160 @@
+<!doctype html>
+<html lang="ja" data-paths="{&quot;en&quot;:&quot;/&quot;,&quot;zh-CN&quot;:&quot;/zh-cn/&quot;,&quot;zh-TW&quot;:&quot;/zh-tw/&quot;,&quot;ja&quot;:&quot;/ja/&quot;,&quot;ko&quot;:&quot;/ko/&quot;,&quot;es&quot;:&quot;/es/&quot;,&quot;fr&quot;:&quot;/fr/&quot;,&quot;de&quot;:&quot;/de/&quot;,&quot;pt&quot;:&quot;/pt/&quot;,&quot;ru&quot;:&quot;/ru/&quot;}">
+<head>
+<meta charset="utf-8">
+<script>(function(){var d=document.documentElement,th=null,s=null;try{th=localStorage.getItem("dig:theme");s=localStorage.getItem("dig:lang")}catch(e){}if(th==="light"||th==="dark")d.setAttribute("data-theme",th);if(!d.hasAttribute("data-root"))return;var P=JSON.parse(d.getAttribute("data-paths")||"{}"),l=null;try{var q=new URLSearchParams(location.search).get("lang");if(P[q])l=q}catch(e){}if(!l&&P[s])l=s;for(var ls=navigator.languages||[navigator.language||"en"],i=0;!l&&!s&&i<ls.length;i++){var x=String(ls[i]).toLowerCase(),b=x.split("-")[0];l=b==="zh"?(/tw|hk|mo|hant/.test(x)?"zh-TW":"zh-CN"):P[b]?b:null}if(l&&l!=="en"&&location.pathname===P.en)location.replace(P[l]+location.search+location.hash)})();</script>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>DNS 検索：DNS レコード・反映状況・MX・SPF・DMARC・登録情報</title>
+<meta name="description" content="任意のドメインの DNS レコード（A、AAAA、CNAME、MX、NS、TXT、CAA、SRV、SOA）を 12 の公共 DNS サーバーに同時に問い合わせます。反映状況、SPF と DMARC の問題、レジストリの NS、RDAP の登録情報まで表示。無料、ブラウザ内で完結します。">
+<meta name="keywords" content="DNS 検索, DNS レコード, DNS 反映確認, MX 検索, SPF チェック, DMARC チェック, TXT レコード, NS 検索, whois, rdap">
+<meta name="robots" content="index, follow">
+<meta name="application-name" content="DNS レコード検索">
+<meta name="theme-color" content="#f6f6f7" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#121316" media="(prefers-color-scheme: dark)">
+<link rel="canonical" href="https://dig.1ms.dog/ja/">
+<link rel="alternate" hreflang="en" href="https://dig.1ms.dog/">
+<link rel="alternate" hreflang="zh-CN" href="https://dig.1ms.dog/zh-cn/">
+<link rel="alternate" hreflang="zh-TW" href="https://dig.1ms.dog/zh-tw/">
+<link rel="alternate" hreflang="ja" href="https://dig.1ms.dog/ja/">
+<link rel="alternate" hreflang="ko" href="https://dig.1ms.dog/ko/">
+<link rel="alternate" hreflang="es" href="https://dig.1ms.dog/es/">
+<link rel="alternate" hreflang="fr" href="https://dig.1ms.dog/fr/">
+<link rel="alternate" hreflang="de" href="https://dig.1ms.dog/de/">
+<link rel="alternate" hreflang="pt" href="https://dig.1ms.dog/pt/">
+<link rel="alternate" hreflang="ru" href="https://dig.1ms.dog/ru/">
+<link rel="alternate" hreflang="x-default" href="https://dig.1ms.dog/">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="1ms.dog">
+<meta property="og:title" content="DNS 検索：DNS レコード・反映状況・MX・SPF・DMARC・登録情報">
+<meta property="og:description" content="12 の DNS サーバーに同時に問い合わせ、メールと登録情報も">
+<meta property="og:url" content="https://dig.1ms.dog/ja/">
+<meta property="og:locale" content="ja_JP">
+<link rel="icon" href="/favicon.ico" sizes="any">
+<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png">
+<meta property="og:image" content="https://dig.1ms.dog/og/ja.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="DNS 検索：DNS レコード・反映状況・MX・SPF・DMARC・登録情報">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="https://dig.1ms.dog/og/ja.png">
+<meta name="twitter:title" content="DNS 検索：DNS レコード・反映状況・MX・SPF・DMARC・登録情報">
+<meta name="twitter:description" content="12 の DNS サーバーに同時に問い合わせ、メールと登録情報も">
+<script type="application/ld+json">{"@context":"https://schema.org","@graph":[{"@type":"WebApplication","name":"DNS レコード検索 · 1ms.dog","url":"https://dig.1ms.dog/ja/","applicationCategory":"UtilitiesApplication","operatingSystem":"Any","browserRequirements":"Requires JavaScript","description":"任意のドメインの DNS レコード（A、AAAA、CNAME、MX、NS、TXT、CAA、SRV、SOA）を 12 の公共 DNS サーバーに同時に問い合わせます。反映状況、SPF と DMARC の問題、レジストリの NS、RDAP の登録情報まで表示。無料、ブラウザ内で完結します。","inLanguage":"ja","isAccessibleForFree":true,"offers":{"@type":"Offer","price":"0","priceCurrency":"USD"}},{"@type":"FAQPage","mainEntity":[{"@type":"Question","name":"このページは何を調べますか？","acceptedAnswer":{"@type":"Answer","text":"ドメインを入力すると、9 種類のレコード（A、AAAA、CNAME、MX、NS、TXT、CAA、SRV、SOA）を 12 の公共 DNS サーバーに、ブラウザから DNS over HTTPS（DoH、暗号化された DNS）で同時に問い合わせます。同じ値はまとめ、各サーバーの回答は「反映状況」に表示します。登録情報は RDAP（構造化された WHOIS）から取得します。"}},{"@type":"Question","name":"DNS の反映（伝播）とは？","acceptedAnswer":{"@type":"Answer","text":"レコードを変更しても、各 DNS サーバーは TTL（有効期間）が切れるまで古いコピーを使います。そのため変更直後は、新しい値を返すサーバーと古い値を返すサーバーが混ざり、「反映状況」にどちらかが表示されます。ブラウザはドメイン自身の権威サーバー（53 番ポート）に接続できないため、ここで分かるのは公共 DNS サーバーのキャッシュの状態だけです。"}},{"@type":"Question","name":"「接続できず」と出るのはなぜ？","acceptedAnswer":{"@type":"Answer","text":"問い合わせはブラウザから各 DNS サーバーへ直接送られます。中国本土では Cloudflare と Google の DNS が通常つながらず、他の一部も同じです。その行は「接続できず」と表示します。これは経路の問題で、レコードが空という意味ではありません。応答しなかったサーバーは不一致として数えません。"}},{"@type":"Question","name":"一致率と TTL は何ですか？","acceptedAnswer":{"@type":"Answer","text":"一致率は、応答した DNS サーバーのうち最も多い回答を返した割合です。TTL はそのサーバーがレコードを保持できる残り秒数で、zone の値から減っていきます。サーバーごとに残り時間が違うのは正常で、不一致ではありません。"}},{"@type":"Question","name":"SPF と DMARC はどう確認しますか？","acceptedAnswer":{"@type":"Answer","text":"SPF はドメインの TXT レコードから読みます。v=spf1 が複数ないか、末尾が +all、-all、~all、?all のどれか、もう一度 DNS を引く仕組み（include、a、mx、ptr、exists、redirect）がいくつあるか（上限 10）を確認します。include の先までは追わないため、この数は下限です。DMARC は _dmarc.\u003cドメイン> から、p= の方針、報告先（rua）の有無、pct を読みます。"}},{"@type":"Question","name":"レジストリの NS と DNS サーバーの NS が違うのはなぜ？","acceptedAnswer":{"@type":"Answer","text":"レジストリ側（RDAP）は登録された情報で、DNS サーバーが返すのはドメインが実際に公開している NS レコードです。違う場合は、変更がまだ反映中か、レジストリの情報が古いかのどちらかです。両方をそのまま表示します。"}},{"@type":"Question","name":"RDAP とは？ 項目が空なのはなぜ？","acceptedAnswer":{"@type":"Answer","text":"RDAP はレジストリが提供する構造化された WHOIS です。公開する情報が少ないレジストリもあり、プライバシー保護サービスが登録者情報を置き換えることもあります。欠けている項目は「なし」ではなく「不明」として表示します。"}},{"@type":"Question","name":"問い合わせはどこに送られますか？","acceptedAnswer":{"@type":"Answer","text":"DNS の問い合わせはブラウザから「反映状況」に並ぶ各サーバーへ直接送られます。RDAP は rdap.org に送られ、そこからレジストリへ転送されます。当社のサーバーは通りませんし、ログも残しません。共有リンクにはドメイン、表示したレコード、登録情報だけが入り、あなたの IP は入りません。"}},{"@type":"Question","name":"共有リンクを開いても数値が変わらないのはなぜ？","acceptedAnswer":{"@type":"Answer","text":"共有された結果はスナップショットで、その時点で DNS サーバーが返した内容を表示します。二人が同じデータを見られるようにするためです。今の値を調べるには「自分の結果を調べる」を押してください。"}},{"@type":"Question","name":"DNSSEC、DKIM、証明書も確認しますか？","acceptedAnswer":{"@type":"Answer","text":"この版では確認しません。表示するのは DNS サーバーが返したレコードです。DNSSEC の検証、DKIM セレクタ、証明書は別の確認項目で、別のツールで扱う予定です。"}}]}]}</script>
+<link rel="preload" href="/assets/fonts/geist-latin.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="/assets/app.69d340d232.css">
+</head>
+<body>
+<div class="app">
+  <div class="top">
+    <a class="brand" href="/ja/"><span class="logo"><img class="logo-light" src="/assets/logo-light.svg" width="90" height="36" alt="1ms" loading="lazy"><img class="logo-dark" src="/assets/logo-dark.svg" width="90" height="36" alt="1ms" loading="lazy"></span><span class="brand-name">DNS レコード検索</span></a>
+    <div class="top-acts">
+      <label class="sel"><svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="6.2"/><path d="M1.8 8h12.4M8 1.8c1.8 1.7 2.7 3.8 2.7 6.2S9.8 12.5 8 14.2C6.2 12.5 5.3 10.4 5.3 8S6.2 3.5 8 1.8z"/></svg><span class="sr" data-i="lang_label">言語</span>
+        <select id="lang"><option value="en">English</option><option value="zh-CN">简体中文</option><option value="zh-TW">繁體中文</option><option value="ja" selected>日本語</option><option value="ko">한국어</option><option value="es">Español</option><option value="fr">Français</option><option value="de">Deutsch</option><option value="pt">Português</option><option value="ru">Русский</option></select></label>
+      <button class="icon-btn" id="helpBtn" type="button" aria-haspopup="dialog" aria-controls="help" aria-label="ヘルプ">
+        <svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="6.2"/><path d="M6.3 6.2a1.8 1.8 0 1 1 2.5 1.7c-.5.2-.8.6-.8 1.1v.4M8 11.3v.1"/></svg>
+      </button>
+      <a class="icon-btn gh" href="https://github.com/yt1988/dns-records" target="_blank" rel="noopener noreferrer" title="GitHub" aria-label="GitHub"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 .2a8 8 0 0 0-2.5 15.6c.4 0 .5-.2.5-.4v-1.5c-2.2.5-2.7-1-2.7-1-.4-.9-.9-1.2-.9-1.2-.7-.5.1-.5.1-.5.8.1 1.2.8 1.2.8.7 1.3 1.9.9 2.4.7 0-.5.3-.9.5-1.1-1.8-.2-3.6-.9-3.6-4 0-.9.3-1.6.8-2.1-.1-.2-.4-1 .1-2.1 0 0 .7-.2 2.2.8a7.4 7.4 0 0 1 4 0c1.5-1 2.2-.8 2.2-.8.4 1.1.2 1.9.1 2.1.5.6.8 1.3.8 2.1 0 3.1-1.9 3.7-3.6 3.9.3.3.6.8.6 1.5v2.2c0 .2.1.5.6.4A8 8 0 0 0 8 .2z"/></svg></a>
+      <button class="icon-btn" id="theme" type="button" aria-label="テーマ">
+        <svg class="i-sys" viewBox="0 0 16 16" aria-hidden="true"><rect x="2" y="3" width="12" height="8.5" rx="1.5"/><path d="M6 14h4M8 11.5V14"/></svg>
+        <svg class="i-light" viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="3"/><path d="M8 1.5v1.5M8 13v1.5M1.5 8H3M13 8h1.5M3.4 3.4l1 1M11.6 11.6l1 1M3.4 12.6l1-1M11.6 4.4l1-1"/></svg>
+        <svg class="i-dark" viewBox="0 0 16 16" aria-hidden="true"><path d="M13.5 9.5A5.5 5.5 0 0 1 6.5 2.5a5.5 5.5 0 1 0 7 7z"/></svg>
+      </button>
+    </div>
+  </div>
+
+  <!-- 1. the domain, and the answer right under it -->
+  <div class="card main">
+    <header class="hero">
+      <h1>DNS レコード検索と反映確認</h1>
+      <p class="intro" data-i="intro">ドメインかリンクを入力すると、12 の公共 DNS サーバーに同時に問い合わせます。レコードの内容、新しい値が届いているサーバー、メールと登録レコードの状態が分かります。</p>
+      <form id="f" class="form" autocomplete="off">
+        <div class="row">
+          <label class="fld grow"><span data-i="f_domain">ドメインまたは URL</span>
+            <input id="domain" name="d" type="search" inputmode="url" placeholder="example.com" spellcheck="false" autocapitalize="off" autocomplete="off" enterkeyhint="go" data-1p-ignore data-lpignore="true" data-bwignore data-form-type="other" required>
+          </label>
+          <button id="go" class="btn" type="submit" data-i="go">検索</button>
+        </div>
+        <div class="types">
+          <span class="types-h" data-i="f_types">レコードの種類</span>
+          <div id="types" class="chips"><label class="chip"><input type="checkbox" value="A" checked><span>A</span></label><label class="chip"><input type="checkbox" value="AAAA" checked><span>AAAA</span></label><label class="chip"><input type="checkbox" value="CNAME"><span>CNAME</span></label><label class="chip"><input type="checkbox" value="MX" checked><span>MX</span></label><label class="chip"><input type="checkbox" value="NS" checked><span>NS</span></label><label class="chip"><input type="checkbox" value="TXT" checked><span>TXT</span></label><label class="chip"><input type="checkbox" value="CAA" checked><span>CAA</span></label><label class="chip"><input type="checkbox" value="SRV"><span>SRV</span></label><label class="chip"><input type="checkbox" value="SOA"><span>SOA</span></label></div>
+          <span class="m hint" data-i="f_types_hint">既定では 6 種類</span>
+        </div>
+        <div class="sub"><span id="err" class="m bad" hidden>&nbsp;</span><span id="prog" class="m prog" aria-live="polite"></span></div>
+      </form>
+    </header>
+
+    <!-- 2. the answer: one conclusion, one line of numbers, three numbers, at most four findings -->
+    <section class="verdict" id="verdict" hidden>
+      <div class="v-head">
+        <span class="dot" id="vDot"></span><h2 id="vTitle" aria-live="polite">&nbsp;</h2>
+        <div class="v-acts">
+          <button class="btn sm" id="shareBtn" type="button" hidden data-i="share">共有</button>
+          <button class="btn sm ghost" id="reportBtn" type="button" hidden data-ms-report="DNS の結果が違います：" data-i="report_result">結果が違う？</button>
+        </div>
+      </div>
+      <p class="v-sub m" id="vSub">&nbsp;</p>
+      <div class="facts">
+        <div class="fact"><span data-i="k_agree">一致率</span><b id="kAgree">—</b><i id="kAgreeWho"></i></div>
+        <div class="fact"><span data-i="k_records">レコード</span><b id="kRecords">—</b><i id="kRecordsWho"></i></div>
+        <div class="fact"><span data-i="k_resolvers">応答した DNS サーバー</span><b id="kResolvers">—</b><i id="kResolversWho"></i></div>
+      </div>
+      <ul class="findings" id="findings"></ul>
+      <p class="links" id="links" hidden></p>
+    </section>
+  </div>
+
+  <!-- 3. the evidence: merged records, then what each resolver returned -->
+  <section class="card sec" id="records" hidden>
+    <div class="sec-h"><h3 data-i="h_records">レコード</h3><span class="m rec-count" id="recCount"></span></div>
+    <div class="table-wrap">
+      <table class="rec">
+        <thead><tr><th data-i="th_type">種類</th><th data-i="th_value">値</th><th data-i="th_ttl">TTL</th><th data-i="th_from">DNS サーバー</th></tr></thead>
+        <tbody id="recBody"></tbody>
+      </table>
+    </div>
+    <p class="note m" data-i="records_note">同じ値はまとめて表示しています。TTL は各 DNS サーバーに残っている秒数です。</p>
+  </section>
+
+  <section class="card sec" id="prop" hidden>
+    <div class="sec-h"><h3 data-i="h_prop">反映状況</h3><div class="tabs" id="propTabs" role="tablist"></div><span class="m prop-sum" id="propSum"></span></div>
+    <p class="m prop-hint" data-i="prop_hint">各 DNS サーバーが今返している値</p>
+    <div class="prop-rows" id="propRows"></div>
+  </section>
+
+  <div class="grid2">
+    <section class="card sec" id="mail" hidden>
+      <div class="sec-h"><h3 data-i="h_mail">メール</h3></div>
+      <div id="mailBody"></div>
+    </section>
+    <section class="card sec" id="rdap" hidden>
+      <div class="sec-h"><h3 data-i="h_rdap">登録情報</h3><span class="m" id="rdapState"></span></div>
+      <div id="rdapBody"></div>
+    </section>
+  </div>
+
+  <p class="foot m" data-i="foot_src">データ：12 の公共 DNS サーバー（DNS over HTTPS）と、rdap.org 経由の RDAP。</p>
+
+  <!-- the shell puts the list of the other 1ms.dog tools here (tool-contract §4), before the dialogs -->
+  <div data-ms-more></div>
+</div>
+
+<div class="scrim" id="help" hidden>
+  <div class="dialog help" role="dialog" aria-modal="true" aria-labelledby="helpT">
+    <div class="dlg-h"><h2 id="helpT" data-i="help_h">ヘルプ</h2>
+      <button class="icon-btn" data-close type="button" aria-label="閉じる"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M4 4l8 8M12 4l-8 8"/></svg></button></div>
+    <div class="help-b">
+      <nav class="help-nav" id="helpNav" role="tablist"><button type="button" role="tab" data-hq="0" aria-selected="true">このページは何を調べますか？</button><button type="button" role="tab" data-hq="1" aria-selected="false">DNS の反映（伝播）とは？</button><button type="button" role="tab" data-hq="2" aria-selected="false">「接続できず」と出るのはなぜ？</button><button type="button" role="tab" data-hq="3" aria-selected="false">一致率と TTL は何ですか？</button><button type="button" role="tab" data-hq="4" aria-selected="false">SPF と DMARC はどう確認しますか？</button><button type="button" role="tab" data-hq="5" aria-selected="false">レジストリの NS と DNS サーバーの NS が違うのはなぜ？</button><button type="button" role="tab" data-hq="6" aria-selected="false">RDAP とは？ 項目が空なのはなぜ？</button><button type="button" role="tab" data-hq="7" aria-selected="false">問い合わせはどこに送られますか？</button><button type="button" role="tab" data-hq="8" aria-selected="false">共有リンクを開いても数値が変わらないのはなぜ？</button><button type="button" role="tab" data-hq="9" aria-selected="false">DNSSEC、DKIM、証明書も確認しますか？</button></nav>
+      <div class="help-pick">
+        <button class="icon-btn" type="button" data-hstep="-1" aria-label="前へ"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M10 4L6 8l4 4"/></svg></button>
+        <select id="helpSel" aria-labelledby="helpT"></select>
+        <button class="icon-btn" type="button" data-hstep="1" aria-label="次へ"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M6 4l4 4-4 4"/></svg></button>
+      </div>
+      <div class="help-c" id="helpC"><article data-hqb="0"><h3>このページは何を調べますか？</h3><p>ドメインを入力すると、9 種類のレコード（A、AAAA、CNAME、MX、NS、TXT、CAA、SRV、SOA）を 12 の公共 DNS サーバーに、ブラウザから DNS over HTTPS（DoH、暗号化された DNS）で同時に問い合わせます。同じ値はまとめ、各サーバーの回答は「反映状況」に表示します。登録情報は RDAP（構造化された WHOIS）から取得します。</p></article><article data-hqb="1" hidden><h3>DNS の反映（伝播）とは？</h3><p>レコードを変更しても、各 DNS サーバーは TTL（有効期間）が切れるまで古いコピーを使います。そのため変更直後は、新しい値を返すサーバーと古い値を返すサーバーが混ざり、「反映状況」にどちらかが表示されます。ブラウザはドメイン自身の権威サーバー（53 番ポート）に接続できないため、ここで分かるのは公共 DNS サーバーのキャッシュの状態だけです。</p></article><article data-hqb="2" hidden><h3>「接続できず」と出るのはなぜ？</h3><p>問い合わせはブラウザから各 DNS サーバーへ直接送られます。中国本土では Cloudflare と Google の DNS が通常つながらず、他の一部も同じです。その行は「接続できず」と表示します。これは経路の問題で、レコードが空という意味ではありません。応答しなかったサーバーは不一致として数えません。</p></article><article data-hqb="3" hidden><h3>一致率と TTL は何ですか？</h3><p>一致率は、応答した DNS サーバーのうち最も多い回答を返した割合です。TTL はそのサーバーがレコードを保持できる残り秒数で、zone の値から減っていきます。サーバーごとに残り時間が違うのは正常で、不一致ではありません。</p></article><article data-hqb="4" hidden><h3>SPF と DMARC はどう確認しますか？</h3><p>SPF はドメインの TXT レコードから読みます。v=spf1 が複数ないか、末尾が +all、-all、~all、?all のどれか、もう一度 DNS を引く仕組み（include、a、mx、ptr、exists、redirect）がいくつあるか（上限 10）を確認します。include の先までは追わないため、この数は下限です。DMARC は _dmarc.&lt;ドメイン&gt; から、p= の方針、報告先（rua）の有無、pct を読みます。</p></article><article data-hqb="5" hidden><h3>レジストリの NS と DNS サーバーの NS が違うのはなぜ？</h3><p>レジストリ側（RDAP）は登録された情報で、DNS サーバーが返すのはドメインが実際に公開している NS レコードです。違う場合は、変更がまだ反映中か、レジストリの情報が古いかのどちらかです。両方をそのまま表示します。</p></article><article data-hqb="6" hidden><h3>RDAP とは？ 項目が空なのはなぜ？</h3><p>RDAP はレジストリが提供する構造化された WHOIS です。公開する情報が少ないレジストリもあり、プライバシー保護サービスが登録者情報を置き換えることもあります。欠けている項目は「なし」ではなく「不明」として表示します。</p></article><article data-hqb="7" hidden><h3>問い合わせはどこに送られますか？</h3><p>DNS の問い合わせはブラウザから「反映状況」に並ぶ各サーバーへ直接送られます。RDAP は rdap.org に送られ、そこからレジストリへ転送されます。当社のサーバーは通りませんし、ログも残しません。共有リンクにはドメイン、表示したレコード、登録情報だけが入り、あなたの IP は入りません。</p></article><article data-hqb="8" hidden><h3>共有リンクを開いても数値が変わらないのはなぜ？</h3><p>共有された結果はスナップショットで、その時点で DNS サーバーが返した内容を表示します。二人が同じデータを見られるようにするためです。今の値を調べるには「自分の結果を調べる」を押してください。</p></article><article data-hqb="9" hidden><h3>DNSSEC、DKIM、証明書も確認しますか？</h3><p>この版では確認しません。表示するのは DNS サーバーが返したレコードです。DNSSEC の検証、DKIM セレクタ、証明書は別の確認項目で、別のツールで扱う予定です。</p></article></div>
+    </div>
+  </div>
+</div>
+<script type="application/json" id="data">{"lang":"ja","paths":{"en":"/","zh-CN":"/zh-cn/","zh-TW":"/zh-tw/","ja":"/ja/","ko":"/ko/","es":"/es/","fr":"/fr/","de":"/de/","pt":"/pt/","ru":"/ru/"}}</script>
+<script src="/assets/l.ja.73ac779c1a.js"></script>
+<script src="/assets/app.0987ee0615.js"></script>
+</body>
+</html>
