@@ -77,8 +77,10 @@ export default {
 
   h_rdap: "註冊資訊", rd_registrar: "註冊商", rd_created: "註冊時間", rd_expires: "到期時間", rd_updated: "更新時間",
   rd_status: "狀態", rd_ns: "註冊局的 NS", rd_loading: "正在讀取註冊資訊…",
-  rd_none: "這個網域沒有註冊資訊", rd_fail: "註冊資訊讀取失敗",
-  foot_src: "資料：12 家公共 DNS 解析器（走 DNS over HTTPS）和 rdap.org 的 RDAP。",
+  rd_none: "查不到註冊資料", rd_none_why: "註冊局有回應，但沒有這個網域的註冊資料，通常表示網域還沒有註冊。", rd_fail: "註冊資訊讀取失敗",
+  rd_unsupported: "{suffix} 沒有公開可用的 RDAP", rd_unsupported_why: "RDAP 只涵蓋 IANA 引導表裡的字尾，{suffix} 不在其中，這裡查不到註冊資訊。",
+  rd_whois: "去 {registry} 查詢", rd_whois_unknown: "可以在註冊局自己的 WHOIS 頁面查詢。",
+  foot_src: "資料：12 家公共 DNS 解析器（走 DNS over HTTPS），註冊資訊來自 RDAP。",
 
   share_title: "{domain} · {type} {value}", share_title_none: "{domain} · {n} 筆記錄",
   card_grade: "網域健檢", card_cov: "{tot} 家裡 {ok} 家回答 · {fail} 家沒有回答",
@@ -95,7 +97,8 @@ export default {
     ["SPF 和 DMARC 是怎麼檢查的？", "SPF 從網域的 TXT 記錄裡讀：頁面會看有沒有不只一條 v=spf1 記錄、結尾是 +all、-all、~all 還是 ?all，並數出需要再查一次 DNS 的機制（include、a、mx、ptr、exists、redirect）有幾個，上限是 10。頁面不會跟著 include 裡的記錄查，所以這個數只是下限。DMARC 從 _dmarc.<網域> 裡讀：p= 策略、有沒有回報地址（rua）、pct。"],
     ["為什麼註冊局的 NS 和解析器的不一樣？", "註冊局那邊（RDAP）存的是登記資訊，解析器回傳的是網域實際發布的 NS 記錄。兩者不同通常說明改動還在生效，或者註冊局的資料還沒更新。兩邊都照原樣顯示。"],
     ["RDAP 是什麼？為什麼有些欄位是空的？", "RDAP 是註冊局提供的結構化 WHOIS。有的註冊局公開的資訊很少，隱私保護服務也會替換註冊人資訊；頁面把缺少的欄位顯示成未知，而不是「沒有」。"],
-    ["我的查詢送到哪裡去了？", "每次 DNS 查詢都從你的瀏覽器直接送給「解析器回答」裡列出的解析器；RDAP 查詢送給 rdap.org，由它跳轉到對應的註冊局。查詢不經過我們的伺服器，我們也不留紀錄。分享連結裡有網域自己的公開記錄和你看到的註冊資訊，沒有你的 IP。"],
+    ["為什麼有些字尾查不到註冊資訊？", "RDAP 由各註冊局提供，rdap.org 只認識 IANA 引導表裡列出的字尾。.cn、.jp、.ru、.hk、.de、.vn 不在裡面，所以頁面寫「查不到」，而不是「沒有」，並給出註冊局自己的 WHOIS 頁面（CNNIC、JPRS、TCI、HKDNR、VNNIC）。.io 也不在引導表裡，但 Identity Digital 提供了帶 CORS 的 RDAP，所以直接問它。有的註冊局的 RDAP 不帶 CORS（例如 .de 的 DENIC），瀏覽器用不了；43 埠的 WHOIS 瀏覽器也連不上。"],
+    ["我的查詢送到哪裡去了？", "每次 DNS 查詢都從你的瀏覽器直接送給「解析器回答」裡列出的解析器；RDAP 查詢送給 rdap.org，由它跳轉到對應的註冊局；不在引導表裡的字尾（如 .io）直接送給註冊局自己的 RDAP。查詢不經過我們的伺服器，我們也不留紀錄。分享連結裡有網域自己的公開記錄和你看到的註冊資訊，沒有你的 IP。"],
     ["為什麼打開分享連結，數字不會變？", "分享的結果是一份快照，顯示當時解析器回傳的內容，這樣兩個人看到的是同一份資料。想查現在的，點「查我現在的」。"],
   ],
 };

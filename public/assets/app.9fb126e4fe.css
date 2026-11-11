@@ -115,7 +115,7 @@ select option:checked { background-color: var(--soft); }
 .fact span { display: block; color: var(--muted); font-size: 12px; }
 .fact b { display: block; font-family: var(--f-num); font-size: 21px; font-variant-numeric: tabular-nums; line-height: 1.3; }
 .fact i { display: block; font-style: normal; color: var(--muted); font-size: 12px; min-height: 1.2em; }
-.findings { list-style: none; margin: 12px 0 0; padding: 0; display: flex; flex-direction: column; gap: 6px; font-size: 14px; }
+.findings { list-style: none; margin: 12px 0 0; padding: 0; display: flex; flex-direction: column; gap: 6px; font-size: 14px; min-height: 48px; }   /* two lines are reserved: the verdict fills in place and does not push the page */
 .findings li { display: flex; gap: 8px; align-items: baseline; }
 .findings li::before { content: "·"; color: var(--muted); flex: none; }
 .findings li.warn::before { color: var(--warn); }
@@ -129,6 +129,13 @@ select option:checked { background-color: var(--soft); }
 
 /* section cards */
 .sec { display: flex; flex-direction: column; gap: 10px; }
+/* both slots exist from the first paint: mail and registration keep their place while their data is on the way */
+#mailBody { min-height: 300px; }
+#rdapBody { min-height: 176px; }
+table.rec tr.ph td { color: var(--muted); }
+/* a thin result (few types answered) must not pull the sections below it up by more than a row or two; an empty
+   table (NXDOMAIN) has nothing to reserve and keeps its natural height */
+@media (min-width: 761px) { #records .table-wrap:has(#recBody tr) { min-height: 180px; } }
 .sec-h { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; min-height: 30px; }
 .sec-h h3 { margin: 0; font-size: 16px; }
 .rec-count { font-size: 13px; font-variant-numeric: tabular-nums; }

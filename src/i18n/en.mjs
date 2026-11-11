@@ -78,8 +78,10 @@ export default {
 
   h_rdap: "Registration", rd_registrar: "Registrar", rd_created: "Registered", rd_expires: "Expires", rd_updated: "Updated",
   rd_status: "Status", rd_ns: "Name servers at the registrar", rd_loading: "Reading registration data…",
-  rd_none: "No registration data for this domain", rd_fail: "Couldn't read registration data",
-  foot_src: "Data: 12 public DNS resolvers over DNS over HTTPS, and RDAP via rdap.org.",
+  rd_none: "No registration data found", rd_none_why: "The registry answered but has no registration data for this domain — usually because the name is not registered.", rd_fail: "Couldn't read registration data",
+  rd_unsupported: "{suffix} has no public RDAP", rd_unsupported_why: "RDAP covers only the suffixes in IANA's bootstrap file, and {suffix} is not one of them, so registration data cannot be looked up here.",
+  rd_whois: "Look it up at {registry}", rd_whois_unknown: "The registry's own WHOIS page may have it.",
+  foot_src: "Data: 12 public DNS resolvers over DNS over HTTPS, and RDAP for registration data.",
 
   share_title: "{domain} · {type} {value}", share_title_none: "{domain} · {n} records",
   card_grade: "Domain checkup", card_cov: "{ok} of {tot} resolvers answered · {fail} didn't",
@@ -96,7 +98,8 @@ export default {
     ["How are SPF and DMARC checked?", "SPF is read from the domain's TXT records: the page looks for more than one v=spf1 record, checks how the record ends (+all, -all, ~all or ?all), and counts the mechanisms that need another DNS lookup (include, a, mx, ptr, exists, redirect), where the limit is 10. It does not follow includes, so the count is a lower bound. DMARC is read from _dmarc.<domain>: the p= policy, whether reports (rua) are configured, and pct."],
     ["Why is the registrar's name server list different?", "The registrar's list (RDAP) is what the registry has stored; the resolvers return what the domain actually publishes in its NS records. A difference usually means a change is still showing up, or the registry data is out of date. Both sides are shown as they are."],
     ["What is RDAP, and why are some fields empty?", "RDAP is the structured replacement for WHOIS, served by the registry. Some registries publish little, and privacy services replace registrant details; a missing field is shown as unknown, not as \"none\"."],
-    ["Where do my queries go?", "Every DNS query goes from your browser directly to the resolvers listed under Resolver answers; RDAP goes to rdap.org, which redirects to the registry. Nothing passes through our server, and we keep no log. A shared link holds the domain's own public records and the registration data you saw — never your IP."],
+    ["Why do some suffixes have no registration data?", "RDAP is served by each registry, and rdap.org only knows the suffixes listed in IANA's bootstrap file. .cn, .jp, .ru, .hk, .de and .vn are not in it, so the page says it cannot look them up rather than claiming there is nothing, and links to the registry's own WHOIS page (CNNIC, JPRS, TCI, HKDNR, VNNIC). .io is missing from the bootstrap too, but Identity Digital publishes RDAP with CORS, so that one is queried directly. Some registries run RDAP without CORS (DENIC for .de, for example), which a browser cannot use, and WHOIS on port 43 is unreachable from a browser as well."],
+    ["Where do my queries go?", "Every DNS query goes from your browser directly to the resolvers listed under Resolver answers; RDAP goes to rdap.org, which redirects to the registry; suffixes outside the bootstrap (like .io) are asked directly. Nothing passes through our server, and we keep no log. A shared link holds the domain's own public records and the registration data you saw — never your IP."],
     ["Why doesn't a shared link change when I open it?", "A shared result is a snapshot: it shows what the resolvers returned at that time, so two people compare the same data. Press \"Look up mine\" to query again."],
   ],
 };

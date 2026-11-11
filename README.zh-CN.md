@@ -41,7 +41,9 @@ DNSForge、Tiarap、IIJ。选它们的条件：能用 wire-format DoH 回答，�
 
 DMARC 在 `_dmarc.<域名>`，所以勾选 TXT 时每家解析器会多问一次这个名字。DNSSEC 的 DS 只问两家已经回答过其他
 记录类型的解析器（优先 Cloudflare、Google），正常查询不带 EDNS DO 位，AD 读的是回答头里的 AD 位。RDAP 走
-https://rdap.org/，由它跳到对应的注册局。
+https://rdap.org/，由它跳到对应的注册局；不在 IANA 引导表里、但有公开 RDAP 的后缀（目前是 .io）直接问注册局
+自己。没有公开 RDAP 的后缀（.cn、.jp、.ru、.hk、.de、.vn）写「查不到这个后缀的注册信息」，并给出注册局 WHOIS
+页面的链接，不说成「这个域名没有注册信息」。
 
 这一版没有：DKIM 选择器、证书检查（都是别的工具），也没有代理软件对接和账号体系。
 
@@ -55,7 +57,7 @@ src/merge.mjs       按值合并、一致率、旧值解析器、TTL 范围
 src/mail.mjs        SPF、DMARC、注册局 NS 与解析器 NS 的对比
 src/dnssec.mjs      DS 的回答、AD 位、合格验证器名单 → 四种 DNSSEC 状态
 src/grade.mjs       解析等级、邮件等级、总等级（DNSSEC 断链降一级）
-src/rdap.mjs        从 rdap.org 取注册信息并规范化
+src/rdap.mjs        从 rdap.org 取注册信息并规范化；补充表（.io）和没有公开 RDAP 的后缀及注册局 WHOIS 链接
 src/code.mjs        分享结果与链接（/r/<code>）的互转
 src/app.js          页面：查询、结论、三张卡、表格、解析器回答、邮件、注册信息、分享
 src/worker.js       Worker：静态资源，以及分享链接的预览标题（noindex）

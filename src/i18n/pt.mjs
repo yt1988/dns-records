@@ -77,8 +77,10 @@ export default {
 
   h_rdap: "Registro", rd_registrar: "Registrador", rd_created: "Registrado em", rd_expires: "Expira em", rd_updated: "Atualizado em",
   rd_status: "Status", rd_ns: "Servidores de nomes do registrador", rd_loading: "Lendo os dados de registro…",
-  rd_none: "Sem dados de registro para este domínio", rd_fail: "Não foi possível ler os dados de registro",
-  foot_src: "Dados: 12 resolvedores DNS públicos via DNS over HTTPS e RDAP via rdap.org.",
+  rd_none: "Nenhum dado de registro encontrado", rd_none_why: "O registro respondeu, mas não tem dados de registro deste domínio: normalmente o nome não está registrado.", rd_fail: "Não foi possível ler os dados de registro",
+  rd_unsupported: "{suffix} não tem RDAP público", rd_unsupported_why: "O RDAP só cobre os sufixos do arquivo bootstrap da IANA, e {suffix} não está nele, então os dados de registro não podem ser consultados aqui.",
+  rd_whois: "Consultar em {registry}", rd_whois_unknown: "A página WHOIS do registrador pode ter a informação.",
+  foot_src: "Dados: 12 resolvedores DNS públicos via DNS over HTTPS, e dados de registro via RDAP.",
 
   share_title: "{domain} · {type} {value}", share_title_none: "{domain} · {n} registros",
   card_grade: "Diagnóstico do domínio", card_cov: "{ok} de {tot} resolvedores responderam · {fail} não",
@@ -95,7 +97,8 @@ export default {
     ["Como SPF e DMARC são verificados?", "O SPF é lido dos registros TXT do domínio: a página procura mais de um registro v=spf1, vê como ele termina (+all, -all, ~all ou ?all) e conta os mecanismos que exigem outra consulta DNS (include, a, mx, ptr, exists, redirect), com limite de 10. Ela não segue os include, então essa contagem é um mínimo. O DMARC é lido em _dmarc.<domínio>: a política p=, se há relatórios (rua) e o pct."],
     ["Por que a lista de servidores de nomes do registrador é diferente?", "A lista do registrador (RDAP) é o que está registrado; os resolvedores devolvem o que o domínio realmente publica em seus registros NS. Uma diferença geralmente significa que uma mudança ainda está propagando ou que os dados do registrador estão desatualizados. Mostramos os dois lados como estão."],
     ["O que é RDAP e por que faltam campos?", "O RDAP é o substituto estruturado do WHOIS, servido pelo registrador. Alguns registradores publicam pouco e serviços de privacidade trocam os dados do titular; um campo ausente aparece como desconhecido, não como «nenhum»."],
-    ["Para onde vão minhas consultas?", "Cada consulta DNS vai do seu navegador direto aos resolvedores listados em Respostas dos resolvedores; o RDAP vai para rdap.org, que redireciona ao registrador. Nada passa pelo nosso servidor e não guardamos registros. Um link compartilhado contém os registros públicos do próprio domínio e os dados de registro que você viu, nunca o seu IP."],
+    ["Por que alguns sufixos não têm dados de registro?", "O RDAP é servido por cada registrador, e o rdap.org só conhece os sufixos listados no arquivo bootstrap da IANA. .cn, .jp, .ru, .hk, .de e .vn não estão nele, então a página diz que não consegue consultar em vez de afirmar que não há nada, e aponta para a página WHOIS do próprio registrador (CNNIC, JPRS, TCI, HKDNR, VNNIC). .io também não está no bootstrap, mas a Identity Digital publica RDAP com CORS, então ele é consultado direto. Alguns registradores têm RDAP sem CORS (a DENIC para .de, por exemplo), que um navegador não consegue usar, e o WHOIS na porta 43 também não é acessível pelo navegador."],
+    ["Para onde vão minhas consultas?", "Cada consulta DNS vai do seu navegador direto aos resolvedores listados em Respostas dos resolvedores; o RDAP vai para rdap.org, que redireciona ao registrador; sufixos fora do bootstrap (como .io) são consultados direto. Nada passa pelo nosso servidor e não guardamos registros. Um link compartilhado contém os registros públicos do próprio domínio e os dados de registro que você viu, nunca o seu IP."],
     ["Por que um link compartilhado não muda ao abrir?", "Um resultado compartilhado é uma foto: mostra o que os resolvedores devolveram naquele momento, para que duas pessoas comparem os mesmos dados. Toque em «Consultar o meu» para perguntar de novo."],
   ],
 };

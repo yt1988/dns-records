@@ -77,8 +77,10 @@ export default {
 
   h_rdap: "Registro", rd_registrar: "Registrador", rd_created: "Registrado", rd_expires: "Caduca", rd_updated: "Actualizado",
   rd_status: "Estado", rd_ns: "Servidores de nombres del registrador", rd_loading: "Leyendo los datos de registro…",
-  rd_none: "No hay datos de registro para este dominio", rd_fail: "No se pudieron leer los datos de registro",
-  foot_src: "Datos: 12 resolutores DNS públicos por DNS over HTTPS y RDAP a través de rdap.org.",
+  rd_none: "No se encontraron datos de registro", rd_none_why: "El registro respondió, pero no tiene datos de registro de este dominio: normalmente el nombre no está registrado.", rd_fail: "No se pudieron leer los datos de registro",
+  rd_unsupported: "{suffix} no tiene RDAP público", rd_unsupported_why: "El RDAP solo cubre los sufijos del archivo bootstrap de la IANA, y {suffix} no está en él, así que aquí no se pueden consultar los datos de registro.",
+  rd_whois: "Consultarlo en {registry}", rd_whois_unknown: "Puede que la página WHOIS del registro sí lo tenga.",
+  foot_src: "Datos: 12 resolutores DNS públicos por DNS over HTTPS, y datos de registro por RDAP.",
 
   share_title: "{domain} · {type} {value}", share_title_none: "{domain} · {n} registros",
   card_grade: "Chequeo del dominio", card_cov: "{ok} de {tot} resolutores respondieron · {fail} no",
@@ -95,7 +97,8 @@ export default {
     ["¿Cómo se comprueban SPF y DMARC?", "El SPF se lee de los registros TXT del dominio: la página busca más de un registro v=spf1, mira cómo termina (+all, -all, ~all o ?all) y cuenta los mecanismos que necesitan otra consulta DNS (include, a, mx, ptr, exists, redirect), con un límite de 10. No sigue los include, así que la cuenta es un mínimo. DMARC se lee de _dmarc.<dominio>: la política p=, si hay informes (rua) y pct."],
     ["¿Por qué la lista de servidores de nombres del registrador es distinta?", "La lista del registrador (RDAP) es lo que guarda el registro; los resolutores devuelven lo que el dominio publica de verdad en sus registros NS. Una diferencia suele significar que un cambio aún se está viendo o que los datos del registro están desactualizados. Mostramos ambos lados tal como están."],
     ["¿Qué es RDAP y por qué faltan campos?", "RDAP es el sustituto estructurado de WHOIS, servido por el registro. Algunos registros publican poco y los servicios de privacidad sustituyen los datos del titular; un campo ausente se muestra como desconocido, no como «ninguno»."],
-    ["¿A dónde van mis consultas?", "Cada consulta DNS va de tu navegador directamente a los resolutores que aparecen en Respuestas de los resolutores; RDAP va a rdap.org, que redirige al registro. Nada pasa por nuestro servidor y no guardamos registros. Un enlace compartido contiene los registros públicos del propio dominio y los datos de registro que viste, nunca tu IP."],
+    ["¿Por qué algunos sufijos no tienen datos de registro?", "El RDAP lo sirve cada registro, y rdap.org solo conoce los sufijos que aparecen en el archivo bootstrap de la IANA. .cn, .jp, .ru, .hk, .de y .vn no están en él, así que la página dice que no puede consultarlos en vez de afirmar que no hay nada, y enlaza a la página WHOIS del propio registro (CNNIC, JPRS, TCI, HKDNR, VNNIC). .io tampoco está en el bootstrap, pero Identity Digital publica RDAP con CORS, así que se consulta directamente. Algunos registros tienen RDAP sin CORS (DENIC para .de, por ejemplo), que un navegador no puede usar, y el WHOIS del puerto 43 tampoco es accesible desde un navegador."],
+    ["¿A dónde van mis consultas?", "Cada consulta DNS va de tu navegador directamente a los resolutores que aparecen en Respuestas de los resolutores; RDAP va a rdap.org, que redirige al registro; los sufijos fuera del bootstrap (como .io) se consultan directamente. Nada pasa por nuestro servidor y no guardamos registros. Un enlace compartido contiene los registros públicos del propio dominio y los datos de registro que viste, nunca tu IP."],
     ["¿Por qué un enlace compartido no cambia al abrirlo?", "Un resultado compartido es una foto: muestra lo que devolvieron los resolutores en ese momento, para que dos personas comparen los mismos datos. Pulsa «Consultar el mío» para preguntar de nuevo."],
   ],
 };

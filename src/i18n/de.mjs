@@ -78,8 +78,10 @@ export default {
 
   h_rdap: "Registrierung", rd_registrar: "Registrar", rd_created: "Registriert", rd_expires: "Läuft ab", rd_updated: "Aktualisiert",
   rd_status: "Status", rd_ns: "Nameserver der Registry", rd_loading: "Registrierungsdaten werden gelesen…",
-  rd_none: "Keine Registrierungsdaten für diese Domain", rd_fail: "Registrierungsdaten nicht lesbar",
-  foot_src: "Daten: 12 öffentliche DNS-Resolver über DNS over HTTPS und RDAP über rdap.org.",
+  rd_none: "Keine Registrierungsdaten gefunden", rd_none_why: "Die Registry hat geantwortet, hat aber keine Registrierungsdaten zu dieser Domain – meist ist der Name nicht registriert.", rd_fail: "Registrierungsdaten nicht lesbar",
+  rd_unsupported: "{suffix} hat kein öffentliches RDAP", rd_unsupported_why: "RDAP deckt nur die Endungen in der Bootstrap-Datei der IANA ab, und {suffix} gehört nicht dazu; deshalb lassen sich die Registrierungsdaten hier nicht abfragen.",
+  rd_whois: "Bei {registry} nachsehen", rd_whois_unknown: "Die WHOIS-Seite der Registry hat sie womöglich.",
+  foot_src: "Daten: 12 öffentliche DNS-Resolver über DNS over HTTPS, Registrierungsdaten über RDAP.",
 
   share_title: "{domain} · {type} {value}", share_title_none: "{domain} · {n} Einträge",
   card_grade: "Domänen-Check", card_cov: "{ok} von {tot} Resolvern antworteten · {fail} ohne Antwort",
@@ -96,7 +98,8 @@ export default {
     ["Wie werden SPF und DMARC geprüft?", "SPF wird aus den TXT-Einträgen der Domain gelesen: Die Seite sucht mehr als einen v=spf1-Eintrag, prüft den Schluss (+all, -all, ~all oder ?all) und zählt Mechanismen, die eine weitere DNS-Abfrage brauchen (include, a, mx, ptr, exists, redirect), Grenze 10. Include-Einträge werden nicht verfolgt, die Zahl ist also ein Minimum. DMARC wird aus _dmarc.<domain> gelesen: Regel p=, ob Berichte (rua) gesetzt sind, und pct."],
     ["Warum unterscheidet sich die Nameserver-Liste der Registry?", "Die Registry-Liste (RDAP) ist das, was registriert ist; die Resolver geben zurück, was die Domain tatsächlich in ihren NS-Einträgen veröffentlicht. Ein Unterschied heißt meist, dass eine Änderung noch unterwegs ist oder die Registry-Daten veraltet sind. Beide Seiten werden unverändert angezeigt."],
     ["Was ist RDAP, und warum fehlen Felder?", "RDAP ist der strukturierte Nachfolger von WHOIS, bereitgestellt von der Registry. Manche Registries veröffentlichen wenig, und Datenschutzdienste ersetzen die Inhaberdaten; ein fehlendes Feld wird als unbekannt angezeigt, nicht als „keins“."],
-    ["Wohin gehen meine Abfragen?", "Jede DNS-Abfrage geht von Ihrem Browser direkt an die unter Antworten der Resolver gelisteten Resolver; RDAP geht an rdap.org, das zur Registry weiterleitet. Nichts läuft über unseren Server, und wir führen keine Protokolle. Ein geteilter Link enthält die öffentlichen Einträge der Domain selbst und die angezeigten Registrierungsdaten, nie Ihre IP."],
+    ["Warum fehlen bei manchen Endungen die Registrierungsdaten?", "RDAP wird von jeder Registry selbst angeboten, und rdap.org kennt nur die Endungen aus der Bootstrap-Datei der IANA. .cn, .jp, .ru, .hk, .de und .vn stehen dort nicht, deshalb schreibt die Seite, dass sie nicht nachsehen kann, statt „nichts vorhanden“ zu behaupten, und verlinkt die WHOIS-Seite der Registry (CNNIC, JPRS, TCI, HKDNR, VNNIC). .io fehlt dort ebenfalls, aber Identity Digital bietet RDAP mit CORS an, also wird es direkt gefragt. Manche Registries betreiben RDAP ohne CORS (DENIC für .de etwa), das ein Browser nicht nutzen kann; WHOIS auf Port 43 ist aus dem Browser ebenso wenig erreichbar."],
+    ["Wohin gehen meine Abfragen?", "Jede DNS-Abfrage geht von Ihrem Browser direkt an die unter Antworten der Resolver gelisteten Resolver; RDAP geht an rdap.org, das zur Registry weiterleitet; Endungen außerhalb der Bootstrap-Datei (etwa .io) werden direkt angefragt. Nichts läuft über unseren Server, und wir führen keine Protokolle. Ein geteilter Link enthält die öffentlichen Einträge der Domain selbst und die angezeigten Registrierungsdaten, nie Ihre IP."],
     ["Warum ändert sich ein geteilter Link beim Öffnen nicht?", "Ein geteiltes Ergebnis ist ein Schnappschuss: Es zeigt, was die Resolver zu diesem Zeitpunkt zurückgegeben haben, damit zwei Personen dieselben Daten vergleichen. Tippen Sie auf „Meines abfragen“, um neu zu fragen."],
   ],
 };

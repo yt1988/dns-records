@@ -77,8 +77,10 @@ export default {
 
   h_rdap: "注册信息", rd_registrar: "注册商", rd_created: "注册时间", rd_expires: "到期时间", rd_updated: "更新时间",
   rd_status: "状态", rd_ns: "注册局的 NS", rd_loading: "正在读取注册信息…",
-  rd_none: "这个域名没有注册信息", rd_fail: "注册信息读取失败",
-  foot_src: "数据：12 家公共 DNS 解析器（走 DNS over HTTPS）和 rdap.org 的 RDAP。",
+  rd_none: "查不到注册数据", rd_none_why: "注册局回答了，但没有这个域名的注册数据，通常说明域名还没有注册。", rd_fail: "注册信息读取失败",
+  rd_unsupported: "{suffix} 没有公开可用的 RDAP", rd_unsupported_why: "RDAP 只覆盖 IANA 引导表里的后缀，{suffix} 不在其中，这里查不到注册信息。",
+  rd_whois: "去 {registry} 查询", rd_whois_unknown: "可以在注册局自己的 WHOIS 页面查询。",
+  foot_src: "数据：12 家公共 DNS 解析器（走 DNS over HTTPS），注册信息来自 RDAP。",
 
   share_title: "{domain} · {type} {value}", share_title_none: "{domain} · {n} 条记录",
   card_grade: "域名体检", card_cov: "{tot} 家里 {ok} 家回答 · {fail} 家没有回答",
@@ -95,7 +97,8 @@ export default {
     ["SPF 和 DMARC 是怎么检查的？", "SPF 从域名的 TXT 记录里读：页面会看有没有不止一条 v=spf1 记录、结尾是 +all、-all、~all 还是 ?all，并数出需要再查一次 DNS 的机制（include、a、mx、ptr、exists、redirect）有几个，上限是 10。页面不会跟进 include 里的记录，所以这个数只是下限。DMARC 从 _dmarc.<域名> 里读：p= 策略、有没有报告地址（rua）、pct。"],
     ["为什么注册局的 NS 和解析器的不一样？", "注册局那边（RDAP）存的是登记信息，解析器返回的是域名实际发布的 NS 记录。两者不同通常说明改动还在生效，或者注册局的数据还没更新。两边都按原样显示。"],
     ["RDAP 是什么？为什么有些字段是空的？", "RDAP 是注册局提供的结构化 WHOIS。有的注册局公开的信息很少，隐私保护服务也会替换注册人信息；页面把缺失的字段显示成未知，而不是「没有」。"],
-    ["我的查询发到哪里去了？", "每次 DNS 查询都从你的浏览器直接发给「解析器回答」里列出的解析器；RDAP 查询发给 rdap.org，由它跳转到对应的注册局。查询不经过我们的服务器，我们也不留日志。分享链接里有域名自己的公开记录和你看到的注册信息，没有你的 IP。"],
+    ["为什么有些后缀查不到注册信息？", "RDAP 由各注册局提供，rdap.org 只认识 IANA 引导表里列出的后缀。.cn、.jp、.ru、.hk、.de、.vn 不在里面，所以页面写「查不到」，而不是「没有」，并给出注册局自己的 WHOIS 页面（CNNIC、JPRS、TCI、HKDNR、VNNIC）。.io 也不在引导表里，但 Identity Digital 提供了带 CORS 的 RDAP，所以直接问它。有的注册局的 RDAP 不带 CORS（比如 .de 的 DENIC），浏览器用不了；43 端口的 WHOIS 浏览器也连不上。"],
+    ["我的查询发到哪里去了？", "每次 DNS 查询都从你的浏览器直接发给「解析器回答」里列出的解析器；RDAP 查询发给 rdap.org，由它跳转到对应的注册局；不在引导表里的后缀（如 .io）直接发给注册局自己的 RDAP。查询不经过我们的服务器，我们也不留日志。分享链接里有域名自己的公开记录和你看到的注册信息，没有你的 IP。"],
     ["为什么打开分享链接，数字不会变？", "分享的结果是一份快照，显示当时解析器返回的内容，这样两个人看到的是同一份数据。想查现在的，点「查我现在的」。"],
   ],
 };

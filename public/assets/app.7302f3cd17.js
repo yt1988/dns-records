@@ -511,6 +511,24 @@
 
   // src/rdap.mjs
   var RDAP_BASE = "https://rdap.org/domain/";
+  var RDAP_SUPPLEMENTS = {
+    io: { base: "https://rdap.identitydigital.services/rdap/domain/", name: "Identity Digital" }
+  };
+  var REGISTRY_WHOIS = {
+    cn: { name: "CNNIC", url: "https://whois.cnnic.cn/" },
+    jp: { name: "JPRS", url: "https://www.jprs.jp/whois/" },
+    ru: { name: "TCI", url: "https://www.tcinet.ru/whois/" },
+    hk: { name: "HKDNR", url: "https://www.hkdnr.hk/" },
+    vn: { name: "VNNIC", url: "https://whois.vnnic.vn/" }
+  };
+  var NO_RDAP_TLDS = ["cn", "jp", "ru", "hk", "de", "vn"];
+  function tldOf(domain) {
+    const labels = String(domain || "").toLowerCase().replace(/\.+$/, "").split(".");
+    return labels.length > 1 ? labels[labels.length - 1] : "";
+  }
+  function registryOf(domain) {
+    return REGISTRY_WHOIS[tldOf(domain)] || null;
+  }
   async function fetchRdap(domain, { fetchImpl = fetch, signal, timeout = 9e3 } = {}) {
     const ctl = new AbortController();
     let timedOut = false;
@@ -524,13 +542,20 @@
       else signal.addEventListener("abort", stop);
     }
     try {
-      const res = await fetchImpl(RDAP_BASE + encodeURIComponent(domain), {
+      const tld = tldOf(domain);
+      const supplement = RDAP_SUPPLEMENTS[tld];
+      const res = await fetchImpl((supplement ? supplement.base : RDAP_BASE) + encodeURIComponent(domain), {
         signal: ctl.signal,
         credentials: "omit",
         referrerPolicy: "no-referrer",
         headers: { accept: "application/rdap+json, application/json" }
       });
-      if (res.status === 404) return { notFound: true };
+      if (res.status === 404) {
+        if (supplement) return { notFound: true };
+        const body = await res.text().catch(() => "");
+        if (/no rdap service/i.test(body)) return { unsupported: true, tld };
+        return NO_RDAP_TLDS.indexOf(tld) >= 0 ? { unsupported: true, tld } : { notFound: true };
+      }
       if (!res.ok) return { error: "http", status: res.status };
       let json;
       try {
@@ -943,6 +968,7 @@
       setGo(true);
       renderPropSkeleton();
       $("prop").hidden = false;
+      skeleton();
       $("prog").textContent = t("running");
       const wantDmarc = types.indexOf("TXT") >= 0;
       const total = RESOLVERS.length * (types.length + (wantDmarc ? 1 : 0)) + 2;
@@ -1047,6 +1073,42 @@
       $("mailGrade").textContent = "";
       $("mailGrade").className = "st grade";
       all(".shared-bar").forEach((n) => n.parentNode.removeChild(n));
+    }
+    function skeleton() {
+      $("verdict").hidden = false;
+      $("vDot").className = "dot";
+      $("vTitle").textContent = t("running");
+      $("vSub").textContent = " ";
+      $("findings").textContent = "";
+      $("badges").hidden = true;
+      const tb = $("recBody");
+      tb.textContent = "";
+      state.types.forEach((type) => {
+        const tr = el("tr", "ph");
+        tr.appendChild(el("td", "t", type));
+        tr.appendChild(el("td", "v", "\u2026"));
+        tr.appendChild(el("td", "n", "\u2026"));
+        tr.appendChild(el("td", "f", "\u2026"));
+        tb.appendChild(tr);
+      });
+      $("recCount").textContent = "";
+      $("records").hidden = false;
+      const mb = $("mailBody");
+      mb.textContent = "";
+      [t("mx_h"), t("spf_h"), t("dmarc_h"), t("ns_h")].forEach((head) => {
+        line(block(mb, head, "\u2026"), t("running"), "m");
+      });
+      $("mail").hidden = false;
+      const rb = $("rdapBody");
+      rb.textContent = "";
+      const dl = el("dl", "rdap");
+      [t("rd_registrar"), t("rd_created"), t("rd_expires"), t("rd_updated"), t("rd_status"), t("rd_ns")].forEach((k) => {
+        dl.appendChild(el("dt", "", k));
+        dl.appendChild(el("dd", "", "\u2026"));
+      });
+      rb.appendChild(dl);
+      $("rdapState").textContent = t("rd_loading");
+      $("rdap").hidden = false;
     }
     function finish() {
       state.merged = mergeAll(state.results);
@@ -1190,7 +1252,7 @@
         title = t("v_few_all", { a: m.ok.length, b: total });
         dot = "";
       } else if (!covered) {
-        title = t("v_few_most", { a: m.majority.resolvers.length, b: m.ok.length, c: total });
+        title = t("v_few_most", { a: m.majority.resolvers.length, b: total, c: m.ok.length });
         dot = "";
       } else if (m.consistency === 1) {
         title = t("v_all", { n: m.ok.length });
@@ -1410,9 +1472,28 @@
         line(body, t("rd_fail"), "m");
         return;
       }
+      if (state.rdap.unsupported) {
+        const suffix = "." + (state.rdap.tld || tldOf(state.domain));
+        st.textContent = t("rd_unsupported", { suffix });
+        line(body, t("rd_unsupported_why", { suffix }), "m");
+        const reg = registryOf(state.domain);
+        if (reg) {
+          const p = el("p", "m");
+          const a = el("a", "ext", t("rd_whois", { registry: reg.name }));
+          a.href = reg.url;
+          a.target = "_blank";
+          a.rel = "noopener";
+          const icon = el("span");
+          icon.innerHTML = EXT;
+          a.appendChild(icon);
+          p.appendChild(a);
+          body.appendChild(p);
+        } else line(body, t("rd_whois_unknown"), "m");
+        return;
+      }
       if (state.rdap.notFound) {
         st.textContent = t("rd_none");
-        line(body, t("rd_none"), "m");
+        line(body, t("rd_none_why"), "m");
         return;
       }
       const d = state.rdap.data;
@@ -1492,7 +1573,7 @@
         status: state.rdap.data.status,
         nameservers: state.rdap.data.nameservers
       } : null;
-      const xz = !state.rdap ? "fail" : state.rdap.data ? "ok" : state.rdap.notFound ? "none" : "fail";
+      const xz = !state.rdap ? "fail" : state.rdap.data ? "ok" : state.rdap.unsupported ? "no" : state.rdap.notFound ? "none" : "fail";
       const primary = heroType();
       const m = primary && state.merged ? state.merged[primary] : null;
       const first = m && m.majority && m.majority.records.length ? m.majority.records[0] : null;
@@ -1639,7 +1720,7 @@
       const dn = snap.dn || ["unknown", 0];
       state.dnssec = { state: dn[0] === "pass" || dn[0] === "broken" || dn[0] === "off" ? dn[0] : "unknown", answered: Number(dn[1]) || 0, validators: 0 };
       state.dmarc = snap.m && snap.m.length ? resultsFromSnapshot({ r: snap.m.map((a) => [a[0], "TXT", a[1], a[2] || []]) }).TXT || [] : [];
-      state.rdap = snap.xz === "none" || !snap.xz && !snap.x ? { notFound: true } : snap.xz === "ok" || snap.x ? { data: {
+      state.rdap = snap.xz === "no" ? { unsupported: true, tld: tldOf(snap.d) } : snap.xz === "none" || !snap.xz && !snap.x ? { notFound: true } : snap.xz === "ok" || snap.x ? { data: {
         registrar: snap.x.registrar,
         created: snap.x.created,
         expires: snap.x.expires,

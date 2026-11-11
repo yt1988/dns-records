@@ -77,8 +77,10 @@ export default {
 
   h_rdap: "Enregistrement", rd_registrar: "Registraire", rd_created: "Créé le", rd_expires: "Expire le", rd_updated: "Mis à jour le",
   rd_status: "Statut", rd_ns: "Serveurs de noms du registre", rd_loading: "Lecture des données de registre…",
-  rd_none: "Aucune donnée de registre pour ce domaine", rd_fail: "Impossible de lire les données de registre",
-  foot_src: "Données : 12 résolveurs DNS publics via DNS over HTTPS et RDAP via rdap.org.",
+  rd_none: "Aucune donnée d'enregistrement trouvée", rd_none_why: "Le registre a répondu, mais n'a pas de données d'enregistrement pour ce domaine : le nom n'est généralement pas enregistré.", rd_fail: "Impossible de lire les données de registre",
+  rd_unsupported: "{suffix} n'a pas de RDAP public", rd_unsupported_why: "Le RDAP ne couvre que les suffixes du fichier bootstrap de l'IANA, et {suffix} n'en fait pas partie : les données d'enregistrement ne peuvent pas être consultées ici.",
+  rd_whois: "Consulter chez {registry}", rd_whois_unknown: "La page WHOIS du registre peut l'avoir.",
+  foot_src: "Données : 12 résolveurs DNS publics via DNS over HTTPS, et les données de registre via RDAP.",
 
   share_title: "{domain} · {type} {value}", share_title_none: "{domain} · {n} enregistrements",
   card_grade: "Bilan du domaine", card_cov: "{ok} résolveurs sur {tot} ont répondu · {fail} sans réponse",
@@ -95,7 +97,8 @@ export default {
     ["Comment SPF et DMARC sont-ils vérifiés ?", "SPF se lit dans les enregistrements TXT du domaine : la page cherche plus d'un enregistrement v=spf1, regarde comment il finit (+all, -all, ~all ou ?all) et compte les mécanismes qui demandent une autre requête DNS (include, a, mx, ptr, exists, redirect), avec une limite de 10. Elle ne suit pas les include, ce compte est donc un minimum. DMARC se lit dans _dmarc.<domaine> : la politique p=, la présence de rapports (rua) et pct."],
     ["Pourquoi la liste de serveurs de noms du registre diffère-t-elle ?", "La liste du registre (RDAP) est ce qui est enregistré ; les résolveurs renvoient ce que le domaine publie réellement dans ses enregistrements NS. Une différence signifie souvent qu'un changement est en cours de propagation ou que les données du registre sont périmées. Nous affichons les deux côtés tels quels."],
     ["Qu'est-ce que RDAP et pourquoi des champs manquent-ils ?", "RDAP est le remplaçant structuré de WHOIS, servi par le registre. Certains registres publient peu et les services de confidentialité remplacent les données du titulaire ; un champ absent s'affiche comme inconnu, pas comme « aucun »."],
-    ["Où vont mes requêtes ?", "Chaque requête DNS va de votre navigateur directement aux résolveurs listés dans Réponses des résolveurs ; RDAP va à rdap.org, qui redirige vers le registre. Rien ne passe par notre serveur et nous ne gardons pas de journaux. Un lien partagé contient les enregistrements publics du domaine lui-même et les données de registre affichées, jamais votre IP."],
+    ["Pourquoi certains suffixes n'ont-ils pas de données d'enregistrement ?", "Le RDAP est servi par chaque registre, et rdap.org ne connaît que les suffixes listés dans le fichier bootstrap de l'IANA. .cn, .jp, .ru, .hk, .de et .vn n'y figurent pas : la page dit donc qu'elle ne peut pas les consulter au lieu d'affirmer qu'il n'y a rien, et renvoie vers la page WHOIS du registre (CNNIC, JPRS, TCI, HKDNR, VNNIC). .io n'est pas dans le bootstrap non plus, mais Identity Digital publie un RDAP avec CORS, donc il est interrogé directement. Certains registres proposent un RDAP sans CORS (DENIC pour .de, par exemple), inutilisable par un navigateur, et le WHOIS du port 43 n'est pas joignable depuis un navigateur non plus."],
+    ["Où vont mes requêtes ?", "Chaque requête DNS va de votre navigateur directement aux résolveurs listés dans Réponses des résolveurs ; RDAP va à rdap.org, qui redirige vers le registre ; les suffixes absents du bootstrap (comme .io) sont interrogés directement. Rien ne passe par notre serveur et nous ne gardons pas de journaux. Un lien partagé contient les enregistrements publics du domaine lui-même et les données de registre affichées, jamais votre IP."],
     ["Pourquoi un lien partagé ne change-t-il pas quand on l'ouvre ?", "Un résultat partagé est une photo : il montre ce que les résolveurs renvoyaient à ce moment-là, pour que deux personnes comparent les mêmes données. Touchez « Interroger le mien » pour demander à nouveau."],
   ],
 };

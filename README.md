@@ -49,7 +49,9 @@ Four rules keep the result honest:
 DMARC lives at `_dmarc.<domain>`, so when TXT is selected each resolver is also asked for that name. For DNSSEC the DS
 question goes to two resolvers that already answered the other types (Cloudflare and Google first); ordinary queries
 carry no EDNS DO bit, and AD is read from the answer header. RDAP goes through https://rdap.org/, which redirects to the
-right registry.
+right registry; suffixes outside IANA's bootstrap that publish RDAP with CORS (currently .io) are asked directly. A
+suffix with no public RDAP (.cn, .jp, .ru, .hk, .de, .vn) says the suffix cannot be looked up and links to the registry's
+own WHOIS page — it never claims the domain has no registration.
 
 Not in this version: DKIM selectors and certificates (separate tools), proxy integration, accounts.
 
@@ -63,7 +65,8 @@ src/merge.mjs      merge answers by value, consistency, stale resolvers, TTL ran
 src/mail.mjs       SPF, DMARC and registrar-vs-resolver name servers
 src/dnssec.mjs     the DS answer, the AD bit and the validator list → four DNSSEC states
 src/grade.mjs      the answers' grade, the mail grade, and the overall letter
-src/rdap.mjs       registration data from rdap.org, normalized
+src/rdap.mjs       registration data from rdap.org, normalized; CORS-capable supplements (.io) and the suffixes
+                   with no public RDAP, with each registry's WHOIS page
 src/code.mjs       a shared result as a link (/r/<code>), and back
 src/app.js         the page: queries, verdict, the three cards, tables, resolver answers, mail, RDAP, share
 src/worker.js      the Worker: static assets, and a shared link's preview title (noindex)

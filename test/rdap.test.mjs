@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { fetchRdap, normalize, RDAP_BASE } from "../src/rdap.mjs";
+import { fetchRdap, normalize, RDAP_BASE, tldOf, registryOf } from "../src/rdap.mjs";
 
 const json = {
   handle: "2336799_DOMAIN_COM-VRSN",
@@ -40,10 +40,43 @@ test("fetchRdap asks rdap.org and separates not-found, HTTP and network failures
   assert.equal(asked, RDAP_BASE + "example.com");
   assert.equal(good.data.registrar, "RESERVED-Internet Assigned Numbers Authority");
 
-  const gone = await fetchRdap("nope.example", { fetchImpl: async () => ({ ok: false, status: 404 }) });
+  const gone = await fetchRdap("nope.example", { fetchImpl: async () => ({ ok: false, status: 404, text: async () => '{"errorCode":404,"title":"Not Found"}' }) });
   assert.deepEqual(gone, { notFound: true });
   const bad = await fetchRdap("example.com", { fetchImpl: async () => ({ ok: false, status: 503 }) });
   assert.deepEqual(bad, { error: "http", status: 503 });
   const down = await fetchRdap("example.com", { fetchImpl: async () => { throw new TypeError("Failed to fetch"); } });
   assert.deepEqual(down, { error: "network" });
+});
+
+test("a suffix with no RDAP is not a domain without registration data", async () => {
+  const noService = '{"rdapConformance":["rdap_level_0"],"errorCode":404,"title":"No RDAP service is available for this resource"}';
+  const cn = await fetchRdap("sina.cn", { fetchImpl: async () => ({ ok: false, status: 404, text: async () => noService }) });
+  assert.deepEqual(cn, { unsupported: true, tld: "cn" });
+
+  // an unreadable 404 from a suffix we know has no service is still "we could not ask"
+  const jp = await fetchRdap("example.jp", { fetchImpl: async () => ({ ok: false, status: 404, text: async () => "" }) });
+  assert.deepEqual(jp, { unsupported: true, tld: "jp" });
+
+  // ...but an unreadable 404 from a covered suffix is the registry saying the name is not there
+  const com = await fetchRdap("nope.example", { fetchImpl: async () => ({ ok: false, status: 404, text: async () => "" }) });
+  assert.deepEqual(com, { notFound: true });
+});
+
+test(".io is asked of Identity Digital directly, not rdap.org", async () => {
+  let asked = "";
+  const ok = await fetchRdap("example.io", { fetchImpl: async url => { asked = url; return { ok: true, status: 200, json: async () => json }; } });
+  assert.equal(asked, "https://rdap.identitydigital.services/rdap/domain/example.io");
+  assert.equal(ok.data.registrar, "RESERVED-Internet Assigned Numbers Authority");
+  // a 404 here is the registry saying the domain does not exist, not a missing service
+  const gone = await fetchRdap("nope.io", { fetchImpl: async () => ({ ok: false, status: 404, text: async () => "No RDAP service is available for this resource" }) });
+  assert.deepEqual(gone, { notFound: true });
+});
+
+test("the registry WHOIS link is known for the suffixes we cannot ask", () => {
+  assert.equal(registryOf("sina.cn").name, "CNNIC");
+  assert.equal(registryOf("example.jp").name, "JPRS");
+  assert.equal(registryOf("EXAMPLE.RU.").name, "TCI");
+  assert.equal(registryOf("example.io"), null);
+  assert.equal(tldOf("www.example.co.uk"), "uk");
+  assert.equal(tldOf("localhost"), "");
 });

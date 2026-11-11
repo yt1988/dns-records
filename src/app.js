@@ -6,7 +6,7 @@ import { mergeType, mergeAll, mergeRecords, primaryType, OK } from "./merge.mjs"
 import { spfCheck, dmarcCheck, compareNs } from "./mail.mjs";
 import { dnssecVerdict, dsFound, dsAskers, dnssecRows } from "./dnssec.mjs";
 import { resolveGrade, mailGrade, overallGrade } from "./grade.mjs";
-import { fetchRdap } from "./rdap.mjs";
+import { fetchRdap, tldOf, registryOf } from "./rdap.mjs";
 import { encodeResult, decodeResult, sharePath, resultsFromSnapshot, CODES } from "./code.mjs";
 
 (function () {
@@ -179,6 +179,7 @@ import { encodeResult, decodeResult, sharePath, resultsFromSnapshot, CODES } fro
     setGo(true);
     renderPropSkeleton();
     $("prop").hidden = false;
+    skeleton();
     $("prog").textContent = t("running");
 
     const wantDmarc = types.indexOf("TXT") >= 0;
@@ -278,6 +279,49 @@ import { encodeResult, decodeResult, sharePath, resultsFromSnapshot, CODES } fro
     $("mailGrade").textContent = "";
     $("mailGrade").className = "st grade";
     all(".shared-bar").forEach(n => n.parentNode.removeChild(n));
+  }
+
+  // Every block is drawn the moment the query starts, in the order it will keep, and filled as answers arrive.
+  // Content that appears later must not push the page around (tool-contract, 「布局」): the verdict is there with its
+  // grade slot empty, the records table has a row per asked type, mail and registration have their own blocks and
+  // slots. Each block carries its own state, so "still asking" never looks like "nothing there".
+  function skeleton() {
+    $("verdict").hidden = false;
+    $("vDot").className = "dot";
+    $("vTitle").textContent = t("running");
+    $("vSub").textContent = " ";
+    $("findings").textContent = "";
+    $("badges").hidden = true;
+    const tb = $("recBody");
+    tb.textContent = "";
+    state.types.forEach(type => {
+      const tr = el("tr", "ph");
+      tr.appendChild(el("td", "t", type));
+      tr.appendChild(el("td", "v", "…"));
+      tr.appendChild(el("td", "n", "…"));
+      tr.appendChild(el("td", "f", "…"));
+      tb.appendChild(tr);
+    });
+    $("recCount").textContent = "";
+    $("records").hidden = false;
+
+    const mb = $("mailBody");
+    mb.textContent = "";
+    [t("mx_h"), t("spf_h"), t("dmarc_h"), t("ns_h")].forEach(head => {
+      line(block(mb, head, "…"), t("running"), "m");
+    });
+    $("mail").hidden = false;
+
+    const rb = $("rdapBody");
+    rb.textContent = "";
+    const dl = el("dl", "rdap");
+    [t("rd_registrar"), t("rd_created"), t("rd_expires"), t("rd_updated"), t("rd_status"), t("rd_ns")].forEach(k => {
+      dl.appendChild(el("dt", "", k));
+      dl.appendChild(el("dd", "", "…"));
+    });
+    rb.appendChild(dl);
+    $("rdapState").textContent = t("rd_loading");
+    $("rdap").hidden = false;
   }
 
   function finish() {
@@ -414,7 +458,8 @@ import { encodeResult, decodeResult, sharePath, resultsFromSnapshot, CODES } fro
     else if (m.nx && m.nx === m.ok.length) { title = t("v_nx", { domain: state.domain }); dot = "warn"; }
     else if (!state.records.length) { title = t("v_empty", { type: primary }); dot = "warn"; }
     else if (!covered && m.consistency === 1) { title = t("v_few_all", { a: m.ok.length, b: total }); dot = ""; }
-    else if (!covered) { title = t("v_few_most", { a: m.majority.resolvers.length, b: m.ok.length, c: total }); dot = ""; }
+    // {c} is how many answered and {b} how many were asked — the same order as v_few_all above
+    else if (!covered) { title = t("v_few_most", { a: m.majority.resolvers.length, b: total, c: m.ok.length }); dot = ""; }
     else if (m.consistency === 1) { title = t("v_all", { n: m.ok.length }); dot = "ok"; }
     else if (m.consistency != null) { title = t("v_most", { a: m.majority.resolvers.length, b: m.ok.length }); dot = "warn"; }
     else { title = t("v_one"); dot = ""; }
@@ -639,7 +684,23 @@ import { encodeResult, decodeResult, sharePath, resultsFromSnapshot, CODES } fro
     if (!state.rdap) return;
     $("rdap").hidden = false;
     if (state.rdap.error) { st.textContent = t("rd_fail"); line(body, t("rd_fail"), "m"); return; }
-    if (state.rdap.notFound) { st.textContent = t("rd_none"); line(body, t("rd_none"), "m"); return; }
+    // "We could not ask" is not "there is nothing": the suffix has no RDAP we can reach from a browser.
+    if (state.rdap.unsupported) {
+      const suffix = "." + (state.rdap.tld || tldOf(state.domain));
+      st.textContent = t("rd_unsupported", { suffix });
+      line(body, t("rd_unsupported_why", { suffix }), "m");
+      const reg = registryOf(state.domain);
+      if (reg) {
+        const p = el("p", "m");
+        const a = el("a", "ext", t("rd_whois", { registry: reg.name }));
+        a.href = reg.url; a.target = "_blank"; a.rel = "noopener";
+        const icon = el("span"); icon.innerHTML = EXT; a.appendChild(icon);
+        p.appendChild(a);
+        body.appendChild(p);
+      } else line(body, t("rd_whois_unknown"), "m");
+      return;
+    }
+    if (state.rdap.notFound) { st.textContent = t("rd_none"); line(body, t("rd_none_why"), "m"); return; }
     const d = state.rdap.data;
     const dl = el("dl", "rdap");
     const row = (k, v, node) => { dl.appendChild(el("dt", "", k)); const dd = el("dd"); if (node) dd.appendChild(node); else dd.textContent = v == null || v === "" ? "—" : String(v); dl.appendChild(dd); };
@@ -697,7 +758,8 @@ import { encodeResult, decodeResult, sharePath, resultsFromSnapshot, CODES } fro
       registrar: state.rdap.data.registrar, created: state.rdap.data.created, expires: state.rdap.data.expires,
       status: state.rdap.data.status, nameservers: state.rdap.data.nameservers,
     } : null;
-    const xz = !state.rdap ? "fail" : state.rdap.data ? "ok" : state.rdap.notFound ? "none" : "fail";
+    const xz = !state.rdap ? "fail" : state.rdap.data ? "ok" : state.rdap.unsupported ? "no"
+      : state.rdap.notFound ? "none" : "fail";
     const primary = heroType();
     const m = primary && state.merged ? state.merged[primary] : null;
     const first = m && m.majority && m.majority.records.length ? m.majority.records[0] : null;
@@ -821,7 +883,8 @@ import { encodeResult, decodeResult, sharePath, resultsFromSnapshot, CODES } fro
     state.dmarc = snap.m && snap.m.length
       ? (resultsFromSnapshot({ r: snap.m.map(a => [a[0], "TXT", a[1], a[2] || []]) }).TXT || [])
       : [];
-    state.rdap = snap.xz === "none" || (!snap.xz && !snap.x) ? { notFound: true }
+    state.rdap = snap.xz === "no" ? { unsupported: true, tld: tldOf(snap.d) }
+      : snap.xz === "none" || (!snap.xz && !snap.x) ? { notFound: true }
       : snap.xz === "ok" || snap.x ? { data: { registrar: snap.x.registrar, created: snap.x.created, expires: snap.x.expires,
         updated: null, status: snap.x.status || [], nameservers: snap.x.nameservers || [], registrarUrl: null } }
       : { error: "snapshot" };
