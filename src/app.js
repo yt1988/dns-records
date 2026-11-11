@@ -291,7 +291,10 @@ import { encodeResult, decodeResult, sharePath, resultsFromSnapshot, CODES } fro
     $("vTitle").textContent = t("running");
     $("vSub").textContent = " ";
     $("findings").textContent = "";
-    $("badges").hidden = true;
+    // the badge line stays in the layout even while empty: it arrives with the first answer, and a line that appears
+    // then would move the whole page (CLS)
+    $("badges").textContent = "";
+    $("badges").hidden = false;
     const tb = $("recBody");
     tb.textContent = "";
     state.types.forEach(type => {
@@ -507,7 +510,6 @@ import { encodeResult, decodeResult, sharePath, resultsFromSnapshot, CODES } fro
     badges.textContent = "";
     if (state.types.indexOf("CAA") >= 0 && majorityRecords("CAA").length) badges.appendChild(el("span", "badge", t("bd_caa")));
     if (state.types.indexOf("AAAA") >= 0 && majorityRecords("AAAA").length) badges.appendChild(el("span", "badge", t("bd_ipv6")));
-    badges.hidden = !badges.children.length;
     $("verdict").hidden = false;
   }
 
@@ -791,9 +793,10 @@ import { encodeResult, decodeResult, sharePath, resultsFromSnapshot, CODES } fro
     }).open();
   };
 
-  // The card: the verdict, not the data. A grade, the domain, three numbers from the page, and how many resolvers
-  // answered. No record values and no IPs — a card that carries a domain's addresses is a privacy problem the link
-  // already does not have. Everything shrinks or wraps before anything is clipped (docs/tool-contract.md).
+  // The card: the verdict, not the data. A grade and the domain, then the four checks the page makes — DNS agreement,
+  // mail, DNSSEC, registration — one row each with a dot, so the card reads as a checkup. No record values and no IPs:
+  // a card that carries a domain's addresses is a privacy problem the link already does not have. Everything shrinks
+  // before it is clipped (docs/tool-contract.md).
   function drawCard(x, kit) {
     const P = kit.P, w = kit.W - P * 2, F = kit.F, M = kit.M, v = kit.v;
     const g = state.grade || {};
@@ -818,33 +821,47 @@ import { encodeResult, decodeResult, sharePath, resultsFromSnapshot, CODES } fro
     x.fillStyle = v("muted"); x.font = "400 24px " + F;
     x.fillText(t("card_grade"), gx + S + 28, gy + 98);
 
-    // three numbers, each the one the page shows
-    const bw = (w - 40) / 3, bh = 138, by = gy + S + 32;
-    const boxes = [[g.agree || "—", t("k_agree")], [g.mail || "—", t("k_mail")], [t("dn_card_" + dn.state), t("k_dnssec")]];
-    boxes.forEach((box, i) => {
-      const bx = P + i * (bw + 20);
-      x.fillStyle = v("line"); kit.roundRect(x, bx, by, bw, bh, 16); x.fill();
-      let vs = 44;
-      x.font = "700 " + vs + "px " + M;
-      while (vs > 24 && x.measureText(box[0]).width > bw - 28) { vs -= 2; x.font = "700 " + vs + "px " + M; }
-      x.fillStyle = v("fg");
-      const vw = x.measureText(box[0]).width;
-      x.fillText(box[0], bx + (bw - vw) / 2, by + 78);
-      x.fillStyle = v("muted");
-      kit.fit(x, box[1], bw - 24, 21, 14, 400);
-      const lw2 = x.measureText(box[1]).width;
-      x.fillText(box[1], bx + (bw - lw2) / 2, by + 113);
-    });
-
-    // how much of the picture the numbers are based on, and how many things are worth fixing
+    // the four checks, one row each: the same verdicts the page shows, with a dot for what needs attention
     const primary = heroType();
     const m = primary && state.merged ? state.merged[primary] : null;
+    const covered = !!m && m.ok.length * 2 >= RESOLVERS.length;
+    const rd = state.rdap || null;
+    const suffix = "." + ((rd && rd.tld) || tldOf(state.domain));
+    const rdap = !rd ? ["bad", t("rd_fail")]
+      : rd.data ? ["ok", rd.data.registrar || "—"]
+      : rd.unsupported ? ["muted", t("rd_unsupported", { suffix })]
+      : rd.notFound ? ["muted", t("rd_none")]
+      : ["bad", t("rd_fail")];
+    const rows = [
+      [m && m.ok.length ? (covered && m.consistency === 1 ? "ok" : "warn") : "muted", t("k_agree"),
+        m && m.ok.length ? m.majority.resolvers.length + " / " + m.ok.length : "—"],
+      [!g.mail ? "muted" : g.mail === "D" ? "bad" : g.mail === "C" ? "warn" : "ok", t("k_mail"), g.mail || "—"],
+      [dn.state === "pass" ? "ok" : dn.state === "broken" ? "bad" : "muted", t("k_dnssec"), t("dn_card_" + dn.state)],
+      [rdap[0], t("h_rdap"), rdap[1]],
+    ];
+    const rh = 60, ry = gy + S + 30;
+    rows.forEach((row, i) => {
+      const y = ry + i * rh;
+      x.fillStyle = v("line"); x.fillRect(P, y, w, 1);
+      x.fillStyle = v(row[0] === "muted" ? "muted" : row[0]);
+      x.beginPath(); x.arc(P + 7, y + 36, 7, 0, Math.PI * 2); x.fill();
+      // shrink rather than clip (share card contract): a long registrar name or value stays whole, just smaller
+      x.fillStyle = v("fg");
+      kit.fit(x, row[1], w * 0.36, 30, 20, 600);
+      x.fillText(row[1], P + 30, y + 46);
+      x.fillStyle = v(row[0] === "muted" ? "muted" : "fg");
+      kit.fit(x, row[2], w * 0.58, 30, 20, 600);
+      x.fillText(row[2], P + w - x.measureText(row[2]).width, y + 46);
+    });
+
+    // how much of the picture the checks are based on, and how many things are worth fixing
     const problems = (state.findings || []).filter(f => f.level !== "ok").length;
     const cov = m
       ? t("card_cov", { ok: m.ok.length, tot: RESOLVERS.length, fail: m.errors.length }) + " · " + (problems ? t("card_findings", { n: problems }) : t("card_clean"))
       : t("v_allfail");
-    x.fillStyle = v("muted"); x.font = "400 24px " + F;
-    kit.wrap(x, cov, w, 2).forEach((l, i) => x.fillText(l, P, by + bh + 46 + i * 34));
+    x.fillStyle = v("muted"); x.textAlign = "left";
+    kit.fit(x, cov, w, 22, 15, 400);
+    x.fillText(cov, P, ry + rows.length * rh + 30);
   }
 
   /* ---------------- shared result ---------------- */

@@ -6,7 +6,7 @@ export default {
   seo_desc: "一次查询任意域名的 DNS 记录（A、AAAA、CNAME、MX、NS、TXT、CAA、SRV、SOA），同时问 12 家公共解析器：对比各家回答，检查 SPF、DMARC 和 DNSSEC，给出域名体检等级和注册信息。免费，在浏览器里完成。",
   seo_kw: "DNS 查询, DNS 记录, DNS 传播检测, DNS 解析器, MX 查询, SPF 检测, DMARC 查询, DNSSEC 检测, TXT 记录, NS 查询, whois, rdap",
   og_sub: "12 家解析器的回答、域名体检等级、邮件和 DNSSEC",
-  h1: "DNS 记录查询、解析器回答与域名体检",
+  h1: "一个域名的 DNS、邮件和 DNSSEC，一起看",
   intro: "输入域名或链接：同时问 12 家公共解析器，给出 DNS 记录、各家现在回答什么，再按回答、邮件配置和 DNSSEC 算一个体检等级。",
 
   lang_label: "语言", a_lang: "语言", a_theme: "主题", a_help: "帮助", a_close: "关闭", a_prev: "上一个", a_next: "下一个",

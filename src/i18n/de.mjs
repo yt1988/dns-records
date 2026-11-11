@@ -6,7 +6,7 @@ export default {
   seo_desc: "DNS-Einträge jeder Domain (A, AAAA, CNAME, MX, NS, TXT, CAA, SRV, SOA) bei 12 öffentlichen Resolvern auf einmal abfragen. Antworten vergleichen, SPF, DMARC und DNSSEC prüfen und eine Check-Note samt Registrierungsdaten erhalten. Kostenlos, im Browser.",
   seo_kw: "dns abfrage, dns einträge, dns propagation prüfen, dns resolver, mx abfrage, spf prüfen, dmarc prüfen, dnssec prüfen, txt einträge, ns abfrage, whois, rdap",
   og_sub: "Antworten von 12 Resolvern, Check-Note, Mail und DNSSEC",
-  h1: "DNS-Abfrage, Resolver-Antworten und Domänen-Check",
+  h1: "DNS, Mail und DNSSEC einer Domain auf einen Blick",
   intro: "Domain oder Link eingeben: 12 öffentliche Resolver werden gleichzeitig gefragt. Sie sehen die DNS-Einträge, was jeder Resolver gerade antwortet, und eine Check-Note für Antworten, Mail und DNSSEC.",
 
   lang_label: "Sprache", a_lang: "Sprache", a_theme: "Design", a_help: "Hilfe", a_close: "Schließen", a_prev: "Zurück", a_next: "Weiter",
@@ -30,7 +30,7 @@ export default {
   v_old_browser: "Dieser Browser kann das Ergebnis nicht öffnen",
   v_old_browser_sub: "Der Link ist in Ordnung, aber die Anzeige braucht einen neueren Browser (ab Chrome 103 oder Safari 16.4).",
 
-  k_agree: "Gleiche Antwort", k_mail: "Mail-Note", k_dnssec: "DNSSEC",
+  k_agree: "Gleiche Antwort", k_mail: "E-Mail-Note", k_dnssec: "DNSSEC",
   fd_stale: "{n} von {b} Resolvern liefern eine andere Antwort: {names}",
   fd_fail: "{n} von {b} Resolvern haben nicht geantwortet",
   fd_spf_none: "Kein SPF-Eintrag: Empfänger können nicht erkennen, welche Server für diese Domain senden dürfen",

@@ -1,12 +1,12 @@
 // Français. Mêmes clés et mêmes variables que les autres langues (npm test le vérifie).
 export default {
   name: "Français",
-  app_name: "Rayons X du domaine",
-  seo_title: "Rayons X du domaine : enregistrements DNS, réponses des résolveurs, mail et DNSSEC",
+  app_name: "Radiographie du domaine",
+  seo_title: "Radiographie du domaine : enregistrements DNS, réponses des résolveurs, mail et DNSSEC",
   seo_desc: "Interrogez les enregistrements DNS d'un domaine (A, AAAA, CNAME, MX, NS, TXT, CAA, SRV, SOA) sur 12 résolveurs publics à la fois. Comparez les réponses, vérifiez SPF, DMARC et DNSSEC, et obtenez une note de bilan avec les données d'enregistrement. Gratuit, dans votre navigateur.",
   seo_kw: "recherche dns, enregistrements dns, vérifier la propagation dns, résolveurs dns, recherche mx, vérifier spf, vérifier dmarc, vérifier dnssec, enregistrements txt, recherche ns, whois, rdap",
   og_sub: "Réponses de 12 résolveurs, note de bilan, mail et DNSSEC",
-  h1: "Recherche DNS, réponses des résolveurs et bilan du domaine",
+  h1: "Le DNS, le mail et le DNSSEC d'un domaine, d'un seul coup d'œil",
   intro: "Saisissez un domaine ou un lien : 12 résolveurs publics sont interrogés en même temps, avec les enregistrements DNS, ce que répond chaque résolveur maintenant et une note de bilan pour les réponses, le mail et DNSSEC.",
 
   lang_label: "Langue", a_lang: "Langue", a_theme: "Thème", a_help: "Aide", a_close: "Fermer", a_prev: "Précédent", a_next: "Suivant",
@@ -30,7 +30,7 @@ export default {
   v_old_browser: "Ce navigateur ne peut pas ouvrir ce résultat",
   v_old_browser_sub: "Le lien est bon, mais l'affichage demande un navigateur plus récent (Chrome 103 ou Safari 16.4 minimum).",
 
-  k_agree: "Réponses identiques", k_mail: "Note mail", k_dnssec: "DNSSEC",
+  k_agree: "Réponses identiques", k_mail: "Note e-mail", k_dnssec: "DNSSEC",
   fd_stale: "{n} des {b} résolveurs donnent une autre réponse : {names}",
   fd_fail: "{n} des {b} résolveurs n'ont pas répondu",
   fd_spf_none: "Aucun enregistrement SPF : le destinataire ne peut pas savoir quels serveurs peuvent envoyer pour ce domaine",

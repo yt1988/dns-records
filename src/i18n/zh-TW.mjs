@@ -6,7 +6,7 @@ export default {
   seo_desc: "一次查詢任意網域的 DNS 記錄（A、AAAA、CNAME、MX、NS、TXT、CAA、SRV、SOA），同時問 12 家公共解析器：比較各家回答、檢查 SPF、DMARC 和 DNSSEC，給出網域健檢等級和註冊資訊。免費，在瀏覽器裡完成。",
   seo_kw: "DNS 查詢, DNS 記錄, DNS 傳播檢測, DNS 解析器, MX 查詢, SPF 檢測, DMARC 查詢, DNSSEC 檢測, TXT 記錄, NS 查詢, whois, rdap",
   og_sub: "12 家解析器的回答、網域健檢等級、郵件和 DNSSEC",
-  h1: "DNS 記錄查詢、解析器回答與網域健檢",
+  h1: "一個網域的 DNS、郵件和 DNSSEC，一起看",
   intro: "輸入網域或連結：同時問 12 家公共解析器，給出 DNS 記錄、各家現在回答什麼，再依回答、郵件設定和 DNSSEC 算一個健檢等級。",
 
   lang_label: "語言", a_lang: "語言", a_theme: "主題", a_help: "說明", a_close: "關閉", a_prev: "上一個", a_next: "下一個",

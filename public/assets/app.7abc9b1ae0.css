@@ -104,23 +104,24 @@ select option:checked { background-color: var(--soft); }
 
 /* verdict */
 .verdict { border-top: 1px solid var(--line); padding-top: 14px; }
-.v-head { display: flex; align-items: center; gap: 9px; flex-wrap: wrap; }
+/* the share buttons arrive with the result; their height is reserved so the title row does not grow under it (CLS) */
+.v-head { display: flex; align-items: center; gap: 9px; flex-wrap: wrap; min-height: 34px; }
 .v-head h2 { margin: 0; font-size: 20px; line-height: 1.3; flex: 1 1 auto; min-width: 0; }
 .v-acts { display: flex; gap: 8px; margin-left: auto; flex-wrap: wrap; }
 .dot { width: 10px; height: 10px; border-radius: 50%; background: var(--muted); flex: 0 0 auto; }
 .dot.ok { background: var(--ok); } .dot.warn { background: var(--warn); } .dot.bad { background: var(--bad); }
-.v-sub { margin: 6px 0 12px; font-size: 13px; min-height: 1.4em; }
-.facts { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; min-height: 74px; }
+.v-sub { margin: 6px 0 12px; font-size: 13px; min-height: 20px; }
+.facts { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; min-height: 80px; }
 .fact { border: 1px solid var(--line); border-radius: 11px; background: var(--bg); padding: 9px 12px; min-width: 0; }
 .fact span { display: block; color: var(--muted); font-size: 12px; }
 .fact b { display: block; font-family: var(--f-num); font-size: 21px; font-variant-numeric: tabular-nums; line-height: 1.3; }
-.fact i { display: block; font-style: normal; color: var(--muted); font-size: 12px; min-height: 1.2em; }
+.fact i { display: block; font-style: normal; color: var(--muted); font-size: 12px; min-height: 19px; }
 .findings { list-style: none; margin: 12px 0 0; padding: 0; display: flex; flex-direction: column; gap: 6px; font-size: 14px; min-height: 48px; }   /* two lines are reserved: the verdict fills in place and does not push the page */
 .findings li { display: flex; gap: 8px; align-items: baseline; }
 .findings li::before { content: "·"; color: var(--muted); flex: none; }
 .findings li.warn::before { color: var(--warn); }
 .findings li.bad::before { color: var(--bad); }
-.badges { display: flex; flex-wrap: wrap; gap: 6px; margin: 10px 0 0; }
+.badges { display: flex; flex-wrap: wrap; gap: 6px; margin: 10px 0 0; min-height: 19px; }
 .badge { display: inline-block; padding: 2px 9px; border: 1px solid var(--line); border-radius: 999px; background: var(--bg); color: var(--muted); font: 600 11px var(--f-num); }
 .st.grade { font-family: var(--f-num); font-size: 13px; padding: 0 6px; border: 1px solid currentColor; border-radius: 6px; }
 .st.grade:empty { display: none; }

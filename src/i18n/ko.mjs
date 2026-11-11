@@ -6,7 +6,7 @@ export default {
   seo_desc: "모든 도메인의 DNS 레코드(A, AAAA, CNAME, MX, NS, TXT, CAA, SRV, SOA)를 12개 공용 리졸버에 한 번에 조회합니다. 응답을 비교하고 SPF, DMARC, DNSSEC을 확인해 도메인 진단 등급과 등록 정보를 보여 줍니다. 무료, 브라우저에서 바로.",
   seo_kw: "DNS 조회, DNS 레코드, DNS 전파 확인, DNS 리졸버, MX 조회, SPF 검사, DMARC 조회, DNSSEC 검사, TXT 레코드, NS 조회, whois, rdap",
   og_sub: "리졸버 12곳의 응답, 도메인 진단 등급, 메일과 DNSSEC",
-  h1: "DNS 레코드 조회, 리졸버 응답과 도메인 진단",
+  h1: "한 도메인의 DNS, 메일, DNSSEC을 한눈에",
   intro: "도메인이나 링크를 입력하면 12개 공용 리졸버에 동시에 묻습니다. DNS 레코드, 각 리졸버가 지금 주는 응답, 그리고 응답·메일 설정·DNSSEC으로 계산한 진단 등급을 보여 줍니다.",
 
   lang_label: "언어", a_lang: "언어", a_theme: "테마", a_help: "도움말", a_close: "닫기", a_prev: "이전", a_next: "다음",

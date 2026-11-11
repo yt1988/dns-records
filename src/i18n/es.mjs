@@ -6,7 +6,7 @@ export default {
   seo_desc: "Consulta los registros DNS de cualquier dominio (A, AAAA, CNAME, MX, NS, TXT, CAA, SRV, SOA) en 12 resolutores públicos a la vez. Compara las respuestas, comprueba SPF, DMARC y DNSSEC, y obtén una nota del chequeo con los datos de registro. Gratis, en tu navegador.",
   seo_kw: "consulta dns, registros dns, comprobar propagación dns, resolvedores dns, consulta mx, comprobar spf, comprobar dmarc, comprobar dnssec, registros txt, consulta ns, whois, rdap",
   og_sub: "Respuestas de 12 resolutores, nota del chequeo, correo y DNSSEC",
-  h1: "Consulta DNS, respuestas de resolutores y chequeo del dominio",
+  h1: "El DNS, el correo y el DNSSEC de un dominio, de una vez",
   intro: "Escribe un dominio o un enlace: se pregunta a la vez a 12 resolutores públicos, así ves los registros DNS, qué responde cada resolutor ahora y una nota del chequeo para las respuestas, el correo y DNSSEC.",
 
   lang_label: "Idioma", a_lang: "Idioma", a_theme: "Tema", a_help: "Ayuda", a_close: "Cerrar", a_prev: "Anterior", a_next: "Siguiente",

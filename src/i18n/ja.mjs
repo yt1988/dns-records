@@ -6,7 +6,7 @@ export default {
   seo_desc: "任意のドメインの DNS レコード（A、AAAA、CNAME、MX、NS、TXT、CAA、SRV、SOA）を 12 の公共リゾルバーに同時に問い合わせます。応答を比べ、SPF・DMARC・DNSSEC を確認し、ドメイン健診の評価と登録情報を表示。無料、ブラウザ内で完結します。",
   seo_kw: "DNS 検索, DNS レコード, DNS 反映確認, DNS リゾルバー, MX 検索, SPF チェック, DMARC チェック, DNSSEC チェック, TXT レコード, NS 検索, whois, rdap",
   og_sub: "12 のリゾルバーの応答、ドメイン健診、メールと DNSSEC",
-  h1: "DNS レコード検索・リゾルバーの応答・ドメイン健診",
+  h1: "あるドメインの DNS・メール・DNSSEC をまとめて確認",
   intro: "ドメインかリンクを入力すると、12 の公共リゾルバーに同時に問い合わせます。DNS レコード、各リゾルバーがいま返している応答、そして応答・メール設定・DNSSEC から出した健診の評価が分かります。",
 
   lang_label: "言語", a_lang: "言語", a_theme: "テーマ", a_help: "ヘルプ", a_close: "閉じる", a_prev: "前へ", a_next: "次へ",

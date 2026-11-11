@@ -1080,7 +1080,8 @@
       $("vTitle").textContent = t("running");
       $("vSub").textContent = " ";
       $("findings").textContent = "";
-      $("badges").hidden = true;
+      $("badges").textContent = "";
+      $("badges").hidden = false;
       const tb = $("recBody");
       tb.textContent = "";
       state.types.forEach((type) => {
@@ -1306,7 +1307,6 @@
       badges.textContent = "";
       if (state.types.indexOf("CAA") >= 0 && majorityRecords("CAA").length) badges.appendChild(el("span", "badge", t("bd_caa")));
       if (state.types.indexOf("AAAA") >= 0 && majorityRecords("AAAA").length) badges.appendChild(el("span", "badge", t("bd_ipv6")));
-      badges.hidden = !badges.children.length;
       $("verdict").hidden = false;
     }
     const PRIVATE4 = /^(10\.|127\.|0\.|169\.254\.|192\.168\.|172\.(1[6-9]|2\d|3[01])\.)/;
@@ -1657,34 +1657,44 @@
       x.fillStyle = v("muted");
       x.font = "400 24px " + F;
       x.fillText(t("card_grade"), gx + S + 28, gy + 98);
-      const bw = (w - 40) / 3, bh = 138, by = gy + S + 32;
-      const boxes = [[g.agree || "\u2014", t("k_agree")], [g.mail || "\u2014", t("k_mail")], [t("dn_card_" + dn.state), t("k_dnssec")]];
-      boxes.forEach((box, i) => {
-        const bx = P + i * (bw + 20);
-        x.fillStyle = v("line");
-        kit.roundRect(x, bx, by, bw, bh, 16);
-        x.fill();
-        let vs = 44;
-        x.font = "700 " + vs + "px " + M;
-        while (vs > 24 && x.measureText(box[0]).width > bw - 28) {
-          vs -= 2;
-          x.font = "700 " + vs + "px " + M;
-        }
-        x.fillStyle = v("fg");
-        const vw = x.measureText(box[0]).width;
-        x.fillText(box[0], bx + (bw - vw) / 2, by + 78);
-        x.fillStyle = v("muted");
-        kit.fit(x, box[1], bw - 24, 21, 14, 400);
-        const lw2 = x.measureText(box[1]).width;
-        x.fillText(box[1], bx + (bw - lw2) / 2, by + 113);
-      });
       const primary = heroType();
       const m = primary && state.merged ? state.merged[primary] : null;
+      const covered = !!m && m.ok.length * 2 >= RESOLVERS.length;
+      const rd = state.rdap || null;
+      const suffix = "." + (rd && rd.tld || tldOf(state.domain));
+      const rdap = !rd ? ["bad", t("rd_fail")] : rd.data ? ["ok", rd.data.registrar || "\u2014"] : rd.unsupported ? ["muted", t("rd_unsupported", { suffix })] : rd.notFound ? ["muted", t("rd_none")] : ["bad", t("rd_fail")];
+      const rows = [
+        [
+          m && m.ok.length ? covered && m.consistency === 1 ? "ok" : "warn" : "muted",
+          t("k_agree"),
+          m && m.ok.length ? m.majority.resolvers.length + " / " + m.ok.length : "\u2014"
+        ],
+        [!g.mail ? "muted" : g.mail === "D" ? "bad" : g.mail === "C" ? "warn" : "ok", t("k_mail"), g.mail || "\u2014"],
+        [dn.state === "pass" ? "ok" : dn.state === "broken" ? "bad" : "muted", t("k_dnssec"), t("dn_card_" + dn.state)],
+        [rdap[0], t("h_rdap"), rdap[1]]
+      ];
+      const rh = 60, ry = gy + S + 30;
+      rows.forEach((row, i) => {
+        const y = ry + i * rh;
+        x.fillStyle = v("line");
+        x.fillRect(P, y, w, 1);
+        x.fillStyle = v(row[0] === "muted" ? "muted" : row[0]);
+        x.beginPath();
+        x.arc(P + 7, y + 36, 7, 0, Math.PI * 2);
+        x.fill();
+        x.fillStyle = v("fg");
+        kit.fit(x, row[1], w * 0.36, 30, 20, 600);
+        x.fillText(row[1], P + 30, y + 46);
+        x.fillStyle = v(row[0] === "muted" ? "muted" : "fg");
+        kit.fit(x, row[2], w * 0.58, 30, 20, 600);
+        x.fillText(row[2], P + w - x.measureText(row[2]).width, y + 46);
+      });
       const problems = (state.findings || []).filter((f) => f.level !== "ok").length;
       const cov = m ? t("card_cov", { ok: m.ok.length, tot: RESOLVERS.length, fail: m.errors.length }) + " \xB7 " + (problems ? t("card_findings", { n: problems }) : t("card_clean")) : t("v_allfail");
       x.fillStyle = v("muted");
-      x.font = "400 24px " + F;
-      kit.wrap(x, cov, w, 2).forEach((l, i) => x.fillText(l, P, by + bh + 46 + i * 34));
+      x.textAlign = "left";
+      kit.fit(x, cov, w, 22, 15, 400);
+      x.fillText(cov, P, ry + rows.length * rh + 30);
     }
     function showOldBrowser() {
       $("vDot").className = "dot warn";

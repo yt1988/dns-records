@@ -6,7 +6,7 @@ export default {
   seo_desc: "Look up any domain's DNS records — A, AAAA, CNAME, MX, NS, TXT, CAA, SRV, SOA — at 12 public resolvers at once. Compare the answers, check SPF, DMARC and DNSSEC, and get a checkup grade with the registration data. Free, in your browser.",
   seo_kw: "dns lookup, dns records, dns propagation checker, dns resolvers, mx lookup, spf check, dmarc check, dnssec check, txt records, ns lookup, whois, rdap",
   og_sub: "12 resolvers' answers, a checkup grade, mail and DNSSEC",
-  h1: "DNS lookup, resolver answers and a domain checkup",
+  h1: "A domain's DNS, mail and DNSSEC, side by side",
   intro: "Enter a domain or a link: 12 public resolvers are asked at once, so you see the DNS records, what each resolver answers right now, and a checkup grade for the answers, the mail setup and DNSSEC.",
 
   lang_label: "Language", a_lang: "Language", a_theme: "Theme", a_help: "Help", a_close: "Close", a_prev: "Previous", a_next: "Next",
