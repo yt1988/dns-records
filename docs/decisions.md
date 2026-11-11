@@ -98,3 +98,42 @@ rdap.org + 常见注册局」仍有缺口；把 RDAP 改成 Worker 代理则要�
 - 没有直连权威 NS：浏览器发不出 53 端口的 DNS，也不该假装能。
 - 产品名（各语言 `app_name`）、站点登记（`sites.js`、README 表格、导航）、Workers Builds 连接，都要 Public/
   站长处理；本仓库不改外壳。
+
+## 2026-11-11 · v2 DNSSEC 探针（东京 VPS）
+
+准备把 DNSSEC 做进页面，先回答一个问题：这 12 家里，哪几家真的会验证、会在回答里设 AD。只设查询的 AD 位
+不够，OPT 里还要带 DO；探针（`scripts/dnssec-probe.mjs`，跑 `node scripts/dnssec-probe.mjs`）问
+`cloudflare.com`（已签名）、`google.com`（未签名）、`dnssec-failed.org`（故意坏链）三个名字。Public 在东京
+VPS 上的结果：
+
+| 解析器 | 已签名 | 未签名 | 坏链 | 判定 |
+|---|---|---|---|---|
+| Cloudflare | AD | no-AD | SERVFAIL | 会验证 |
+| Google | AD | no-AD | SERVFAIL | 会验证 |
+| Control D | AD | no-AD | SERVFAIL | 会验证 |
+| Rethink DNS | AD | no-AD | SERVFAIL | 会验证 |
+| DNSForge | AD | no-AD | SERVFAIL | 会验证 |
+| Tiarap | AD | no-AD | SERVFAIL | 会验证 |
+| IIJ | AD | no-AD | SERVFAIL | 会验证 |
+| DNS.SB | AD | no-AD | HTTP 503 | 会验证；坏链返回 503 而不是 SERVFAIL |
+| CleanBrowsing | no-AD | no-AD | NOERROR | **不验证，永久排除** |
+| Quad9 | HTTP 505 | HTTP 505 | HTTP 505 | 请求形状被拒，待试 POST 或换路径 |
+| DNS4EU | 连不上 | 连不上 | 连不上 | 待换网络复测 |
+| CZ.NIC ODVR | 连不上 | 连不上 | 连不上 | 待换网络复测 |
+
+结论和拟用规则（实现要等站长批准）：
+
+- **合格验证器 7 家**（Cloudflare、Google、Control D、Rethink、DNSForge、Tiarap、IIJ），加上 DNS.SB 有条件
+  可用。判「通过 / 断链」要求至少 2 家合格验证器，避免单家误判。
+- **CleanBrowsing 永久排除**：本机实测它对 `dnssec-failed.org` 返回 NOERROR + A，AD=0 只是因为它不验证，
+  不能当作「断链」。
+- **DNS.SB 只用于「通过」**：AD=1 可以算验证通过；坏链的 HTTP 503 可能是它拒绝坏签名，也可能是服务故障，
+  不拿来判「断链」。
+- **Quad9** 是知名验证器，505 是我们这种 `GET` + `accept: application/dns-message` + DO 的请求形状被拒；
+  实现前花十分钟试 `POST` 或别的路径，能通就加进名单。
+- 只有父区 DS 明确不存在时才写「未启用」；DS 查询失败、或合格验证器不足 2 家时写「无法判断」。
+- 实现细节：`src/dns.mjs` 的 OPT 加 DO（现在只设查询的 AD 位），加 `DS`(43) 和 `DNSKEY`(48) 类型，只读有没有，
+  不解析签名。
+
+还没做：代码；Quad9 的 POST 试法；DNS4EU 和 CZ.NIC 的换网络复测。解析器列表变了要重跑探针。
+
