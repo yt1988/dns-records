@@ -1171,6 +1171,7 @@
       for (let i = 0; i < 3; i++) $("findings").appendChild(el("li", "ph", "\u2026"));
       $("badges").textContent = "";
       $("badges").hidden = false;
+      renderLinks();
       const tb = $("recBody");
       tb.textContent = "";
       state.types.forEach((type) => {

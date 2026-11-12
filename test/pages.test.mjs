@@ -64,3 +64,19 @@ test("the built assets have no placeholder left and the page code has no templat
     assert.doesNotMatch(s, /{{/, f);
   }
 });
+
+test("the brand keeps the tool's name for screen readers where the narrow layout hides it", async () => {
+  const html = await page("zh-cn");
+  assert.match(html, /class="brand" href="\/zh-cn\/" aria-label="域名透视"/);
+  const files = (await readdir(new URL("assets/", pub))).filter(f => /^app\..+\.css$/.test(f));
+  const css = await readFile(new URL("assets/" + files[0], pub), "utf8");
+  // the visible name is gone below 540 px; without the aria-label the link would read as just "1ms"
+  assert.match(css, /@media \(max-width: 540px\)[^}]*}\s*\.brand-name \{ display: none; \}/);
+});
+
+test("the other-tools line is drawn when the query starts, not when the answers land", async () => {
+  const app = await readFile(new URL("../src/app.js", import.meta.url), "utf8");
+  // links to other tools depend only on the shell's tool addresses and the domain, so they can be drawn up front;
+  // drawing them in finish() added 31 px to the verdict at 5 s (CLS, docs/decisions.md)
+  assert.match(app, /function skeleton\(\)[\s\S]{0,2500}?renderLinks\(\);/);
+});

@@ -375,3 +375,21 @@ MX」不是一回事：前者是我们没问到，后者才是观测到的结论
 `state.merged.MX.answered === 0` 时改用 `mx_noanswer`：「没有一家解析器回答 MX 记录，无法判断这个域名怎么收信」
 （en: "No resolver returned MX records, so we can't tell how this domain receives mail"），十种语言。有解析器
 作答、答案为空仍然是 `mx_none`，Null MX 仍然是 `mx_null`。分享链接打开时走同一条渲染路径，同样这句话。
+
+## 2026-11-12 · 窄屏页头只留 logo；「其他工具」那行开查就画
+
+线上验收（Public 在 375 px 和真查 cloudflare.com 时量的）报回来的两处。
+
+**页头被裁**：375 px 下 `.brand` 里的名字被切掉——中文「域名透视」、俄语「Рентген домена」。四个控件加 90 px
+logo 之后只剩约 50 px，俄语名字要 155 px，缩字号救不回来。按约定的第二种做法：≤540 px 时 `.brand-name`
+`display:none`，只留 1ms logo（壳的导航条上方已经写着 1ms.dog），链接补 `aria-label`（`{{a:app_name}}`），
+读屏念的仍是「域名透视」而不是「1ms」。同时 `.brand { flex: none; overflow: visible }`，否则 90 px 的 logo 会被
+压进 89.5 px 的盒子，那 0.5 px 本身就会被判成溢出。540 px 以上名字照常显示（768 px 下俄语 155 px 放得下）。
+
+**verdict 长高 31 px**：真查时 5.1 s 时 `#verdict` 290→321，把 `#records` 往下推。长高的是 `#links`——「哪家
+DNS 最快 / 从这个地区 Ping」那一行，原来只在 `finish()` 里画：12 px 外边距 + 19 px 行高 = 31 px。它只依赖壳注入
+的 `<meta name="dns">` 等工具地址和域名，开查时两者都知道，所以改成 `skeleton()` 里就 `renderLinks()`。本地补上
+壳会注入的 meta 后实测：桌面 verdict 322→321（1 px 舍入），CLS 0；375 px 下 links 46 px 从第一帧就在（两行，
+说明提前画也顺手解决了窄屏换行）。
+
+两条都钉了测试：页头的 `aria-label` + 540 px 的 `display:none`，以及 `skeleton()` 里必须出现 `renderLinks()`。

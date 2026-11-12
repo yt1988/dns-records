@@ -306,6 +306,9 @@ import { encodeResult, decodeResult, sharePath, resultsFromSnapshot, CODES } fro
     // then would move the whole page (CLS)
     $("badges").textContent = "";
     $("badges").hidden = false;
+    // The "other tools" line depends only on the shell's tool addresses and the domain, both known now: drawing it at
+    // the start keeps its 31 px in the first layout instead of pushing the records down when the answers land (CLS).
+    renderLinks();
     const tb = $("recBody");
     tb.textContent = "";
     state.types.forEach(type => {

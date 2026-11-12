@@ -59,6 +59,15 @@ html[data-theme="dark"] .logo-dark { display: block; }
 html[data-theme="light"] .logo-light { display: block; }
 @media (prefers-color-scheme: dark) { html:not([data-theme="light"]) .logo-light { display: none; } html:not([data-theme="light"]) .logo-dark { display: block; } }
 .brand-name { font-size: 20px; font-weight: 700; letter-spacing: -.02em; white-space: nowrap; }
+/* Narrow screens: the four controls and the 90 px logo leave ~50 px for the name, which cuts 域名透视 and, worse,
+   Рентген домена to a fragment. The logo alone is the brand there (the shell's bar above already says 1ms.dog); the
+   link keeps the tool's name as its aria-label (page.html), so it is not just "1ms" to a screen reader. */
+@media (max-width: 540px) {
+  /* no name to clip, so nothing may overflow: flex: none keeps the 90 px logo from being squeezed into a 89.5 px box,
+     which alone reads as a truncated brand */
+  .brand { gap: 0; flex: none; overflow: visible; }
+  .brand-name { display: none; }
+}
 .top-acts { display: flex; align-items: center; gap: 8px; flex: none; }
 .icon-btn { display: grid; place-items: center; width: 34px; height: 34px; border: 1px solid var(--line); border-radius: 9px; background: var(--panel); color: var(--fg); cursor: pointer; padding: 0; }
 .icon-btn:hover { background: var(--soft); }
