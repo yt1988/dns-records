@@ -1,7 +1,9 @@
-// The Worker: static files, and one dynamic route — a shared result, /<lang>/r/<code>. For a share link it serves the
-// language's page with the result in the title and the preview, marked noindex; the page itself then draws the snapshot.
-// Everything else is the built site in public/. Nothing is stored and nothing is logged.
+// The Worker: static files, and two dynamic routes. A shared result (/<lang>/r/<code>) gets its language's page with
+// the result in the title and the preview, marked noindex; the page itself then draws the snapshot. /whois asks a
+// registry for registration data the visitor's browser cannot read — the only query that goes through this server.
+// Everything else is the built site in public/. Nothing is stored beyond the cache and nothing is logged.
 import { sharePath, decodeResult } from "./code.mjs";
+import { lookupRegistration } from "./whois.mjs";
 import en from "./i18n/en.mjs";
 import zhCN from "./i18n/zh-CN.mjs";
 import zhTW from "./i18n/zh-TW.mjs";
@@ -19,9 +21,46 @@ const SLUG = { "": "en", "zh-cn": "zh-CN", "zh-tw": "zh-TW", ja: "ja", ko: "ko",
 
 const fill = (s, vars) => String(s).replace(/\{(\w+)\}/g, (m, k) => (k in vars ? vars[k] : m));
 
+// Registration lookups are for this site's own page, not for other sites to borrow: CORS names dig.1ms.dog only.
+const ALLOWED_ORIGIN = "https://dig.1ms.dog";
+const CACHE_SUCCESS = 43200, CACHE_FAILURE = 600, CACHE_CLIENT = 3600;
+
+async function handleWhois(request, url, env, ctx) {
+  const headers = { "content-type": "application/json; charset=utf-8", "vary": "origin" };
+  const origin = request.headers.get("origin");
+  if (origin === ALLOWED_ORIGIN) headers["access-control-allow-origin"] = ALLOWED_ORIGIN;
+  const reply = (body, status = 200, extra = {}) => new Response(JSON.stringify(body), { status, headers: { ...headers, ...extra } });
+  if (request.method !== "GET") return reply({ ok: false, reason: "method" }, 405, { allow: "GET" });
+  const domain = (url.searchParams.get("d") || "").trim().toLowerCase().replace(/\.+$/, "");
+  // an allow-list of what the page sends: anything else is refused before a socket or a fetch is made
+  if (!/^[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?(?:\.[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?)+$/.test(domain) || domain.length > 253) {
+    return reply({ ok: false, reason: "bad-domain" }, 400);
+  }
+
+  const store = typeof caches !== "undefined" ? caches.default : null;
+  const key = new Request("https://whois.internal/?d=" + domain);
+  if (store) {
+    const hit = await store.match(key);
+    if (hit) return reply(await hit.json(), 200, { "cache-control": "public, max-age=" + CACHE_CLIENT });
+  }
+
+  // The socket module is imported here, while a request is being handled, never at module scope.
+  const connect = env.WHOIS_CONNECT || (async (host, port) => (await import("./whois-net.js")).connectTo(host, port));
+  const out = await lookupRegistration(domain, { connect });
+
+  if (store) {
+    const ttl = out.ok ? CACHE_SUCCESS : CACHE_FAILURE;
+    ctx && ctx.waitUntil(store.put(key, new Response(JSON.stringify(out), {
+      headers: { "content-type": "application/json; charset=utf-8", "cache-control": "public, max-age=" + ttl },
+    })));
+  }
+  return reply(out, out.reason === "bad-domain" ? 400 : 200, { "cache-control": "public, max-age=" + CACHE_CLIENT });
+}
+
 export default {
-  async fetch(request, env) {
+  async fetch(request, env, ctx) {
     const url = new URL(request.url);
+    if (url.pathname === "/whois") return handleWhois(request, url, env, ctx);
     const sp = sharePath(url.pathname);
     if (!sp) return env.ASSETS.fetch(request);
 

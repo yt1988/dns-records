@@ -49,6 +49,55 @@ test("a code that does not decode is a plain 404, without reading any asset", as
   assert.match(res.headers.get("content-type"), /text\/plain/);
 });
 
+// ---- /whois: registration data the browser could not read, asked by the server ----
+
+const whoisReply = "Domain Name: SINA.CN\nSponsoring Registrar: Example Registrar\nName Server: ns1.sina.com.cn\nRegistration Time: 2003-03-17 12:20:05\nExpiration Time: 2027-03-17 12:48:36\nDomain Status: clientTransferProhibited\n";
+const socket = () => ({
+  opened: Promise.resolve(),
+  writable: { getWriter: () => ({ write: async () => {}, releaseLock() {} }) },
+  readable: { getReader: () => { let done = false; return { read: async () => (done ? { done: true } : (done = true, { done: false, value: new TextEncoder().encode(whoisReply) })) }; } },
+  close() {},
+});
+
+test("/whois refuses anything that is not a plain domain, before asking anyone", async () => {
+  for (const d of ["", "a.com/x", "javascript:alert(1)", "a..com", "例子.cn"]) {
+    const res = await worker.fetch(new Request("https://dig.1ms.dog/whois?d=" + encodeURIComponent(d)), { ASSETS: { fetch: async () => page() } });
+    assert.equal(res.status, 400, d);
+    assert.equal((await res.json()).reason, "bad-domain");
+  }
+  const post = await worker.fetch(new Request("https://dig.1ms.dog/whois?d=sina.cn", { method: "POST" }), {});
+  assert.equal(post.status, 405);
+});
+
+test("/whois answers with the public fields only, and only dig.1ms.dog may read it from another site", async () => {
+  const realFetch = globalThis.fetch;
+  globalThis.fetch = async () => new Response("No RDAP service is available for this resource", { status: 404 });
+  try {
+    const res = await worker.fetch(new Request("https://dig.1ms.dog/whois?d=sina.cn", { headers: { origin: "https://dig.1ms.dog" } }), {
+      ASSETS: { fetch: async () => page() }, WHOIS_CONNECT: () => socket(),
+    });
+    assert.equal(res.status, 200);
+    assert.equal(res.headers.get("access-control-allow-origin"), "https://dig.1ms.dog");
+    assert.equal(res.headers.get("vary"), "origin");
+    assert.match(res.headers.get("cache-control"), /max-age=3600/);
+    const body = await res.json();
+    assert.equal(body.ok, true);
+    assert.equal(body.src, "whois");
+    assert.equal(body.registrar, "Example Registrar");
+    assert.deepEqual(body.nameservers, ["ns1.sina.com.cn"]);
+    assert.deepEqual(Object.keys(body).sort(),
+      ["created", "expires", "nameservers", "ok", "registrar", "src", "status", "tld", "updated"].sort());
+    // the registrant is in the registry's reply; it must never be in ours (the fixture has no registrant line, so this
+    // checks the shape: these are the only fields the route can carry)
+    const other = await worker.fetch(new Request("https://dig.1ms.dog/whois?d=sina.cn", { headers: { origin: "https://example.org" } }), {
+      ASSETS: { fetch: async () => page() }, WHOIS_CONNECT: () => socket(),
+    });
+    assert.equal(other.headers.get("access-control-allow-origin"), null);
+  } finally {
+    globalThis.fetch = realFetch;
+  }
+});
+
 test("every other request goes straight to the static site", async () => {
   const res = await worker.fetch(new Request("https://dig.1ms.dog/zh-cn/"), { ASSETS: { fetch: async () => page() } });
   assert.equal(res.status, 200);

@@ -6,7 +6,7 @@ import { mergeType, mergeAll, mergeRecords, primaryType, OK } from "./merge.mjs"
 import { spfCheck, dmarcCheck, compareNs } from "./mail.mjs";
 import { dnssecVerdict, dsFound, dsAskers, dnssecRows } from "./dnssec.mjs";
 import { resolveGrade, mailGrade, overallGrade } from "./grade.mjs";
-import { fetchRdap, tldOf, registryOf } from "./rdap.mjs";
+import { fetchRdap, fetchServerRegistration, tldOf, registryOf } from "./rdap.mjs";
 import { encodeResult, decodeResult, sharePath, resultsFromSnapshot, CODES } from "./code.mjs";
 
 (function () {
@@ -243,8 +243,16 @@ import { encodeResult, decodeResult, sharePath, resultsFromSnapshot, CODES } fro
     $("rdap").hidden = false;
     $("rdapState").textContent = t("rd_loading");
     $("rdapBody").textContent = "";
-    return fetchRdap(name).then(r => {
+    return fetchRdap(name).then(async r => {
       if (my !== runId) return;
+      // The browser could not read the registry: the suffix has no RDAP in IANA's list, or its RDAP has no CORS.
+      // The Worker can reach it (RDAP without CORS, or the registry's port-43 WHOIS), so it asks on our behalf and
+      // the answer is marked as proxied where it is shown.
+      if (r.error || r.unsupported) {
+        const proxied = await fetchServerRegistration(name);
+        if (my !== runId) return;
+        if (proxied) r = proxied;
+      }
       state.rdap = r;
       renderRdap();
     });
@@ -709,7 +717,9 @@ import { encodeResult, decodeResult, sharePath, resultsFromSnapshot, CODES } fro
       } else line(body, t("rd_whois_unknown"), "m");
       return;
     }
-    if (state.rdap.notFound) { st.textContent = t("rd_none"); line(body, t("rd_none_why"), "m"); return; }
+    // An empty answer that came from the server still came from the server: name the source either way.
+    const srcNote = () => { if (state.rdap.src) body.appendChild(el("p", "m", t(state.rdap.src === "whois" ? "rd_src_whois" : "rd_src_rdap"))); };
+    if (state.rdap.notFound) { st.textContent = t("rd_none"); line(body, t("rd_none_why"), "m"); srcNote(); return; }
     const d = state.rdap.data;
     const dl = el("dl", "rdap");
     const row = (k, v, node) => { dl.appendChild(el("dt", "", k)); const dd = el("dd"); if (node) dd.appendChild(node); else dd.textContent = v == null || v === "" ? "—" : String(v); dl.appendChild(dd); };
@@ -733,6 +743,8 @@ import { encodeResult, decodeResult, sharePath, resultsFromSnapshot, CODES } fro
       row(t("rd_ns"), null, wrap);
     }
     body.appendChild(dl);
+    // This answer was fetched by the 1ms.dog server, not by the visitor's browser. Say so, every time.
+    srcNote();
   }
 
   /* ---------------- links to other tools ---------------- */
@@ -769,11 +781,12 @@ import { encodeResult, decodeResult, sharePath, resultsFromSnapshot, CODES } fro
     } : null;
     const xz = !state.rdap ? "fail" : state.rdap.data ? "ok" : state.rdap.unsupported ? "no"
       : state.rdap.notFound ? "none" : "fail";
+    const xs = state.rdap && state.rdap.src ? state.rdap.src : null;
     const primary = heroType();
     const m = primary && state.merged ? state.merged[primary] : null;
     const first = m && m.majority && m.majority.records.length ? m.majority.records[0] : null;
     return {
-      v: 1, d: state.domain, t: state.types, at: state.startedAt, r: rows, m: dm, x: d, xz,
+      v: 1, d: state.domain, t: state.types, at: state.startedAt, r: rows, m: dm, x: d, xz, xs,
       // the DNSSEC verdict, so a shared link shows the same third number (an older link has none: "unknown")
       dn: state.dnssec ? [state.dnssec.state, state.dnssec.answered] : ["unknown", 0],
       s: { ty: primary || state.types[0] || "A", val: first ? first.data : "", ok: m ? m.answered : 0,
@@ -910,7 +923,8 @@ import { encodeResult, decodeResult, sharePath, resultsFromSnapshot, CODES } fro
       : [];
     state.rdap = snap.xz === "no" ? { unsupported: true, tld: tldOf(snap.d) }
       : snap.xz === "none" || (!snap.xz && !snap.x) ? { notFound: true }
-      : snap.xz === "ok" || snap.x ? { data: { registrar: snap.x.registrar, created: snap.x.created, expires: snap.x.expires,
+      : snap.xz === "ok" || snap.x ? { src: snap.xs === "whois" ? "whois" : snap.xs === "rdap" ? "rdap" : null,
+        data: { registrar: snap.x.registrar, created: snap.x.created, expires: snap.x.expires,
         updated: null, status: snap.x.status || [], nameservers: snap.x.nameservers || [], registrarUrl: null } }
       : { error: "snapshot" };
     $("domain").value = snap.d;

@@ -4,8 +4,9 @@
 > TXT, CAA, SRV and SOA at 12 public resolvers at once, merged by value, with each resolver's own answer under
 > Resolver answers. From that the page gives a checkup grade: how far the resolvers agree, how the mail setup looks
 > (SPF, DMARC), and whether DNSSEC validates. It also compares the registrar's name servers (RDAP) with the ones the
-> resolvers return, and shows registration data (registrar, dates, status). Nothing is stored, no account is needed,
-> and the queries never pass through 1ms.dog's servers.
+> resolvers return, and shows registration data (registrar, dates, status). DNS queries never pass through 1ms.dog's
+> servers; registration data does when the browser cannot read the registry itself, and the page marks those answers.
+> Nothing is stored beyond a one-hour lookup cache, and no account is needed.
 
 - Page: https://dig.1ms.dog/ (also /zh-cn/, /zh-tw/, /ja/, /ko/, /es/, /fr/, /de/, /pt/, /ru/)
 - Source code: https://github.com/yt1988/dns-records

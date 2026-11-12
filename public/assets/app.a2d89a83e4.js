@@ -580,6 +580,48 @@
       if (signal) signal.removeEventListener("abort", stop);
     }
   }
+  var WHOIS_ENDPOINT = "/whois?d=";
+  async function fetchServerRegistration(domain, { fetchImpl = fetch, signal, timeout = 12e3 } = {}) {
+    const ctl = new AbortController();
+    const timer = setTimeout(() => ctl.abort(), timeout);
+    const stop = () => ctl.abort();
+    if (signal) {
+      if (signal.aborted) ctl.abort();
+      else signal.addEventListener("abort", stop);
+    }
+    try {
+      const res = await fetchImpl(WHOIS_ENDPOINT + encodeURIComponent(domain), {
+        signal: ctl.signal,
+        credentials: "omit",
+        referrerPolicy: "no-referrer",
+        headers: { accept: "application/json" }
+      });
+      if (!res.ok) return null;
+      const j = await res.json();
+      if (!j || typeof j !== "object") return null;
+      const src = j.src === "whois" ? "whois" : "rdap";
+      if (j.ok) return {
+        src,
+        data: {
+          handle: null,
+          registrar: j.registrar || null,
+          registrarUrl: j.registrarUrl || null,
+          created: j.created || null,
+          expires: j.expires || null,
+          updated: j.updated || null,
+          status: Array.isArray(j.status) ? j.status : [],
+          nameservers: Array.isArray(j.nameservers) ? j.nameservers : []
+        }
+      };
+      if (j.reason === "notfound") return { notFound: true, src };
+      return null;
+    } catch (e) {
+      return null;
+    } finally {
+      clearTimeout(timer);
+      if (signal) signal.removeEventListener("abort", stop);
+    }
+  }
   function vname(entity) {
     const card = Array.isArray(entity.vcardArray) && Array.isArray(entity.vcardArray[1]) ? entity.vcardArray[1] : [];
     const fn = card.find((p) => Array.isArray(p) && p[0] === "fn");
@@ -1046,8 +1088,13 @@
       $("rdap").hidden = false;
       $("rdapState").textContent = t("rd_loading");
       $("rdapBody").textContent = "";
-      return fetchRdap(name).then((r) => {
+      return fetchRdap(name).then(async (r) => {
         if (my !== runId) return;
+        if (r.error || r.unsupported) {
+          const proxied = await fetchServerRegistration(name);
+          if (my !== runId) return;
+          if (proxied) r = proxied;
+        }
         state.rdap = r;
         renderRdap();
       });
@@ -1502,9 +1549,13 @@
         } else line(body, t("rd_whois_unknown"), "m");
         return;
       }
+      const srcNote = () => {
+        if (state.rdap.src) body.appendChild(el("p", "m", t(state.rdap.src === "whois" ? "rd_src_whois" : "rd_src_rdap")));
+      };
       if (state.rdap.notFound) {
         st.textContent = t("rd_none");
         line(body, t("rd_none_why"), "m");
+        srcNote();
         return;
       }
       const d = state.rdap.data;
@@ -1540,6 +1591,7 @@
         row(t("rd_ns"), null, wrap);
       }
       body.appendChild(dl);
+      srcNote();
     }
     function renderLinks() {
       const box = $("links");
@@ -1585,6 +1637,7 @@
         nameservers: state.rdap.data.nameservers
       } : null;
       const xz = !state.rdap ? "fail" : state.rdap.data ? "ok" : state.rdap.unsupported ? "no" : state.rdap.notFound ? "none" : "fail";
+      const xs = state.rdap && state.rdap.src ? state.rdap.src : null;
       const primary = heroType();
       const m = primary && state.merged ? state.merged[primary] : null;
       const first = m && m.majority && m.majority.records.length ? m.majority.records[0] : null;
@@ -1597,6 +1650,7 @@
         m: dm,
         x: d,
         xz,
+        xs,
         // the DNSSEC verdict, so a shared link shows the same third number (an older link has none: "unknown")
         dn: state.dnssec ? [state.dnssec.state, state.dnssec.answered] : ["unknown", 0],
         s: {
@@ -1742,15 +1796,18 @@
       const dn = snap.dn || ["unknown", 0];
       state.dnssec = { state: dn[0] === "pass" || dn[0] === "broken" || dn[0] === "off" ? dn[0] : "unknown", answered: Number(dn[1]) || 0, validators: 0 };
       state.dmarc = snap.m && snap.m.length ? resultsFromSnapshot({ r: snap.m.map((a) => [a[0], "TXT", a[1], a[2] || []]) }).TXT || [] : [];
-      state.rdap = snap.xz === "no" ? { unsupported: true, tld: tldOf(snap.d) } : snap.xz === "none" || !snap.xz && !snap.x ? { notFound: true } : snap.xz === "ok" || snap.x ? { data: {
-        registrar: snap.x.registrar,
-        created: snap.x.created,
-        expires: snap.x.expires,
-        updated: null,
-        status: snap.x.status || [],
-        nameservers: snap.x.nameservers || [],
-        registrarUrl: null
-      } } : { error: "snapshot" };
+      state.rdap = snap.xz === "no" ? { unsupported: true, tld: tldOf(snap.d) } : snap.xz === "none" || !snap.xz && !snap.x ? { notFound: true } : snap.xz === "ok" || snap.x ? {
+        src: snap.xs === "whois" ? "whois" : snap.xs === "rdap" ? "rdap" : null,
+        data: {
+          registrar: snap.x.registrar,
+          created: snap.x.created,
+          expires: snap.x.expires,
+          updated: null,
+          status: snap.x.status || [],
+          nameservers: snap.x.nameservers || [],
+          registrarUrl: null
+        }
+      } : { error: "snapshot" };
       $("domain").value = snap.d;
       $("err").hidden = true;
       resetUI();

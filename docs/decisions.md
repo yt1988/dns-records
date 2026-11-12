@@ -270,3 +270,38 @@ DNSSEC、注册信息——每行一个状态点和页面上同源的结论，�
   timeout 不算」。
 
 FAQ 第 92 条（体检等级）十条语言按新规则重写；第 95 条（连不上不算不一致）现在才名副其实。
+
+## 2026-11-12 · 浏览器读不了的注册信息，由 Worker 代查（/whois）
+
+.cn、.jp、.ru、.hk 没有 RDAP；.de 有 RDAP（`rdap.denic.de`）但不发 CORS 头。这三种情况下浏览器自己读不到注册信息，
+页面原来只能写「查不到这个后缀」。站长定的方向是不加新成本，就在现有 Worker 上加一条 `GET /whois?d=<域名>`
+（AGENTS.md 要求给 Worker 加转发先问站长，这次是站长要的）。
+
+**顺序**：先进 IANA 引导表的 RDAP（.de 改问注册局自己的 RDAP），再走 43 端口的 WHOIS。两样都没有才是
+「查不到这个后缀」。.vn 的 WHOIS 从哪都问不到，留在 `QUIET_TLDS`，页面继续给注册局链接。
+
+**测速**（从 Cloudflare 的网络测，Public 会话做的）：`whois.cnnic.cn` 56 ms，`whois.jprs.jp` 加 `/e` 要英文输出
+244 ms，`whois.tcinet.ru` 502 ms，`whois.hkirc.hk` 475 ms。Cloudflare 只封 25 端口，43 端口通。超时定 8 秒，
+输出最多读 40 KB。
+
+**只留该留的字段**：解析出来的只有注册商、注册/到期/更新时间、状态和注册局 NS，和 RDAP 下来的字段同名。
+`.cn` 的 WHOIS 里有注册人姓名、邮箱、电话，`parseWhois` 根本不读这些键，Worker 也不会把它们写进响应——
+访客问的是域名，不是域名的主人。有测试专门拿带注册人信息的样本反查，响应里不能出现这些值。
+
+**缓存和边界**：`caches.default`，成功 12 小时、失败 10 分钟（失败可能是我们这边一时的线路，不该冻一天）；给页面
+的 `Cache-Control` 是 1 小时。只接受 GET，域名先过和页面一样的正则（ASCII、至少两段，页面传过来的是 punycode），
+不合格直接 400，不建 socket 也不发 fetch。CORS 只对 `https://dig.1ms.dog` 发 `Access-Control-Allow-Origin`，带
+`Vary: Origin`，别站借不到。
+
+**踩过的坑**：
+- `cloudflare:sockets` 的 `connect()` 只能在请求处理里调，模块顶层的绑定会报错；所以拿它放在单独的
+  `src/whois-net.js`，`/whois` 里再动态 import，Node 的测试才能照常 import worker.js。
+- 动态 import 是异步的，`connect(...)` 拿到的是 Promise，忘了 await 会把一个 Promise 当 socket 用。
+- CNNIC 发完数据不关连接，等 EOF 会一直等到 8 秒超时；改成每次 read 等 1.5 秒没下文就当结束。
+- JPRS 对保留域名（example.jp）会回一句域名本身、没有任何字段。这种回「查不到注册数据」，不是「出错」。
+- 本地 `wrangler dev` 的缓存存在 `.wrangler/state/v3/cache`，失败也会被缓存 10 分钟；改代码后测到「仍超时」其实
+  是缓存，要先停掉 dev、删掉这个目录再起。
+
+**页面怎么标**：响应带 `src: "rdap" | "whois"`，页面在注册信息下面写「这一项由 1ms.dog 的服务器代查」，分享快照
+的 `xs` 记住来源。页脚的数据来源、README 和十种语言的隐私问答都从「全部在浏览器里完成」改成照实说：DNS 查询
+仍然只在浏览器里，注册信息在浏览器读不了时由服务器代查，注册人信息不读、不返回。

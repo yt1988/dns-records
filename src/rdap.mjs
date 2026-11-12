@@ -71,6 +71,43 @@ export async function fetchRdap(domain, { fetchImpl = fetch, signal, timeout = 9
   }
 }
 
+// What the page asks when the browser cannot read the registry itself: the Worker reaches RDAP without CORS and the
+// registry's port-43 WHOIS server. The answer comes back like fetchRdap's, plus src — "rdap" or "whois" — so the page
+// can say the lookup was made on the visitor's behalf (docs/decisions.md).
+export const WHOIS_ENDPOINT = "/whois?d=";
+
+export async function fetchServerRegistration(domain, { fetchImpl = fetch, signal, timeout = 12000 } = {}) {
+  const ctl = new AbortController();
+  const timer = setTimeout(() => ctl.abort(), timeout);
+  const stop = () => ctl.abort();
+  if (signal) { if (signal.aborted) ctl.abort(); else signal.addEventListener("abort", stop); }
+  try {
+    const res = await fetchImpl(WHOIS_ENDPOINT + encodeURIComponent(domain), {
+      signal: ctl.signal, credentials: "omit", referrerPolicy: "no-referrer", headers: { accept: "application/json" },
+    });
+    if (!res.ok) return null;
+    const j = await res.json();
+    if (!j || typeof j !== "object") return null;
+    const src = j.src === "whois" ? "whois" : "rdap";
+    if (j.ok) return {
+      src,
+      data: {
+        handle: null, registrar: j.registrar || null, registrarUrl: j.registrarUrl || null,
+        created: j.created || null, expires: j.expires || null, updated: j.updated || null,
+        status: Array.isArray(j.status) ? j.status : [],
+        nameservers: Array.isArray(j.nameservers) ? j.nameservers : [],
+      },
+    };
+    if (j.reason === "notfound") return { notFound: true, src };
+    return null;
+  } catch (e) {
+    return null;
+  } finally {
+    clearTimeout(timer);
+    if (signal) signal.removeEventListener("abort", stop);
+  }
+}
+
 function vname(entity) {
   const card = Array.isArray(entity.vcardArray) && Array.isArray(entity.vcardArray[1]) ? entity.vcardArray[1] : [];
   const fn = card.find(p => Array.isArray(p) && p[0] === "fn");

@@ -25,8 +25,8 @@ Live: https://dig.1ms.dog
 
 ## How it works
 
-Every query is a DNS over HTTPS `GET` (RFC 8484) sent by the page straight to each resolver — there is no server in the
-middle, and no request goes to 1ms.dog. The binary DNS answer is parsed in the browser by a small parser in
+Every DNS query is a DNS over HTTPS `GET` (RFC 8484) sent by the page straight to each resolver — there is no server in
+the middle, and no DNS query goes to 1ms.dog. The binary DNS answer is parsed in the browser by a small parser in
 [`src/dns.mjs`](src/dns.mjs) (about 250 lines, no DNS library); the merged view comes from
 [`src/merge.mjs`](src/merge.mjs), the mail checks from [`src/mail.mjs`](src/mail.mjs), the DNSSEC verdict from
 [`src/dnssec.mjs`](src/dnssec.mjs) and the grade from [`src/grade.mjs`](src/grade.mjs).
@@ -50,10 +50,15 @@ Four rules keep the result honest:
 
 DMARC lives at `_dmarc.<domain>`, so when TXT is selected each resolver is also asked for that name. For DNSSEC the DS
 question goes to two resolvers that already answered the other types (Cloudflare and Google first); ordinary queries
-carry no EDNS DO bit, and AD is read from the answer header. RDAP goes through https://rdap.org/, which redirects to the
-right registry; suffixes outside IANA's bootstrap that publish RDAP with CORS (currently .io) are asked directly. A
-suffix with no public RDAP (.cn, .jp, .ru, .hk, .de, .vn) says the suffix cannot be looked up and links to the registry's
-own WHOIS page — it never claims the domain has no registration.
+carry no EDNS DO bit, and AD is read from the answer header. Registration data is read in the browser first: through
+https://rdap.org/, which redirects to the right registry, or the registry's own RDAP for suffixes outside IANA's
+bootstrap that publish it with CORS (currently .io). When a browser cannot read the registry — the suffix has no RDAP
+(.cn, .jp, .ru, .hk), or its RDAP sends no CORS header (.de) — the page asks the Worker's `GET /whois?d=<domain>`, which
+tries RDAP without CORS and then the registry's port-43 WHOIS (currently CNNIC, JPRS, TCI and HKDNR). That answer is
+marked on the page as fetched by the server, and it carries only the registrar, the dates, the status flags and the name
+servers: registrant names, e-mails and phone numbers are never read out of the registry's reply or returned. A suffix
+with neither (currently .vn) says it cannot be looked up and links to the registry's own WHOIS page — it never claims
+the domain has no registration.
 
 Not in this version: DKIM selectors and certificates (separate tools), proxy integration, accounts.
 
@@ -67,11 +72,14 @@ src/merge.mjs      merge answers by value, consistency, stale resolvers, TTL ran
 src/mail.mjs       SPF, DMARC and registrar-vs-resolver name servers
 src/dnssec.mjs     the DS answer, the AD bit and the validator list → four DNSSEC states
 src/grade.mjs      the answers' grade, the mail grade, and the overall letter
-src/rdap.mjs       registration data from rdap.org, normalized; CORS-capable supplements (.io) and the suffixes
-                   with no public RDAP, with each registry's WHOIS page
+src/rdap.mjs       registration data from rdap.org, normalized; CORS-capable supplements (.io); the request the
+                   page makes when the browser cannot read a registry itself
+src/whois.mjs      the Worker's registration lookup: RDAP without CORS, port-43 WHOIS for .cn/.jp/.ru/.hk, and the
+                   text parser that keeps only registrar, dates, status and name servers
+src/whois-net.js   Cloudflare's sockets API, imported only while a /whois request is being handled
 src/code.mjs       a shared result as a link (/r/<code>), and back
 src/app.js         the page: queries, verdict, the three cards, tables, resolver answers, mail, RDAP, share
-src/worker.js      the Worker: static assets, and a shared link's preview title (noindex)
+src/worker.js      the Worker: static assets, a shared link's preview title (noindex), and GET /whois
 src/page.html      the page template, one per language
 src/style.css      the theme (--bg --fg --muted --line --ink), desktop and 375 px
 src/i18n/*.mjs     10 languages; keys and placeholders are tested against English
@@ -93,7 +101,8 @@ npm run dev       # wrangler dev, http://localhost:8794
 
 Deploy: `npm run deploy`. On 1ms.dog the domain is routed by the shell; to self-host, bind your own domain to the Worker
 in the Cloudflare dashboard and build with `SITE_URL=https://your.domain npm run build`. No DNS query passes through the
-Worker either way: only the share link's HTML is rewritten there.
+Worker either way: only the share link's HTML is rewritten there and the registration lookups a browser cannot make are
+asked through it.
 
 ## Adding a resolver
 
@@ -107,10 +116,14 @@ Worker either way: only the share link's HTML is rewritten there.
 
 ## Privacy
 
-The page sends each DNS query from the visitor's browser to the resolvers listed under Resolver answers; the RDAP query
-goes to rdap.org. 1ms.dog's server never sees a query or an answer, and keeps no log. A shared link contains the domain's
-own public records and the registration fields that were on screen — never the visitor's IP. Both the share dialog and
-the Q&A say this in every language. No cookies, no accounts, no analytics beyond the shell's page counts.
+The page sends each DNS query from the visitor's browser to the resolvers listed under Resolver answers; 1ms.dog's server
+never sees a DNS query or its answer. Registration data is asked by the browser too (rdap.org, or the registry's own
+RDAP). When a browser cannot read a registry, the page asks the Worker's `/whois`: it tries RDAP and then the registry's
+port-43 WHOIS, and returns only the fields listed above — never registrant details — and the page marks the answer as
+fetched by the server. Those lookups are cached for twelve hours (failures ten minutes) and no log is kept. A shared
+link contains the domain's own public records and the registration fields that were on screen — never the visitor's IP.
+Both the share dialog and the Q&A say this in every language. No cookies, no accounts, no analytics beyond the shell's
+page counts.
 
 ## License
 
