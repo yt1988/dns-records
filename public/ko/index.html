@@ -41,7 +41,7 @@
 <meta name="twitter:description" content="리졸버 12곳의 응답, 도메인 진단 등급, 메일과 DNSSEC">
 <script type="application/ld+json">{"@context":"https://schema.org","@graph":[{"@type":"WebApplication","name":"도메인 투시 · 1ms.dog","url":"https://dig.1ms.dog/ko/","applicationCategory":"UtilitiesApplication","operatingSystem":"Any","browserRequirements":"Requires JavaScript","description":"모든 도메인의 DNS 레코드(A, AAAA, CNAME, MX, NS, TXT, CAA, SRV, SOA)를 12개 공용 리졸버에 한 번에 조회합니다. 응답을 비교하고 SPF, DMARC, DNSSEC을 확인해 도메인 진단 등급과 등록 정보를 보여 줍니다. 무료, DNS 조회는 브라우저에서 바로.","inLanguage":"ko","isAccessibleForFree":true,"offers":{"@type":"Offer","price":"0","priceCurrency":"USD"}},{"@type":"FAQPage","mainEntity":[{"@type":"Question","name":"이 페이지는 무엇을 조회하나요?","acceptedAnswer":{"@type":"Answer","text":"도메인을 입력하면 9가지 레코드(A, AAAA, CNAME, MX, NS, TXT, CAA, SRV, SOA)를 12개 공용 리졸버에 브라우저에서 DNS over HTTPS(DoH, 암호화된 DNS)로 동시에 묻습니다. 같은 값은 합쳐서 보여 주고, 리졸버별 응답은 「리졸버 응답」에 표시합니다. 등록 정보는 RDAP(구조화된 WHOIS)에서 가져옵니다."}},{"@type":"Question","name":"진단 등급은 어떻게 정하나요?","acceptedAnswer":{"@type":"Answer","text":"등급은 두 가지 중 낮은 쪽입니다. 하나는 응답이 얼마나 같은지, 다른 하나는 메일 설정입니다. 일치 여부는 응답한 리졸버만 세어 봅니다. 응답한 곳이 모두 같으면 A, 하나라도 다르면 B입니다. 이 페이지에서 연결하지 못한 리졸버(대개 회선 문제)는 어느 쪽으로도 세지 않습니다. 리졸버가 돌려준 SERVFAIL이나 REFUSED는 응답이므로 셉니다. 12곳 중 절반 미만만 응답하면 등급을 매기지 않습니다. 메일 등급은 SPF와 DMARC에서 나오며, 메일을 받을 수 있는 MX가 있을 때만 매깁니다. 서명되어 있지만 DNSSEC 검증에 실패하는 도메인은 한 단계 더 내려갑니다. CAA와 IPv6은 배지로만 보여 주며 등급을 바꾸지 않습니다."}},{"@type":"Question","name":"DNSSEC으로 무엇을 알 수 있나요?","acceptedAnswer":{"@type":"Answer","text":"DNSSEC이 있으면 리졸버가 응답이 정말 그 도메인의 것이고 도중에 바뀌지 않았음을 증명할 수 있습니다. 페이지는 상위 영역에 DS 레코드를 묻고, 검증한다고 확인된 리졸버의 AD 비트를 읽습니다. 「켜져 있고 검증 통과」는 도메인이 서명되어 있고 그 리졸버들이 모두 인정했다는 뜻입니다. 「켜져 있지만 검증 실패」는 서명된 도메인의 응답이 검증을 통과하지 못해, 확인하는 리졸버와 브라우저가 거부하는 상태입니다. 꺼짐은 흔한 상태이며 등급을 내리지 않습니다. 근거가 부족하면 판단할 수 없다고 씁니다."}},{"@type":"Question","name":"레코드 변경은 언제 반영되나요?","acceptedAnswer":{"@type":"Answer","text":"레코드를 바꿔도 각 리졸버는 TTL(유효 기간)이 끝날 때까지 예전 복사본을 씁니다. 그래서 변경 직후에는 새 값을 주는 리졸버와 예전 값을 주는 리졸버가 섞이고, 「리졸버 응답」 패널이 어느 쪽인지 보여 줍니다. 브라우저는 도메인의 권한 서버(53번 포트)에 연결할 수 없으므로, 여기서는 공용 리졸버의 캐시 상태만 볼 수 있습니다."}},{"@type":"Question","name":"왜 어떤 리졸버는 「연결 실패」로 나오나요?","acceptedAnswer":{"@type":"Answer","text":"조회는 브라우저에서 각 리졸버로 직접 갑니다. 중국 본토에서는 Cloudflare와 Google DNS가 보통 막혀 있고 일부 다른 리졸버도 마찬가지입니다. 그런 줄은 「연결 실패」로 표시합니다. 경로의 문제이며 레코드가 비었다는 뜻이 아닙니다. 응답하지 않은 리졸버는 불일치로 세지 않습니다."}},{"@type":"Question","name":"「같은 응답」과 TTL은 무슨 뜻인가요?","acceptedAnswer":{"@type":"Answer","text":"「같은 응답」은 응답한 리졸버 중 가장 많은 응답을 준 수입니다. TTL은 그 리졸버가 레코드를 보관할 수 있는 남은 초이며 zone의 값에서 줄어듭니다. 리졸버마다 남은 시간이 다른 것은 정상이고 불일치가 아닙니다."}},{"@type":"Question","name":"SPF와 DMARC는 어떻게 확인하나요?","acceptedAnswer":{"@type":"Answer","text":"SPF는 도메인의 TXT 레코드에서 읽습니다. v=spf1이 여러 개인지, 끝이 +all, -all, ~all, ?all 중 무엇인지, DNS를 다시 조회하는 메커니즘(include, a, mx, ptr, exists, redirect)이 몇 개인지(한도 10) 확인합니다. include 안쪽까지 따라가지 않으므로 이 수는 최소값입니다. DMARC는 _dmarc.\u003c도메인>에서 p= 정책, 보고 주소(rua) 여부, pct를 읽습니다."}},{"@type":"Question","name":"등록기관의 NS와 리졸버의 NS가 다른 이유는?","acceptedAnswer":{"@type":"Answer","text":"등록기관 쪽(RDAP)은 등록된 정보이고, 리졸버가 반환하는 것은 도메인이 실제로 공개한 NS 레코드입니다. 다르면 변경이 아직 반영 중이거나 등록기관 정보가 오래된 것입니다. 양쪽을 그대로 보여 줍니다."}},{"@type":"Question","name":"RDAP은 무엇이고 왜 빈 항목이 있나요?","acceptedAnswer":{"@type":"Answer","text":"RDAP는 등록기관이 제공하는 구조화된 WHOIS입니다. 공개하는 정보가 적은 등록기관도 있고, 개인정보 보호 서비스가 등록자 정보를 바꿔 놓기도 합니다. 빠진 항목은 「없음」이 아니라 「알 수 없음」으로 표시합니다."}},{"@type":"Question","name":"등록 정보를 서버가 대신 조회하는 이유는?","acceptedAnswer":{"@type":"Answer","text":"RDAP는 등록기관마다 제공되며, rdap.org는 IANA 부트스트랩에 실린 접미사만 압니다. 또 RDAP가 있어도 브라우저가 읽을 수 없는 접미사가 있습니다(.de의 DENIC 등). 두 경우 모두 브라우저에서는 읽을 수 없어, 페이지가 1ms.dog 서버에 대신 조회를 부탁합니다. 서버는 먼저 RDAP를 시도하고, 없으면 등록기관의 43번 포트 WHOIS에 연결합니다(현재 .cn, .jp, .ru, .hk). 결과에는 「서버가 대신 조회」라고 표시합니다. 서버는 등록기관이 공개한 내용을 그대로 돌려줍니다. 등록기관, 날짜, 상태, 네임서버에 더해 등록자(기관 또는 이름), 이메일, 전화, 등록기관의 DNSSEC도 보여 줍니다. 등록기관이 공개하지 않았으면 비워 두고, 만들지도 가리지도 않습니다. 등록기관의 응답 원문은 「원본 기록」에 들어 있습니다. .vn의 WHOIS는 응답하지 않아 등록기관 링크를 보여 주고, 「없음」이 아니라 「조회할 수 없음」이라고 씁니다."}},{"@type":"Question","name":"제 조회는 어디로 가나요?","acceptedAnswer":{"@type":"Answer","text":"모든 DNS 조회는 브라우저에서 「리졸버 응답」에 나열된 리졸버로 직접 갑니다. 등록 정보도 먼저 브라우저가 rdap.org나 등록기관 자체 RDAP(.io 등)에 묻습니다. 브라우저가 읽을 수 없을 때(CORS가 없는 RDAP, RDAP가 없는 접미사)는 페이지가 1ms.dog 서버에 한 번 대신 조회를 부탁합니다. 서버는 먼저 RDAP, 다음으로 등록기관의 43번 포트 WHOIS를 시도하고, 결과에는 「서버가 대신 조회」라고 표시합니다. 당신의 IP와 조회 내용은 로그로 남기지 않습니다. 공유 링크에는 도메인 자체의 공개 레코드와 화면에 보인 등록 정보만 들어가며, 당신의 IP와 등록자·연락처는 들어가지 않습니다."}},{"@type":"Question","name":"공유 링크를 열어도 숫자가 그대로인 이유는?","acceptedAnswer":{"@type":"Answer","text":"공유된 결과는 스냅숏입니다. 그 시점에 리졸버가 반환한 내용을 보여 주어 두 사람이 같은 데이터를 비교할 수 있습니다. 지금 값을 보려면 「내 결과 조회」를 누르세요."}}]}]}</script>
 <link rel="preload" href="/assets/fonts/geist-latin.woff2" as="font" type="font/woff2" crossorigin>
-<link rel="stylesheet" href="/assets/app.b1006b23ee.css">
+<link rel="stylesheet" href="/assets/app.c0a447ecde.css">
 </head>
 <body>
 <div class="app">
@@ -117,14 +117,14 @@
   </section>
 
   <section class="card sec" id="prop" hidden>
-    <div class="sec-h"><h3 data-i="h_prop">리졸버 응답</h3><div class="tabs" id="propTabs" role="tablist"></div><span class="m prop-sum" id="propSum"></span></div>
+    <div class="sec-h"><h3 data-i="h_prop">리졸버 응답</h3><span class="m apex-note" id="propApex" hidden></span><div class="tabs" id="propTabs" role="tablist"></div><span class="m prop-sum" id="propSum"></span></div>
     <p class="m prop-hint" data-i="prop_hint">각 리졸버가 지금 주는 응답</p>
     <div class="prop-rows" id="propRows"></div>
   </section>
 
   <div class="grid2">
     <section class="card sec" id="mail" hidden>
-      <div class="sec-h"><h3 data-i="h_mail">메일</h3><span class="st grade" id="mailGrade"></span></div>
+      <div class="sec-h"><h3 data-i="h_mail">메일</h3><span class="m apex-note" id="mailApex" hidden></span><span class="st grade" id="mailGrade"></span></div>
       <div id="mailBody"></div>
     </section>
     <section class="card sec" id="rdap" hidden>
@@ -155,7 +155,7 @@
   </div>
 </div>
 <script type="application/json" id="data">{"lang":"ko","paths":{"en":"/","zh-CN":"/zh-cn/","zh-TW":"/zh-tw/","ja":"/ja/","ko":"/ko/","es":"/es/","fr":"/fr/","de":"/de/","pt":"/pt/","ru":"/ru/"}}</script>
-<script src="/assets/l.ko.b85046c724.js"></script>
-<script src="/assets/app.2d78983a72.js"></script>
+<script src="/assets/l.ko.4fb172b67c.js"></script>
+<script src="/assets/app.44ef21588a.js"></script>
 </body>
 </html>

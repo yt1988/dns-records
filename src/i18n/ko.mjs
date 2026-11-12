@@ -49,6 +49,7 @@ export default {
   no_records: "레코드 없음", rec_n: "{b}곳 중 {n}곳이 반환", ttl_range: "{a}–{b}초", ttl_s: "{a}초", ttl_h: "{a}시간", ttl_d: "{a}일", ttl_range_h: "{a}–{b}시간", ttl_range_d: "{a}–{b}일",
   lk_dns: "내게 가장 빠른 DNS 리졸버는?", lk_ping: "18개 지역에서 이 도메인 Ping", lk_asn: "이 IP의 소유자",
   records_note: "같은 값은 합쳐서 보여 줍니다. TTL은 각 리졸버에 남은 시간입니다.",
+  q_apex: "{domain}에서 확인",
 
   h_prop: "리졸버 응답", prop_hint: "각 리졸버가 지금 주는 응답", agree: "다수와 같음", differs: "다수와 다름",
   prop_summary: "응답한 {b}곳 중 {a}곳이 같은 응답", prop_none: "이 종류는 응답한 리졸버가 없습니다", th_resolver: "리졸버",

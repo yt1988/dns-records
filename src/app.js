@@ -6,6 +6,7 @@ import { mergeType, mergeAll, mergeRecords, primaryType, OK } from "./merge.mjs"
 import { spfCheck, dmarcCheck, compareNs } from "./mail.mjs";
 import { dnssecVerdict, dsFound, dsAskers, dnssecRows } from "./dnssec.mjs";
 import { resolveGrade, mailGrade, overallGrade } from "./grade.mjs";
+import { ZONE_TYPES, findApex, preferRegistrable } from "./zone.mjs";
 import { fetchRdap, fetchServerRegistration, tldOf, registryOf } from "./rdap.mjs";
 import { encodeResult, decodeResult, sharePath, resultsFromSnapshot, CODES } from "./code.mjs";
 
@@ -100,7 +101,7 @@ import { encodeResult, decodeResult, sharePath, resultsFromSnapshot, CODES } fro
   let runId = 0, ctl = null, state = fresh(), R = null;
 
   function fresh() {
-    return { domain: "", types: [], results: {}, dmarc: [], rdap: null, startedAt: 0, finished: false,
+    return { domain: "", apex: "", lateApex: "", types: [], results: {}, dmarc: [], rdap: null, startedAt: 0, finished: false,
       tab: "A", merged: null, records: [], shareCode: "", shared: false, findings: [],
       ds: null, dnssec: null, grade: null };
   }
@@ -147,7 +148,108 @@ import { encodeResult, decodeResult, sharePath, resultsFromSnapshot, CODES } fro
   }
   const err = (r, type, error, rcodeName, statusCode) => ({ id: r.id, type, status: "error", error, rcodeName: rcodeName || "", statusCode: statusCode || 0, records: [] });
 
+  // The domain whose mail and NS records the page shows. The registry names the registrable domain (www.baidu.com →
+  // baidu.com, and www.cloudflare.com → cloudflare.com even though that host is delegated as a zone of its own); when
+  // the browser cannot read the registry within a moment, one SOA question finds the zone. Failing both, the lookup
+  // stays on the typed name rather than inventing a parent.
+  async function resolveApex(name, signal, rdapAttempt) {
+    const zoneP = findApex(name, n => firstMessage(n, signal));
+    const registry = await Promise.race([
+      rdapAttempt.then(r => (r && r.lookedUp) || "").catch(() => ""),
+      new Promise(res => setTimeout(() => res(""), 1200)),
+    ]).then(v => String(v || "").toLowerCase());
+    const zone = await zoneP;
+    return preferRegistrable(zone, name, registry);
+  }
+
+  // One SOA question, answered by whichever resolver replies first (the rest are dropped at once). Only the zone
+  // lookup uses this: one extra question per lookup, never one per record type.
+  function firstMessage(name, signal) {
+    const c = new AbortController();
+    let finished = false, settle, timer = null;
+    const done = new Promise(res => { settle = res; });
+    function finish(msg) {
+      if (finished) return;
+      finished = true;
+      if (timer) clearTimeout(timer);
+      c.abort();
+      if (signal) signal.removeEventListener("abort", onStop);
+      settle(msg);
+    }
+    function onStop() { finish(null); }
+    timer = setTimeout(() => finish(null), TIMEOUT);
+    if (signal) { if (signal.aborted) onStop(); else signal.addEventListener("abort", onStop); }
+    let left = RESOLVERS.length;
+    for (const r of RESOLVERS) {
+      fetch(dohURL(r.doh, name, "SOA"), {
+        mode: "cors", cache: "no-store", credentials: "omit", referrerPolicy: "no-referrer",
+        headers: { accept: "application/dns-message" }, signal: c.signal,
+      }).then(res => (res.ok ? res.arrayBuffer() : null))
+        .then(buf => (buf ? parse(buf) : null))
+        .then(msg => { if (msg) finish(msg); else if (--left === 0) finish(null); })
+        .catch(() => { if (--left === 0) finish(null); });
+    }
+    return done;
+  }
+
+  // The registry can name a shorter domain than the SOA walk found: www.cloudflare.com is a zone of its own (its own
+  // SOA and NS), but mail sent to that name is configured on cloudflare.com. When the registry's answer arrives after
+  // the zone questions were already asked, they are asked again at the registrable domain and the page is redrawn.
+  // Only the zone types move; A/AAAA/CNAME keep the answers for the host the visitor typed.
+  async function askDs(apex, signal, my, onEach) {
+    const answered = {};
+    Object.keys(state.results).forEach(type => state.results[type].forEach(r => { if (r.status === OK) answered[r.id] = 1; }));
+    const ids = dsAskers(Object.keys(answered));
+    const results = await Promise.all(ids.map(id => {
+      const r = RESOLVERS.filter(x => x.id === id)[0];
+      return queryOne(r, apex, "DS", signal, { do: true }).then(res => { if (onEach) onEach(); return res; });
+    }));
+    for (let i = ids.length; i < 2; i++) if (onEach) onEach();
+    if (my !== runId) return false;
+    state.ds = dsFound(results);
+    state.dnssec = dnssecVerdict(state.ds, dnssecRows(state.results));
+    return true;
+  }
+
+  async function reaskZone(apex, my) {
+    const zoneTypes = state.types.filter(x => ZONE_TYPES.has(x));
+    if (!zoneTypes.length) return;
+    const wantDmarc = state.types.indexOf("TXT") >= 0;
+    state.apex = apex;
+    for (const type of zoneTypes) state.results[type] = [];
+    state.dmarc = [];
+    await Promise.all(RESOLVERS.map(async r => {
+      let dead = null;
+      for (const type of zoneTypes) {
+        const res = dead ? err(r, type, "skipped") : await queryOne(r, apex, type, ctl.signal);
+        if (my !== runId) return;
+        if (!dead && res.status === "error" && (res.error === "timeout" || res.error === "network" || res.error === "http")) dead = res.error;
+        addResult(type, res);
+      }
+      if (wantDmarc) {
+        const res = dead ? err(r, "TXT", "skipped") : await queryOne(r, "_dmarc." + apex, "TXT", ctl.signal);
+        if (my !== runId) return;
+        state.dmarc.push(res);
+      }
+    }));
+    if (my !== runId) return;
+    await askDs(apex, ctl.signal, my);
+    if (my !== runId) return;
+    finish();
+    syncApexNotes();
+  }
+
   function setProgress(done, total) { $("prog").textContent = done < total ? t("prog", { done, total }) : ""; }
+
+  // "查的是 baidu.com" beside a block whose numbers are about the zone, not the host the visitor typed. Shown only
+  // when the two differ, so the usual case (the apex itself) has no extra line.
+  function syncApexNotes() {
+    const zone = !!(state.apex && state.apex !== state.domain);
+    const set = (id, on) => { const n = $(id); n.hidden = !on; n.textContent = on ? t("q_apex", { domain: state.apex }) : ""; };
+    const tab = ZONE_TYPES.has(state.tab);
+    set("propApex", zone && tab);
+    set("mailApex", zone && state.types.some(x => ZONE_TYPES.has(x)));
+  }
 
   function addResult(type, res) {
     if (!state.results[type]) state.results[type] = [];
@@ -183,30 +285,46 @@ import { encodeResult, decodeResult, sharePath, resultsFromSnapshot, CODES } fro
     $("prog").textContent = t("running");
 
     const wantDmarc = types.indexOf("TXT") >= 0;
-    const total = RESOLVERS.length * (types.length + (wantDmarc ? 1 : 0)) + 2;   // + the DS question, asked of two
+    const total = RESOLVERS.length * (types.length + (wantDmarc ? 1 : 0)) + 3;   // + DS asked of two, + one SOA for the zone
     let done = 0;
     const tick = () => { done++; setProgress(done, total); };
-    const rdapP = loadRdap(norm.name, my);
+    const browserRdap = fetchRdap(norm.name);
+    const rdapP = loadRdap(norm.name, my, browserRdap);
+
+    // MX, SPF, DMARC, NS, CAA and DNSSEC belong to a domain, not to the host the visitor typed: www.baidu.com's mail
+    // is configured on baidu.com (docs/decisions.md). The registry names that domain directly; when the browser
+    // cannot read it in time, one SOA question finds the zone instead. A/AAAA/CNAME/SRV stay on the typed name and
+    // start at once, so the visitor sees addresses while the mail name is still being settled.
+    const apexP = resolveApex(norm.name, ctl.signal, browserRdap).then(apex => {
+      if (my === runId) { state.apex = apex; syncApexNotes(); tick(); }
+      return apex;
+    });
+    const hostTypes = types.filter(x => !ZONE_TYPES.has(x));
+    const zoneTypes = types.filter(x => ZONE_TYPES.has(x));
 
     await Promise.all(RESOLVERS.map(async r => {
       let dead = null;
-      for (const type of types) {
-        if (my !== runId) return;
-        if (dead) { addResult(type, err(r, type, "skipped")); tick(); if (state.tab === type) renderProp(); continue; }
-        const res = await queryOne(r, norm.name, type, ctl.signal);
+      const ask = async (name, type) => {
+        if (dead) { addResult(type, err(r, type, "skipped")); tick(); if (state.tab === type) renderProp(); return; }
+        const res = await queryOne(r, name, type, ctl.signal);
         if (my !== runId) return;
         addResult(type, res);
         if (res.status === "error" && (res.error === "timeout" || res.error === "network" || res.error === "http")) dead = res.error;
         tick();
         if (state.tab === type) renderProp();
-      }
+      };
+      for (const type of hostTypes) { if (my !== runId) return; await ask(norm.name, type); }
+      const apex = await apexP;
+      if (my !== runId) return;
+      for (const type of zoneTypes) { if (my !== runId) return; await ask(apex, type); }
       if (wantDmarc && my === runId) {
-        let res;
-        if (dead) res = err(r, "TXT", "skipped");
-        else res = await queryOne(r, "_dmarc." + norm.name, "TXT", ctl.signal);
-        if (my !== runId) return;
-        state.dmarc.push(res);
-        tick();
+        if (dead) { state.dmarc.push(err(r, "TXT", "skipped")); tick(); }
+        else {
+          const res = await queryOne(r, "_dmarc." + apex, "TXT", ctl.signal);
+          if (my !== runId) return;
+          state.dmarc.push(res);
+          tick();
+        }
       }
     }));
 
@@ -214,22 +332,14 @@ import { encodeResult, decodeResult, sharePath, resultsFromSnapshot, CODES } fro
 
     // DNSSEC: the parent's DS record, asked of two resolvers that answered the record types (so a visitor whose
     // network blocks Cloudflare and Google still gets an answer), then the AD bits already collected are folded in.
-    const answered = {};
-    Object.keys(state.results).forEach(type => state.results[type].forEach(r => { if (r.status === OK) answered[r.id] = 1; }));
-    const ids = dsAskers(Object.keys(answered));
-    const dsResults = await Promise.all(ids.map(id => {
-      const r = RESOLVERS.filter(x => x.id === id)[0];
-      return queryOne(r, norm.name, "DS", ctl.signal, { do: true }).then(res => { tick(); return res; });
-    }));
-    for (let i = ids.length; i < 2; i++) tick();
-    if (my !== runId) return;
-    state.ds = dsFound(dsResults);
-    state.dnssec = dnssecVerdict(state.ds, dnssecRows(state.results));
+    if (!await askDs(state.apex, ctl.signal, my, tick)) return;
 
     state.finished = true;
     finish();
     await rdapP;
-    if (my === runId) { renderRdap(); renderMail(); prepareShare(); }
+    if (my !== runId) return;
+    renderRdap(); renderMail(); prepareShare();
+    if (state.lateApex && state.lateApex !== state.apex) await reaskZone(state.lateApex, my);
   }
 
   function setGo(busy) {
@@ -239,11 +349,11 @@ import { encodeResult, decodeResult, sharePath, resultsFromSnapshot, CODES } fro
   }
 
   /* ---------------- RDAP ---------------- */
-  function loadRdap(name, my) {
+  function loadRdap(name, my, firstTry) {
     $("rdap").hidden = false;
     $("rdapState").textContent = t("rd_loading");
     $("rdapBody").textContent = "";
-    return fetchRdap(name).then(async r => {
+    return (firstTry || fetchRdap(name)).then(async r => {
       if (my !== runId) return;
       // The browser could not read the registry: the suffix has no RDAP in IANA's list, or its RDAP has no CORS.
       // The Worker can reach it (RDAP without CORS, or the registry's port-43 WHOIS), so it asks on our behalf and
@@ -255,6 +365,16 @@ import { encodeResult, decodeResult, sharePath, resultsFromSnapshot, CODES } fro
       }
       state.rdap = r;
       renderRdap();
+      // The registry names the registrable domain. When it arrives after the zone questions were already answered at
+      // what DNS called the apex (www.cloudflare.com answers SOA and NS for itself), the zone records are asked again
+      // at the registry's name. Before the lookup is finished the name is just remembered; lookup() acts on it.
+      const reg = r && typeof r.lookedUp === "string" ? r.lookedUp.toLowerCase() : "";
+      const lower = name.toLowerCase();
+      const valid = reg && reg.split(".").length >= 2 && (reg === lower || lower.endsWith("." + reg));
+      if (valid && reg !== state.apex) {
+        if (state.finished) reaskZone(reg, my).catch(() => {});
+        else state.lateApex = reg;
+      }
     });
   }
 
@@ -268,6 +388,7 @@ import { encodeResult, decodeResult, sharePath, resultsFromSnapshot, CODES } fro
     $("findings").textContent = "";
     $("links").hidden = true;
     $("links").textContent = "";
+    ["propApex", "mailApex"].forEach(id => { $(id).hidden = true; $(id).textContent = ""; });
     $("shareBtn").hidden = true;
     $("reportBtn").hidden = true;
     $("recBody").textContent = "";
@@ -432,6 +553,7 @@ import { encodeResult, decodeResult, sharePath, resultsFromSnapshot, CODES } fro
     else if (mt.answered === 1) sum.textContent = t("v_one");
     else if (mt.consistency != null) sum.textContent = t("prop_summary", { a: mt.majority.resolvers.length, b: mt.answered });
     else sum.textContent = (results.length) + " / " + RESOLVERS.length;
+    syncApexNotes();
   }
 
   /* ---------------- verdict ---------------- */
@@ -546,7 +668,10 @@ import { encodeResult, decodeResult, sharePath, resultsFromSnapshot, CODES } fro
     tb.textContent = "";
     state.records.forEach(row => {
       const tr = el("tr");
-      tr.appendChild(el("td", "t", row.type));
+      const tc = el("td", "t", row.type);
+      // a zone-level record under a host name: say which name it was asked of, so the row is not read as www's own
+      if (state.apex && state.apex !== state.domain && ZONE_TYPES.has(row.type)) tc.appendChild(el("span", "apex-at", state.apex));
+      tr.appendChild(tc);
       const v = el("td", "v");
       if ((row.type === "A" || row.type === "AAAA") && isPublic(row.data) && asnHref(row.data)) {
         const a = el("a", "", row.data);
@@ -566,6 +691,7 @@ import { encodeResult, decodeResult, sharePath, resultsFromSnapshot, CODES } fro
     });
     $("recCount").textContent = String(state.records.length);
     $("records").hidden = false;
+    syncApexNotes();
   }
 
   /* ---------------- mail ---------------- */
@@ -627,6 +753,7 @@ import { encodeResult, decodeResult, sharePath, resultsFromSnapshot, CODES } fro
   function renderMail() {
     const body = $("mailBody");
     body.textContent = "";
+    syncApexNotes();
     const grade = state.grade;
     $("mailGrade").textContent = grade && grade.mail ? grade.mail : "";
     $("mailGrade").title = t("k_mail");
@@ -823,6 +950,8 @@ import { encodeResult, decodeResult, sharePath, resultsFromSnapshot, CODES } fro
     const first = m && m.majority && m.majority.records.length ? m.majority.records[0] : null;
     return {
       v: 1, d: state.domain, t: state.types, at: state.startedAt, r: rows, m: dm, x: d, xz, xs,
+      // the zone the mail and NS rows came from, when the visitor typed a host inside it (an older link has none)
+      ap: state.apex && state.apex !== state.domain ? state.apex : null,
       // the DNSSEC verdict, so a shared link shows the same third number (an older link has none: "unknown")
       dn: state.dnssec ? [state.dnssec.state, state.dnssec.answered] : ["unknown", 0],
       s: { ty: primary || state.types[0] || "A", val: first ? first.data : "", ok: m ? m.answered : 0,
@@ -947,6 +1076,7 @@ import { encodeResult, decodeResult, sharePath, resultsFromSnapshot, CODES } fro
     state = fresh();
     state.shared = true;
     state.domain = snap.d;
+    state.apex = typeof snap.ap === "string" && /^[a-z0-9.-]+$/i.test(snap.ap) ? snap.ap : snap.d;
     state.types = snap.t.filter(x => ALL_TYPES.indexOf(x) >= 0);
     state.tab = state.types[0] || "A";
     state.startedAt = snap.at || Date.now();

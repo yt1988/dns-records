@@ -393,3 +393,39 @@ DNS 最快 / 从这个地区 Ping」那一行，原来只在 `finish()` 里画�
 说明提前画也顺手解决了窄屏换行）。
 
 两条都钉了测试：页头的 `aria-label` + 540 px 的 `display:none`，以及 `skeleton()` 里必须出现 `renderLinks()`。
+
+## 2026-11-12 · 邮件、NS、DNSSEC 查根域，不查访客输入的主机名
+
+站长报的问题：输入 `www.baidu.com`，邮件那一块显示「没有 MX 记录」。原因和注册信息那条一样——主机名没有自己的
+邮件配置：MX、SPF、`_dmarc` 都在 `baidu.com`，问 `www.baidu.com` 只会拿到别的 zone 的 SOA 或者空答案。
+把「没问到」画成「这个域名不收信」，正是这个页面最不能犯的错。
+
+**哪个名字**：A/AAAA/CNAME/SRV 仍然查访客输入的名字（www 的 CNAME 链就该看）；MX、NS、TXT（SPF）、CAA、
+SOA、`_dmarc.<根域>`、DS 查根域。仓库里没有 PSL，也不打算放一份——根域从 DNS 自己读出来：**一次 SOA 查询**，
+问在输入的名字上，答案区或授权区里的 SOA owner 就是 zone apex。12 家解析器同时发，谁先答用谁，其余立刻掐掉，
+只多一轮、不按记录类型各问一遍。
+
+**最多往上一层**（`src/zone.mjs` 的 `findApex`）：输入的名字拿到可用的 SOA（是它自己或它的上级）就用；
+拿到 NXDOMAIN，或者 CNAME 到别的 zone（`www.baidu.com` → `a.shifen.com`，SOA 是 shifen.com 的，不是它的上级）
+才往上问一级。再往上就危险了：`www.x.co.uk` 不存在时会一路问到 `co.uk`，而问 co.uk 的邮件对谁都没用。
+两级封顶，`www.example.co.uk` → `example.co.uk`，绝不会被砍成 `co.uk`（测试钉住）。
+
+**主机自己是 zone 的情况**：`www.cloudflare.com` 有自己的 SOA 和 NS，是真正委派出去的 zone，DNS 层面它就是
+apex——但邮件还是 `cloudflare.com` 的。这个只有注册局知道：注册信息的 `lookedUp` 就是可注册域名。
+`resolveApex` 同时等 SOA 和浏览器 RDAP，最多 1.2 秒，RDAP 先回且是可注册域名就用它。浏览器读不到注册局时
+（`.cn` 之类要走 Worker 代查），答案会晚得多：这时 zone 记录先按 SOA 的 apex 查，`loadRdap` 拿到 `lookedUp`
+后如果发现是更短的上级，就**只把 zone 类型重问一遍**（`reaskZone`，A/AAAA 不动），重算等级和分享码再重画。
+RDAP 在查询还没结束时就回来的话，名字先记在 `lateApex`，等 `finish()` 之后统一处理，避免和正在进行的
+zone 查询抢 `state.results`。代价只在「主机是独立 zone」这种少数情况：多一轮 zone 查询，其他情况一次都不多。
+
+**页面怎么说**：邮件块和属性块的标题旁加一行 `q_apex`——「查的是 baidu.com」（en: "looked up on cloudflare.com"），
+只在根域和输入不同时出现；记录表里 zone 类型的行在类型名下面标根域。分享快照加 `ap` 字段（根域不等于输入时），
+旧链接照旧没有这行。十种语言的 `q_apex` 要给站长过目。
+
+**顺带修的一处**：375 px 下 `cloudflare.com` 会横向滚动 1 px——DMARC 的 `mailto:<一长串哈希>@dmarc…` 是不可断的
+长 token，把 `.grid2` 的两列撑到 360 px（轨道只有 343 px）。`.grid2 > * { min-width: 0 }`，`.blk p` 加
+`overflow-wrap: anywhere`。这是原来就有的，不是这次引入的，但「页面不能横向滚动」是底线。
+
+测试：`test/zone.test.mjs` 14 项——apex 保持、主机只问一次、CNAME 跨 zone 上一层、两级后缀不砍、未注册名字
+问到 `x.co.uk` 就停、NXDOMAIN、无回答、非上级 SOA 忽略、`nameFor` 分流、`preferRegistrable`，以及页面接线
+（zone 类型问 `apex`、`_dmarc.<apex>`、DS 问 `state.apex`、`lateApex` 的重问路径）。`npm test` 104 项全过。

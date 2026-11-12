@@ -49,6 +49,7 @@ export default {
   no_records: "没有记录", rec_n: "{n}/{b} 家返回", ttl_range: "{a}–{b} 秒", ttl_s: "{a} 秒", ttl_h: "{a} 小时", ttl_d: "{a} 天", ttl_range_h: "{a}–{b} 小时", ttl_range_d: "{a}–{b} 天",
   lk_dns: "哪家 DNS 解析器对你最快？", lk_ping: "从 18 个地区 Ping 这个域名", lk_asn: "这个 IP 归谁",
   records_note: "相同的值已合并；TTL 是各解析器还剩的时间。",
+  q_apex: "查的是 {domain}",
 
   h_prop: "解析器回答", prop_hint: "各家现在给出的回答", agree: "和多数相同", differs: "和多数不同",
   prop_summary: "回答的 {b} 家里，{a} 家相同", prop_none: "这一类没有解析器回答", th_resolver: "解析器",

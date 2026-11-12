@@ -49,6 +49,7 @@ export default {
   no_records: "Aucun enregistrement", rec_n: "{n} sur {b} la renvoient", ttl_range: "{a}–{b} s", ttl_s: "{a} s", ttl_h: "{a} h", ttl_d: "{a} j", ttl_range_h: "{a}–{b} h", ttl_range_d: "{a}–{b} j",
   lk_dns: "Quel résolveur DNS est le plus rapide pour vous ?", lk_ping: "Ping de ce domaine depuis 18 régions", lk_asn: "À qui est cette IP ?",
   records_note: "Les valeurs sont fusionnées entre résolveurs ; le TTL est ce qu'il reste à chacun.",
+  q_apex: "recherché sur {domain}",
 
   h_prop: "Réponses des résolveurs", prop_hint: "Ce que répond chaque résolveur maintenant", agree: "Comme la majorité", differs: "Différente",
   prop_summary: "{a} des {b} qui ont répondu donnent la même réponse", prop_none: "Aucun résolveur n'a répondu pour ce type", th_resolver: "Résolveur",

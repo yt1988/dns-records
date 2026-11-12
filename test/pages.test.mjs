@@ -74,6 +74,15 @@ test("the brand keeps the tool's name for screen readers where the narrow layout
   assert.match(css, /@media \(max-width: 540px\)[^}]*}\s*\.brand-name \{ display: none; \}/);
 });
 
+test("a long value in mail cannot widen the page past 375 px", async () => {
+  // cloudflare.com's DMARC rua address is a long unbreakable mailto: token; without wrapping the two-column card
+  // took 360 px of a 343 px track and the page scrolled 1 px sideways on a phone
+  const files = (await readdir(new URL("assets/", pub))).filter(f => /^app\..+\.css$/.test(f));
+  const css = await readFile(new URL("assets/" + files[0], pub), "utf8");
+  assert.match(css, /\.grid2 > \* \{ min-width: 0; \}/);
+  assert.match(css, /\.blk p \{[^}]*overflow-wrap: anywhere;/);
+});
+
 test("the other-tools line is drawn when the query starts, not when the answers land", async () => {
   const app = await readFile(new URL("../src/app.js", import.meta.url), "utf8");
   // links to other tools depend only on the shell's tool addresses and the domain, so they can be drawn up front;

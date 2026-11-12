@@ -150,6 +150,8 @@ table.rec tr.ph td { color: var(--muted); }
 .sec-h { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; min-height: 30px; }
 .sec-h h3 { margin: 0; font-size: 16px; }
 .rec-count { font-size: 13px; font-variant-numeric: tabular-nums; }
+.apex-note { font-size: 12px; color: var(--muted); }   /* "查的是 baidu.com": this block is about the zone, not the host */
+.apex-at { display: block; font-size: 11px; font-weight: 400; color: var(--muted); }   /* the name a zone-level row was asked of */
 .note { font-size: 12px; margin: 0; }
 .table-wrap { overflow-x: auto; border: 1px solid var(--line); border-radius: 10px; }
 table.rec { width: 100%; border-collapse: collapse; font-size: 13px; min-width: 520px; }
@@ -186,13 +188,15 @@ table.rec td.f { font-family: var(--f-num); white-space: nowrap; color: var(--mu
 
 /* mail and registration */
 .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; align-items: start; }
+/* a long unbreakable value (the hash in a DMARC rua address) must not widen the column past the page */
+.grid2 > * { min-width: 0; }
 .blk { border-top: 1px solid var(--line); padding-top: 10px; margin-top: 10px; }
 .blk:first-child { border-top: 0; padding-top: 0; margin-top: 0; }
 .blk-h { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; margin-bottom: 4px; }
 .blk-h h4 { margin: 0; font-size: 14px; }
 .blk-h .st { font-size: 12px; font-weight: 600; }
 .st.ok { color: var(--ok); } .st.warn { color: var(--warn); } .st.bad { color: var(--bad); }
-.blk p { margin: 3px 0; font-size: 13px; }
+.blk p { margin: 3px 0; font-size: 13px; overflow-wrap: anywhere; }
 .blk .val { font-family: var(--f-num); overflow-wrap: anywhere; }
 .pills { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 5px; }
 .pill { display: inline-block; padding: 1px 8px; border: 1px solid var(--line); border-radius: 999px; background: var(--bg); font: 12px var(--f-num); max-width: 100%; overflow-wrap: anywhere; }

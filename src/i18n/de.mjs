@@ -49,6 +49,7 @@ export default {
   no_records: "Keine Einträge", rec_n: "{n} von {b} geben ihn zurück", ttl_range: "{a}–{b} s", ttl_s: "{a} s", ttl_h: "{a} Std.", ttl_d: "{a} Tage", ttl_range_h: "{a}–{b} Std.", ttl_range_d: "{a}–{b} Tage",
   lk_dns: "Welcher DNS-Resolver ist für Sie am schnellsten?", lk_ping: "Diese Domain von 18 Regionen aus anpingen", lk_asn: "Wem gehört diese IP?",
   records_note: "Gleiche Werte sind zusammengefasst; der TTL ist die Restzeit beim jeweiligen Resolver.",
+  q_apex: "abgefragt bei {domain}",
 
   h_prop: "Antworten der Resolver", prop_hint: "Was jeder Resolver gerade antwortet", agree: "Wie die Mehrheit", differs: "Anders",
   prop_summary: "{a} der {b}, die geantwortet haben, stimmen überein", prop_none: "Für diesen Typ hat kein Resolver geantwortet", th_resolver: "Resolver",

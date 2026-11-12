@@ -49,6 +49,7 @@ export default {
   no_records: "レコードなし", rec_n: "{b} 台中 {n} 台が返す", ttl_range: "{a}–{b} 秒", ttl_s: "{a} 秒", ttl_h: "{a} 時間", ttl_d: "{a} 日", ttl_range_h: "{a}–{b} 時間", ttl_range_d: "{a}–{b} 日",
   lk_dns: "自分に一番速い DNS リゾルバーは？", lk_ping: "18 地点からこのドメインに Ping", lk_asn: "この IP の所有者",
   records_note: "同じ値はまとめて表示しています。TTL は各リゾルバーに残っている時間です。",
+  q_apex: "{domain} で確認",
 
   h_prop: "リゾルバーの応答", prop_hint: "各リゾルバーがいま返している応答", agree: "多数と同じ", differs: "多数と違う",
   prop_summary: "応答した {b} のうち {a} が同じ応答", prop_none: "この種類はどのリゾルバーも応答していません", th_resolver: "リゾルバー",
