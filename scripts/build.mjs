@@ -71,7 +71,7 @@ export async function build({ check = false } = {}) {
   const js = (await bundle({ entryPoints: [fileURLToPath(new URL("app.js", src))], bundle: true, format: "iife",
     target: ["es2019", "chrome70", "safari13", "firefox68", "edge79"], legalComments: "none", write: false,
     external: ["/assets/share/share.js*"] })).outputFiles[0].text;
-  const css = (await readFile(new URL("assets/fonts/fonts.css", pub), "utf8")) + "\n" + await readFile(new URL("style.css", src), "utf8");
+  const css = (await readFile(new URL("assets/fonts/fonts.css", pub), "utf8")) + "\n" + await readFile(new URL("base.css", src), "utf8") + "\n" + await readFile(new URL("style.css", src), "utf8");
   const jsName = `app.${hash(js)}.js`, cssName = `app.${hash(css)}.css`;
   const files = { ["assets/" + jsName]: js, ["assets/" + cssName]: css };
 

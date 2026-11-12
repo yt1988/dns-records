@@ -1,30 +1,9 @@
 /* DNS Records. Theme variables are the platform's: the navigation bar follows them. */
-:root {
-  --bg: #f6f6f7; --fg: #17181a; --muted: #5f6673; --line: #e2e4e8; --soft: #eef0f3; --panel: #ffffff;
-  --ink: #1d4ed8; --ok: #15803d; --warn: #b45309; --bad: #dc2626;
-  --f-ui: Geist, "PingFang SC", "Microsoft YaHei", "Hiragino Sans", "Malgun Gothic", sans-serif;
-  --f-num: "Geist Mono", Consolas, monospace;
-  color-scheme: light;
-}
-html[data-theme="dark"] {
-  --bg: #121316; --fg: #ededee; --muted: #9aa1ad; --line: #2b2e34; --soft: #1b1d21; --panel: #191b1f;
-  --ink: #7aa2ff; --ok: #4ade80; --warn: #fbbf24; --bad: #f87171;
-  color-scheme: dark;
-}
-@media (prefers-color-scheme: dark) {
-  html:not([data-theme="light"]) {
-    --bg: #121316; --fg: #ededee; --muted: #9aa1ad; --line: #2b2e34; --soft: #1b1d21; --panel: #191b1f;
-    --ink: #7aa2ff; --ok: #4ade80; --warn: #fbbf24; --bad: #f87171;
-    color-scheme: dark;
-  }
-}
-* { box-sizing: border-box; }
-[hidden] { display: none !important; }
+
 html { scrollbar-gutter: stable; }
 body { margin: 0; background: var(--bg); color: var(--fg); font: 15px/1.55 var(--f-ui); -webkit-text-size-adjust: 100%; }
 a { color: var(--ink); text-decoration: none; }
 a:hover { text-decoration: underline; }
-.sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
 .m { color: var(--muted); font-weight: 400; }
 .mono { font-family: var(--f-num); }
 svg { display: block; }
@@ -39,8 +18,6 @@ svg { display: block; }
 .top { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
 .brand { display: flex; align-items: center; gap: 8px; min-width: 0; overflow: hidden; color: var(--fg); }
 .brand:hover { text-decoration: none; }
-.logo { display: block; width: 90px; height: 36px; flex: none; }
-.logo img { display: block; width: 90px; height: 36px; }
 .logo-dark { display: none; }
 html[data-theme="dark"] .logo-light { display: none; }
 html[data-theme="dark"] .logo-dark { display: block; }
@@ -70,7 +47,6 @@ html[data-theme="light"] .logo-light { display: block; }
 .sel > svg { width: 15px; height: 15px; flex: none; fill: none; stroke: currentColor; stroke-width: 1.4; }
 .sel select { appearance: none; -webkit-appearance: none; border: 0; background: transparent; height: 100%; padding: 0 10px 0 6px; font-size: 16px; color: var(--fg); cursor: pointer; outline: none; }
 select option, select optgroup { background-color: var(--panel); color: var(--fg); }
-select option:checked { background-color: var(--soft); }
 
 /* cards */
 .card { background: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: 18px; }
@@ -84,7 +60,6 @@ select option:checked { background-color: var(--soft); }
 .fld input:focus { outline: 2px solid var(--ink); outline-offset: 1px; }
 .btn { height: 44px; padding: 0 18px; border-radius: 10px; border: 1px solid var(--fg); background: var(--fg); color: var(--bg); font: 600 15px var(--f-ui); cursor: pointer; white-space: nowrap; }
 .btn:hover { opacity: .9; }
-.btn:disabled { opacity: .5; cursor: default; }
 .btn.ghost { background: transparent; color: var(--fg); border-color: var(--line); }
 .btn.sm { height: 34px; padding: 0 14px; font-size: 14px; }
 .types { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin-top: 12px; min-height: 32px; }
