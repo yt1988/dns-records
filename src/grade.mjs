@@ -8,11 +8,13 @@ export const STEPS = ["A", "B", "C", "D"];
 const worse = (a, b) => (STEPS.indexOf(a) >= STEPS.indexOf(b) ? a : b);
 const down = g => STEPS[Math.min(STEPS.length - 1, STEPS.indexOf(g) + 1)];
 
-// The answers agreeing: A only when every resolver answered and all said the same thing. Half the resolvers failing
-// is not "healthy" even when the ones that answered agree, so it is a B; fewer than half answering is unknown.
-export function resolveGrade({ ok, total, consistency, records }) {
-  if (!records || ok * 2 < total || consistency == null) return null;
-  if (ok < total) return "B";
+// The answers agreeing: A when every resolver that answered the domain said the same thing. A resolver we could not
+// reach is not a disagreement and not a mark against the domain: it is left out of the count, so a 11-of-12 answer
+// where all 11 agree is an A, not a B (docs/tool-contract.md: unknown is not a problem). SERVFAIL and REFUSED are
+// answers, so they do lower the letter. Fewer than half the resolvers answering is still unknown: a handful of answers
+// is not a picture of the domain, however much they agree.
+export function resolveGrade({ answered, total, consistency, records }) {
+  if (!records || answered * 2 < total || consistency == null) return null;
   return consistency === 1 ? "A" : "B";
 }
 

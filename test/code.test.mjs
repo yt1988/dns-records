@@ -56,4 +56,7 @@ test("resultsFromSnapshot restores answers, failures and the types that were ask
   assert.equal(by.MX[1].error, "servfail");
   assert.equal(by.MX[2].error, "skipped");
   assert.equal(CODES.refused, 9);
+  // an odd rcode is an answer about the domain, so a shared link must not read back as a failed trip to the resolver
+  assert.equal(CODES.rcode, 10);
+  assert.equal(resultsFromSnapshot({ r: [["x", "A", 10, []]] }).A[0].error, "rcode");
 });

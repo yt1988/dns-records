@@ -4,21 +4,31 @@
 // requested type. Two answers are the same when those lists hold the same records (order and TTL ignored): the TTL
 // depends on when each resolver cached the record, so it says nothing about propagation.
 //
-// "Consistency" is how many of the resolvers that answered gave the most common answer. Resolvers that failed are
-// counted separately and never as disagreement: a resolver that could not be reached has not told us anything, so it
-// must not look like an empty or outdated answer.
+// "Consistency" is how many of the resolvers that answered gave the most common answer. Two kinds of failure are
+// not the same thing (docs/tool-contract.md: unknown is neither fine nor a problem):
+//   - SERVFAIL, REFUSED or an odd rcode is the resolver answering about the domain. It counts as an answer, so it
+//     takes part in the consistency figure — the domain's own state is different from the others'.
+//   - timeout, a blocked request, an HTTP error or an unreadable answer is us not reaching the resolver. It has told
+//     us nothing, so it enters no denominator and says nothing good or bad about the domain.
 import { ALL_TYPES } from "./resolvers.mjs";
 
 export const OK = "ok";
 export const ERR = "error";
 
+// The errors that are an answer about the domain, rather than a failed trip to the resolver.
+export const SERVED_ERRORS = new Set(["servfail", "refused", "rcode"]);
+export const isServed = r => r.status !== OK && SERVED_ERRORS.has(r.error);
+
 // Records sorted by type and value: the same set of answers in a different order is the same answer.
 export const answerKey = rows => rows.map(r => r.type + " " + r.data).sort().join(" | ");
 
-// status per type: { ok, errors, groups, majority, consistency, stale, nx, empty, distinct }
+// status per type: { ok, errors, served, unreachable, answered, groups, majority, consistency, stale, nx, empty, distinct }
 export function mergeType(results) {
   const ok = results.filter(r => r.status === OK);
   const errors = results.filter(r => r.status !== OK);
+  const served = errors.filter(isServed);
+  const unreachable = errors.filter(r => !isServed(r));
+  const answered = ok.length + served.length;
   const groups = new Map();
   for (const r of ok) {
     const key = answerKey(r.records);
@@ -31,9 +41,12 @@ export function mergeType(results) {
   return {
     ok,
     errors,
+    served,
+    unreachable,
+    answered,
     groups: list,
     majority,
-    consistency: ok.length >= 2 && majority ? majority.resolvers.length / ok.length : null,
+    consistency: answered >= 2 && majority ? majority.resolvers.length / answered : null,
     stale,
     nx: ok.filter(r => r.rcode === 3).length,
     empty: ok.length > 0 && ok.every(r => r.records.length === 0),

@@ -29,6 +29,27 @@ test("a resolver with an older answer is stale; failed resolvers are not counted
   assert.equal(m.majority.resolvers.length, 2);
 });
 
+test("SERVFAIL and REFUSED are answers about the domain; a timeout is not", () => {
+  const m = mergeType([
+    ok("a", [rec("A", "1.1.1.1")]), ok("b", [rec("A", "1.1.1.1")]), ok("c", [rec("A", "1.1.1.1")]),
+    fail("d", "servfail"), fail("e", "refused"), fail("f", "timeout"), fail("g", "http"),
+  ]);
+  assert.equal(m.answered, 5);
+  assert.deepEqual(m.served.map(r => r.id), ["d", "e"]);
+  assert.deepEqual(m.unreachable.map(r => r.id), ["f", "g"]);
+  assert.equal(m.consistency, 3 / 5);
+});
+
+test("resolvers we could not reach leave the consistency figure alone", () => {
+  const m = mergeType([
+    ok("a", [rec("A", "1.1.1.1")]), ok("b", [rec("A", "1.1.1.1")]),
+    fail("c", "timeout"), fail("d", "network"), fail("e", "bad"), fail("f", "skipped"),
+  ]);
+  assert.equal(m.answered, 2);
+  assert.equal(m.unreachable.length, 4);
+  assert.equal(m.consistency, 1);
+});
+
 test("one answering resolver has no consistency figure, not 100%", () => {
   const m = mergeType([ok("a", [rec("A", "1.1.1.1")]), fail("b", "timeout")]);
   assert.equal(m.consistency, null);

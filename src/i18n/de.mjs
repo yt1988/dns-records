@@ -19,7 +19,7 @@ export default {
 
   v_nx: "{domain} existiert nicht (NXDOMAIN)",
   v_empty: "Keine {type}-Einträge",
-  v_allfail: "Kein Resolver hat geantwortet",
+  v_allfail: "Kein Resolver hat geantwortet", v_servfail: "{n} Resolver haben geantwortet, aber keine Einträge geliefert (SERVFAIL und Ähnliches)",
   v_all: "Alle {n} Resolver, die geantwortet haben, liefern dieselbe Antwort",
   v_most: "Von den {b}, die geantwortet haben, liefern {a} dieselbe Antwort",
   v_one: "Nur ein Resolver hat geantwortet", v_few_all: "Nur {a} von {b} Resolvern haben geantwortet; sie stimmen überein", v_few_most: "Nur {c} von {b} Resolvern haben geantwortet; {a} davon stimmen überein",
@@ -32,7 +32,7 @@ export default {
 
   k_agree: "Gleiche Antwort", k_mail: "E-Mail-Note", k_dnssec: "DNSSEC",
   fd_stale: "{n} von {b} Resolvern liefern eine andere Antwort: {names}",
-  fd_fail: "{n} von {b} Resolvern haben nicht geantwortet",
+  fd_fail: "{n} von {b} Resolvern waren diesmal nicht erreichbar (meist liegt es an Ihrer Verbindung); zählt nicht zur Note",
   fd_spf_none: "Kein SPF-Eintrag: Empfänger können nicht erkennen, welche Server für diese Domain senden dürfen",
   fd_spf_plus: "SPF endet auf +all: Jeder kann Mail als diese Domain senden",
   fd_spf_noall: "SPF endet nicht auf -all oder ~all: Manche Absender werden nie abgelehnt",
@@ -90,7 +90,7 @@ export default {
   help_h: "Hilfe",
   docs: [
     ["Was prüft diese Seite?", "Geben Sie eine Domain ein: Neun Eintragstypen (A, AAAA, CNAME, MX, NS, TXT, CAA, SRV, SOA) werden bei 12 öffentlichen DNS-Resolvern abgefragt, jeweils per DNS over HTTPS aus Ihrem Browser. Gleiche Werte werden zusammengefasst, die Antwort jedes Resolvers steht unter Antworten der Resolver. Die Registrierungsdaten kommen von RDAP, der strukturierten Form von WHOIS."],
-    ["Wie wird die Check-Note berechnet?", "Die Note ist die schlechtere von zwei Noten: wie einheitlich die Resolver antworten und wie es um Mail steht. Die Antworten bekommen nur dann ein A, wenn alle 12 geantwortet haben und alle dieselbe Antwort liefern; scheitert bis zur Hälfte, wird es B. Die Mail-Note kommt aus SPF und DMARC und gilt nur, wenn die Domain einen MX hat, der Mail annimmt. Eine signierte Domain, deren DNSSEC nicht validiert, rutscht eine Stufe tiefer. CAA und IPv6 sind nur Abzeichen und ändern die Note nie."],
+    ["Wie wird die Check-Note berechnet?", "Die Note ist die schlechtere von zwei Noten: wie einheitlich die Resolver antworten und wie es um Mail steht. Gezählt werden nur Resolver, die geantwortet haben: sagen alle von ihnen dasselbe, gibt es ein A, eine abweichende Antwort macht daraus ein B. Ein Resolver, den diese Seite nicht erreicht hat (meist liegt es an Ihrer Verbindung), zählt weder dafür noch dagegen; ein SERVFAIL oder REFUSED des Resolvers ist eine Antwort und zählt mit. Antworten weniger als die Hälfte der zwölf, gibt es keine Note. Die Mail-Note kommt aus SPF und DMARC und gilt nur, wenn die Domain einen MX hat, der Mail annimmt. Eine signierte Domain, deren DNSSEC nicht validiert, rutscht eine Stufe tiefer. CAA und IPv6 sind nur Abzeichen und ändern die Note nie."],
     ["Was sagt mir DNSSEC?", "Mit DNSSEC kann ein Resolver beweisen, dass eine Antwort wirklich von dieser Domain stammt und unterwegs nicht verändert wurde. Die Seite fragt den DS-Eintrag bei der Elternzone ab und liest das AD-Bit von Resolvern, die bekannt für Validierung sind. „Aktiv und validiert“ heißt: Die Domain ist signiert und diese Resolver bestätigen es. „Aktiv, aber die Validierung schlägt fehl“ heißt: Eine signierte Domain antwortet mit einer kaputten Kette, und prüfende Resolver lehnen sie ab. Inaktiv ist der Normalfall und kostet keine Note; fehlen Belege, schreibt die Seite, dass sie es nicht feststellen kann."],
     ["Wie lange dauert es, bis eine DNS-Änderung sichtbar ist?", "Nach einer Änderung hält jeder Resolver seine alte Kopie, bis der TTL (Lebensdauer) abläuft. Direkt danach antworten daher manche Resolver noch mit dem alten Wert, und das Panel zeigt, welche. Die Seite sieht nur, was die öffentlichen Resolver im Cache haben: Ein Browser erreicht den autoritativen Server der Domain nicht über Port 53 und kann den aktuellen Zonenstand daher nicht zeigen."],
     ["Warum steht bei manchen Resolvern „keine Verbindung“?", "Die Abfragen gehen von Ihrem Browser direkt an jeden Resolver. In Festlandchina sind Cloudflare und Google DNS meist blockiert, einzelne andere ebenfalls, daher steht dort „keine Verbindung“. Das ist eine Aussage über den Weg, keine leere Eintragsmenge: Ein Resolver ohne Antwort zählt nie als Abweichung."],

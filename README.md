@@ -37,10 +37,12 @@ read, from more than one continent.
 
 Four rules keep the result honest:
 
-- **A resolver that did not answer is not a disagreement.** Consistency is the share of *answering* resolvers that gave
-  the most common answer. Unreachable resolvers are listed as unreachable; they never look like an empty answer.
-- **Few answers are not a healthy result.** The answers only earn an A when all 12 answered with the same answer. A
-  grade needs at least half of them answering; below that the page says how many did answer, with no letter and no green.
+- **A resolver we could not reach is not a disagreement, and not a fault.** Consistency is the share of *answering*
+  resolvers that gave the most common answer; a timeout or a blocked request enters no denominator and never lowers the
+  grade. SERVFAIL, REFUSED or another rcode is the resolver answering about the domain, so it does count.
+- **Few answers are not a healthy result.** The answers earn an A when every resolver that answered gave the same
+  answer. A grade needs at least half of the 12 answering; below that the page says how many did answer, with no letter
+  and no green.
 - **TTL differences are not disagreement.** TTL counts down from the zone's value and differs per resolver, so it is
   shown as a range, not compared.
 - **No direct query to the domain's authoritative server.** Browsers cannot speak DNS on port 53, so the page only sees

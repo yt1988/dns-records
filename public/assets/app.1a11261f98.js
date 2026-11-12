@@ -323,10 +323,15 @@
 
   // src/merge.mjs
   var OK = "ok";
+  var SERVED_ERRORS = /* @__PURE__ */ new Set(["servfail", "refused", "rcode"]);
+  var isServed = (r) => r.status !== OK && SERVED_ERRORS.has(r.error);
   var answerKey2 = (rows) => rows.map((r) => r.type + " " + r.data).sort().join(" | ");
   function mergeType(results) {
     const ok = results.filter((r) => r.status === OK);
     const errors = results.filter((r) => r.status !== OK);
+    const served = errors.filter(isServed);
+    const unreachable = errors.filter((r) => !isServed(r));
+    const answered = ok.length + served.length;
     const groups = /* @__PURE__ */ new Map();
     for (const r of ok) {
       const key = answerKey2(r.records);
@@ -339,9 +344,12 @@
     return {
       ok,
       errors,
+      served,
+      unreachable,
+      answered,
       groups: list,
       majority,
-      consistency: ok.length >= 2 && majority ? majority.resolvers.length / ok.length : null,
+      consistency: answered >= 2 && majority ? majority.resolvers.length / answered : null,
       stale,
       nx: ok.filter((r) => r.rcode === 3).length,
       empty: ok.length > 0 && ok.every((r) => r.records.length === 0),
@@ -483,9 +491,8 @@
   var STEPS = ["A", "B", "C", "D"];
   var worse = (a, b) => STEPS.indexOf(a) >= STEPS.indexOf(b) ? a : b;
   var down = (g) => STEPS[Math.min(STEPS.length - 1, STEPS.indexOf(g) + 1)];
-  function resolveGrade({ ok, total, consistency, records }) {
-    if (!records || ok * 2 < total || consistency == null) return null;
-    if (ok < total) return "B";
+  function resolveGrade({ answered, total, consistency, records }) {
+    if (!records || answered * 2 < total || consistency == null) return null;
     return consistency === 1 ? "A" : "B";
   }
   function mailGrade({ mx, checked, spf, dmarc }) {
@@ -672,7 +679,7 @@
 
   // src/code.mjs
   var CODE_VERSION = "1";
-  var CODES = { ok: 0, nx: 3, servfail: 2, timeout: 4, network: 5, http: 6, bad: 7, skipped: 8, refused: 9 };
+  var CODES = { ok: 0, nx: 3, servfail: 2, timeout: 4, network: 5, http: 6, bad: 7, skipped: 8, refused: 9, rcode: 10 };
   async function encodeResult(obj) {
     return CODE_VERSION + "~" + await pack(JSON.stringify(obj));
   }
@@ -716,7 +723,7 @@
     return byType;
   }
   function errorOf(code) {
-    return { 2: "servfail", 4: "timeout", 5: "network", 6: "http", 7: "bad", 8: "skipped", 9: "refused" }[code] || null;
+    return { 2: "servfail", 4: "timeout", 5: "network", 6: "http", 7: "bad", 8: "skipped", 9: "refused", 10: "rcode" }[code] || null;
   }
 
   // src/app.js
@@ -1204,10 +1211,10 @@
         val.textContent = valueText(res);
       });
       const sum = $("propSum");
-      if (!mt.ok.length && results.length >= RESOLVERS.length) sum.textContent = t("prop_none");
-      else if (!mt.ok.length) sum.textContent = results.length + " / " + RESOLVERS.length;
-      else if (mt.ok.length === 1) sum.textContent = t("v_one");
-      else if (mt.consistency != null) sum.textContent = t("prop_summary", { a: mt.majority.resolvers.length, b: mt.ok.length });
+      if (!mt.answered && results.length >= RESOLVERS.length) sum.textContent = t("prop_none");
+      else if (!mt.answered) sum.textContent = results.length + " / " + RESOLVERS.length;
+      else if (mt.answered === 1) sum.textContent = t("v_one");
+      else if (mt.consistency != null) sum.textContent = t("prop_summary", { a: mt.majority.resolvers.length, b: mt.answered });
       else sum.textContent = results.length + " / " + RESOLVERS.length;
     }
     function heroType() {
@@ -1226,23 +1233,27 @@
       const total = RESOLVERS.length;
       const primary = heroType();
       const m = primary ? state.merged[primary] : null;
+      const ans = m ? m.answered : 0, miss = m ? m.unreachable.length : 0;
       const facts = mailFacts();
-      const resolve = resolveGrade({ ok: m ? m.ok.length : 0, total, consistency: m ? m.consistency : null, records: state.records.length });
+      const resolve = resolveGrade({ answered: ans, total, consistency: m ? m.consistency : null, records: state.records.length });
       const mail = mailGrade(facts);
       const dn = state.dnssec || { state: "unknown", validators: 0, answered: 0 };
       const grade = overallGrade({ resolve, mail, dnssec: dn.state });
-      const agree = m && m.ok.length ? m.majority.resolvers.length + "/" + m.ok.length : "\u2014";
+      const agree = m && m.majority ? m.majority.resolvers.length + "/" + ans : "\u2014";
       $("kAgree").textContent = agree;
       $("kAgreeWho").textContent = m && m.consistency != null ? pct(m.consistency) : "";
       $("kMail").textContent = mail || "\u2014";
       $("kMailWho").textContent = mail ? "SPF \xB7 DMARC" : "";
       $("kDnssec").textContent = t("dn_card_" + dn.state);
       $("kDnssecWho").textContent = dn.answered ? dn.answered + " / " + total : "";
-      const covered = !!m && m.ok.length * 2 >= total;
+      const covered = ans * 2 >= total;
       let title = "", dot = "warn";
-      if (!m || !m.ok.length) {
+      if (!m || !ans) {
         title = t("v_allfail");
         dot = "bad";
+      } else if (!m.ok.length) {
+        title = t("v_servfail", { n: ans });
+        dot = "warn";
       } else if (m.nx && m.nx === m.ok.length) {
         title = t("v_nx", { domain: state.domain });
         dot = "warn";
@@ -1250,16 +1261,16 @@
         title = t("v_empty", { type: primary });
         dot = "warn";
       } else if (!covered && m.consistency === 1) {
-        title = t("v_few_all", { a: m.ok.length, b: total });
+        title = t("v_few_all", { a: ans, b: total });
         dot = "";
       } else if (!covered) {
-        title = t("v_few_most", { a: m.majority.resolvers.length, b: total, c: m.ok.length });
+        title = t("v_few_most", { a: m.majority.resolvers.length, b: total, c: ans });
         dot = "";
       } else if (m.consistency === 1) {
-        title = t("v_all", { n: m.ok.length });
+        title = t("v_all", { n: ans });
         dot = "ok";
       } else if (m.consistency != null) {
-        title = t("v_most", { a: m.majority.resolvers.length, b: m.ok.length });
+        title = t("v_most", { a: m.majority.resolvers.length, b: ans });
         dot = "warn";
       } else {
         title = t("v_one");
@@ -1270,14 +1281,14 @@
       else if (grade === "D") dot = "bad";
       $("vTitle").textContent = grade ? t("v_grade", { grade }) + " \xB7 " + title : title;
       $("vDot").className = "dot " + dot;
-      $("vSub").textContent = m ? t("v_sub", { ok: m.ok.length, tot: total, fail: m.errors.length }) : t("v_allfail");
+      $("vSub").textContent = m ? t("v_sub", { ok: ans, tot: total, fail: miss }) : t("v_allfail");
       state.grade = { resolve, mail, overall: grade, agree };
       const F = [];
       const add = (level, text2) => F.push({ level, text: text2 });
       const spf = spfInfo(), dmarc = dmarcInfo(), ns = nsInfo();
       if (m) {
         if (m.stale.length) add("warn", t("fd_stale", { n: m.stale.length, b: m.ok.length, names: m.stale.slice(0, 3).map((r) => resName(r.id)).join(", ") }));
-        if (m.errors.filter((r) => r.error !== "skipped").length) add("warn", t("fd_fail", { n: m.errors.filter((r) => r.error !== "skipped").length, b: total }));
+        if (miss) add("note", t("fd_fail", { n: miss, b: total }));
       }
       if (spf && spf.checked) {
         if (spf.count === 0) add("warn", t("fd_spf_none"));
@@ -1294,7 +1305,7 @@
       if (dn.state === "broken") add("bad", t("dn_broken"));
       if (ns && ns.onlyRegistrar.length) add("warn", t("fd_ns", { names: ns.onlyRegistrar.slice(0, 3).join(", ") }));
       if (ns && ns.onlyResolver.length) add("warn", t("fd_ns_extra", { names: ns.onlyResolver.slice(0, 3).join(", ") }));
-      if (!F.length && spf && spf.checked) add("ok", t("fd_ok"));
+      if (!F.some((x) => x.level === "warn" || x.level === "bad") && spf && spf.checked) add("ok", t("fd_ok"));
       F.sort((a, b) => (a.level === "bad" ? 0 : 1) - (b.level === "bad" ? 0 : 1));
       state.findings = F.slice(0, 4);
       const ul = $("findings");
@@ -1591,7 +1602,7 @@
         s: {
           ty: primary || state.types[0] || "A",
           val: first ? first.data : "",
-          ok: m ? m.ok.length : 0,
+          ok: m ? m.answered : 0,
           tot: RESOLVERS.length,
           n: state.records.length
         }
@@ -1659,15 +1670,16 @@
       x.fillText(t("card_grade"), gx + S + 28, gy + 98);
       const primary = heroType();
       const m = primary && state.merged ? state.merged[primary] : null;
-      const covered = !!m && m.ok.length * 2 >= RESOLVERS.length;
+      const ans = m ? m.answered : 0;
+      const covered = ans * 2 >= RESOLVERS.length;
       const rd = state.rdap || null;
       const suffix = "." + (rd && rd.tld || tldOf(state.domain));
       const rdap = !rd ? ["bad", t("rd_fail")] : rd.data ? ["ok", rd.data.registrar || "\u2014"] : rd.unsupported ? ["muted", t("rd_unsupported", { suffix })] : rd.notFound ? ["muted", t("rd_none")] : ["bad", t("rd_fail")];
       const rows = [
         [
-          m && m.ok.length ? covered && m.consistency === 1 ? "ok" : "warn" : "muted",
+          m && m.majority ? covered && m.consistency === 1 ? "ok" : "warn" : "muted",
           t("k_agree"),
-          m && m.ok.length ? m.majority.resolvers.length + " / " + m.ok.length : "\u2014"
+          m && m.majority ? m.majority.resolvers.length + " / " + ans : "\u2014"
         ],
         [!g.mail ? "muted" : g.mail === "D" ? "bad" : g.mail === "C" ? "warn" : "ok", t("k_mail"), g.mail || "\u2014"],
         [dn.state === "pass" ? "ok" : dn.state === "broken" ? "bad" : "muted", t("k_dnssec"), t("dn_card_" + dn.state)],
@@ -1689,8 +1701,8 @@
         kit.fit(x, row[2], w * 0.58, 30, 20, 600);
         x.fillText(row[2], P + w - x.measureText(row[2]).width, y + 46);
       });
-      const problems = (state.findings || []).filter((f) => f.level !== "ok").length;
-      const cov = m ? t("card_cov", { ok: m.ok.length, tot: RESOLVERS.length, fail: m.errors.length }) + " \xB7 " + (problems ? t("card_findings", { n: problems }) : t("card_clean")) : t("v_allfail");
+      const problems = (state.findings || []).filter((f) => f.level === "warn" || f.level === "bad").length;
+      const cov = m ? t("card_cov", { ok: ans, tot: RESOLVERS.length, fail: m.unreachable.length }) + " \xB7 " + (problems ? t("card_findings", { n: problems }) : t("card_clean")) : t("v_allfail");
       x.fillStyle = v("muted");
       x.textAlign = "left";
       kit.fit(x, cov, w, 22, 15, 400);

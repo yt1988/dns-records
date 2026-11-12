@@ -7,17 +7,21 @@ const spf = (o = {}) => ({ count: 1, qualifier: "fail", issues: [], ...o });
 const dmarc = (o = {}) => ({ count: 1, p: "reject", rua: ["mailto:x@example.com"], ...o });
 const good = { mx: true, checked: true, spf: spf(), dmarc: dmarc() };
 
-test("the answers' grade: A only when every resolver answered with the same answer", () => {
-  assert.equal(resolveGrade({ ok: 12, total: 12, consistency: 1, records: 1 }), "A");
-  assert.equal(resolveGrade({ ok: 12, total: 12, consistency: 0.9, records: 1 }), "B");
-  assert.equal(resolveGrade({ ok: 11, total: 12, consistency: 1, records: 1 }), "B");
-  assert.equal(resolveGrade({ ok: 6, total: 12, consistency: 1, records: 1 }), "B");
+test("the answers' grade: A when every resolver that answered gave the same answer", () => {
+  assert.equal(resolveGrade({ answered: 12, total: 12, consistency: 1, records: 1 }), "A");
+  // cloudflare.com: 11 of 12 answered and all agree. The one we could not reach is not a disagreement and does not
+  // lower the letter — a resolver we cannot reach says nothing about the domain (docs/tool-contract.md).
+  assert.equal(resolveGrade({ answered: 11, total: 12, consistency: 1, records: 1 }), "A");
+  assert.equal(resolveGrade({ answered: 6, total: 12, consistency: 1, records: 1 }), "A");
+  // a different answer from a resolver that did answer is a disagreement, so it is a B
+  assert.equal(resolveGrade({ answered: 12, total: 12, consistency: 11 / 12, records: 1 }), "B");
+  assert.equal(resolveGrade({ answered: 12, total: 12, consistency: 0.9, records: 1 }), "B");
 });
 
 test("fewer than half the resolvers answering is not graded at all", () => {
-  assert.equal(resolveGrade({ ok: 5, total: 12, consistency: 1, records: 1 }), null);
-  assert.equal(resolveGrade({ ok: 0, total: 12, consistency: null, records: 0 }), null);
-  assert.equal(resolveGrade({ ok: 12, total: 12, consistency: null, records: null }), null);
+  assert.equal(resolveGrade({ answered: 5, total: 12, consistency: 1, records: 1 }), null);
+  assert.equal(resolveGrade({ answered: 0, total: 12, consistency: null, records: 0 }), null);
+  assert.equal(resolveGrade({ answered: 12, total: 12, consistency: null, records: null }), null);
 });
 
 test("the mail grade: A for one SPF and a strict DMARC with reports", () => {

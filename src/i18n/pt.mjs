@@ -19,7 +19,7 @@ export default {
 
   v_nx: "{domain} não existe (NXDOMAIN)",
   v_empty: "Sem registros {type}",
-  v_allfail: "Nenhum resolvedor respondeu",
+  v_allfail: "Nenhum resolvedor respondeu", v_servfail: "{n} resolvedores responderam, mas sem registros (SERVFAIL e afins)",
   v_all: "Os {n} resolvedores que responderam deram a mesma resposta",
   v_most: "Dos {b} que responderam, {a} deram a mesma resposta",
   v_one: "Só um resolvedor respondeu", v_few_all: "Só {a} de {b} resolvedores responderam; os que responderam concordam", v_few_most: "Só {c} de {b} resolvedores responderam; {a} deles concordam",
@@ -32,7 +32,7 @@ export default {
 
   k_agree: "Mesma resposta", k_mail: "Nota de e-mail", k_dnssec: "DNSSEC",
   fd_stale: "{n} de {b} resolvedores deram outra resposta: {names}",
-  fd_fail: "{n} de {b} resolvedores não responderam",
+  fd_fail: "{n} de {b} resolvedores não foram alcançados desta vez (provavelmente sua conexão); não conta na nota",
   fd_spf_none: "Sem registro SPF: quem recebe não consegue saber quais servidores podem enviar por este domínio",
   fd_spf_plus: "O SPF termina em +all: qualquer pessoa pode enviar como este domínio",
   fd_spf_noall: "O SPF não termina em -all nem ~all: alguns remetentes nunca são recusados",
@@ -89,7 +89,7 @@ export default {
   help_h: "Ajuda",
   docs: [
     ["O que esta página consulta?", "Digite um domínio: nove tipos de registro (A, AAAA, CNAME, MX, NS, TXT, CAA, SRV, SOA) são pedidos a 12 resolvedores DNS públicos, cada um por DNS over HTTPS a partir do seu navegador. Valores iguais são reunidos e a resposta de cada resolvedor aparece em Respostas dos resolvedores. Os dados de registro vêm do RDAP, a versão estruturada do WHOIS."],
-    ["Como a nota de diagnóstico é calculada?", "A nota é a menor entre duas: o quanto as respostas dos resolvedores coincidem e como está o e-mail. As respostas só recebem A quando os 12 responderam e todos deram a mesma resposta; se até metade falhar, vira B. A nota de e-mail vem de SPF e DMARC e só vale quando o domínio tem um MX que aceita e-mail. Um domínio assinado cujo DNSSEC não valida cai mais um nível. CAA e IPv6 são apenas selos e nunca mudam a letra."],
+    ["Como a nota de diagnóstico é calculada?", "A nota é a menor entre duas: o quanto as respostas dos resolvedores coincidem e como está o e-mail. Só contam os resolvedores que responderam: se todos disserem o mesmo, é A; uma resposta diferente vira B. Um resolvedor que esta página não alcançou (normalmente pela sua conexão) não conta nem a favor nem contra; um SERVFAIL ou REFUSED do resolvedor é uma resposta e conta. Se menos da metade dos doze responder, não há nota. A nota de e-mail vem de SPF e DMARC e só vale quando o domínio tem um MX que aceita e-mail. Um domínio assinado cujo DNSSEC não valida cai mais um nível. CAA e IPv6 são apenas selos e nunca mudam a letra."],
     ["O que o DNSSEC me diz?", "O DNSSEC permite que um resolvedor prove que uma resposta veio mesmo deste domínio e não foi alterada no caminho. A página pede o registro DS à zona pai e lê o bit AD de resolvedores que se sabe que validam. «Ativo e validando» significa que o domínio é assinado e esses resolvedores confirmam; «Ativo, mas a validação falha» significa que um domínio assinado responde com uma cadeia rompida, e os resolvedores que conferem vão recusá-lo. Desativado é o normal e não reduz a nota; quando faltam evidências, a página diz que não consegue saber."],
     ["Quanto tempo leva para uma mudança de DNS aparecer?", "Quando um registro muda, cada resolvedor mantém a cópia antiga até o TTL (tempo de vida) acabar. Por isso, logo após uma mudança, alguns resolvedores ainda respondem com o valor antigo, e o painel de respostas mostra quais. A página só vê o que os resolvedores públicos têm em cache: um navegador não consegue chegar ao servidor autoritativo do domínio na porta 53, então não pode mostrar a verdade atual da zona."],
     ["Por que alguns resolvedores dizem «não conectou»?", "As consultas vão do seu navegador direto a cada resolvedor. Na China continental, Cloudflare e Google DNS costumam estar bloqueados, e alguns outros também, então essas linhas dizem «não conectou». É um fato sobre o caminho, não um conjunto vazio de registros: um resolvedor que não respondeu nunca conta como divergência."],

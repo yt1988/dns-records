@@ -410,10 +410,10 @@ import { encodeResult, decodeResult, sharePath, resultsFromSnapshot, CODES } fro
       val.textContent = valueText(res);
     });
     const sum = $("propSum");
-    if (!mt.ok.length && results.length >= RESOLVERS.length) sum.textContent = t("prop_none");
-    else if (!mt.ok.length) sum.textContent = (results.length) + " / " + RESOLVERS.length;
-    else if (mt.ok.length === 1) sum.textContent = t("v_one");
-    else if (mt.consistency != null) sum.textContent = t("prop_summary", { a: mt.majority.resolvers.length, b: mt.ok.length });
+    if (!mt.answered && results.length >= RESOLVERS.length) sum.textContent = t("prop_none");
+    else if (!mt.answered) sum.textContent = (results.length) + " / " + RESOLVERS.length;
+    else if (mt.answered === 1) sum.textContent = t("v_one");
+    else if (mt.consistency != null) sum.textContent = t("prop_summary", { a: mt.majority.resolvers.length, b: mt.answered });
     else sum.textContent = (results.length) + " / " + RESOLVERS.length;
   }
 
@@ -439,14 +439,16 @@ import { encodeResult, decodeResult, sharePath, resultsFromSnapshot, CODES } fro
     const primary = heroType();
     const m = primary ? state.merged[primary] : null;
 
-    // The grade: the same numbers the three cards show, and the same function the card image uses.
+    // The grade: the same numbers the three cards show, and the same function the card image uses. "Answered" is the
+    // resolvers that gave an answer about the domain; ones we could not reach are not counted for or against it.
+    const ans = m ? m.answered : 0, miss = m ? m.unreachable.length : 0;
     const facts = mailFacts();
-    const resolve = resolveGrade({ ok: m ? m.ok.length : 0, total, consistency: m ? m.consistency : null, records: state.records.length });
+    const resolve = resolveGrade({ answered: ans, total, consistency: m ? m.consistency : null, records: state.records.length });
     const mail = mailGrade(facts);
     const dn = state.dnssec || { state: "unknown", validators: 0, answered: 0 };
     const grade = overallGrade({ resolve, mail, dnssec: dn.state });
 
-    const agree = m && m.ok.length ? m.majority.resolvers.length + "/" + m.ok.length : "—";
+    const agree = m && m.majority ? m.majority.resolvers.length + "/" + ans : "—";
     $("kAgree").textContent = agree;
     $("kAgreeWho").textContent = m && m.consistency != null ? pct(m.consistency) : "";
     $("kMail").textContent = mail || "—";
@@ -455,16 +457,18 @@ import { encodeResult, decodeResult, sharePath, resultsFromSnapshot, CODES } fro
     $("kDnssecWho").textContent = dn.answered ? dn.answered + " / " + total : "";
 
     // Green only when most of the 12 answered: a handful of answers is not a healthy picture of propagation.
-    const covered = !!m && m.ok.length * 2 >= total;
+    const covered = ans * 2 >= total;
     let title = "", dot = "warn";
-    if (!m || !m.ok.length) { title = t("v_allfail"); dot = "bad"; }
+    if (!m || !ans) { title = t("v_allfail"); dot = "bad"; }
+    // resolvers that answered, but none of them with records: SERVFAIL all round is an answer, not silence
+    else if (!m.ok.length) { title = t("v_servfail", { n: ans }); dot = "warn"; }
     else if (m.nx && m.nx === m.ok.length) { title = t("v_nx", { domain: state.domain }); dot = "warn"; }
     else if (!state.records.length) { title = t("v_empty", { type: primary }); dot = "warn"; }
-    else if (!covered && m.consistency === 1) { title = t("v_few_all", { a: m.ok.length, b: total }); dot = ""; }
+    else if (!covered && m.consistency === 1) { title = t("v_few_all", { a: ans, b: total }); dot = ""; }
     // {c} is how many answered and {b} how many were asked — the same order as v_few_all above
-    else if (!covered) { title = t("v_few_most", { a: m.majority.resolvers.length, b: total, c: m.ok.length }); dot = ""; }
-    else if (m.consistency === 1) { title = t("v_all", { n: m.ok.length }); dot = "ok"; }
-    else if (m.consistency != null) { title = t("v_most", { a: m.majority.resolvers.length, b: m.ok.length }); dot = "warn"; }
+    else if (!covered) { title = t("v_few_most", { a: m.majority.resolvers.length, b: total, c: ans }); dot = ""; }
+    else if (m.consistency === 1) { title = t("v_all", { n: ans }); dot = "ok"; }
+    else if (m.consistency != null) { title = t("v_most", { a: m.majority.resolvers.length, b: ans }); dot = "warn"; }
     else { title = t("v_one"); dot = ""; }
     // The letter sets the colour when there is one (C and D are not green, A and B are).
     if (grade === "A" || grade === "B") dot = "ok";
@@ -472,7 +476,7 @@ import { encodeResult, decodeResult, sharePath, resultsFromSnapshot, CODES } fro
     else if (grade === "D") dot = "bad";
     $("vTitle").textContent = grade ? t("v_grade", { grade }) + " · " + title : title;
     $("vDot").className = "dot " + dot;
-    $("vSub").textContent = m ? t("v_sub", { ok: m.ok.length, tot: total, fail: m.errors.length }) : t("v_allfail");
+    $("vSub").textContent = m ? t("v_sub", { ok: ans, tot: total, fail: miss }) : t("v_allfail");
     state.grade = { resolve, mail, overall: grade, agree };
 
     // Findings, worst first, at most four.
@@ -481,7 +485,9 @@ import { encodeResult, decodeResult, sharePath, resultsFromSnapshot, CODES } fro
     const spf = spfInfo(), dmarc = dmarcInfo(), ns = nsInfo();
     if (m) {
       if (m.stale.length) add("warn", t("fd_stale", { n: m.stale.length, b: m.ok.length, names: m.stale.slice(0, 3).map(r => resName(r.id)).join(", ") }));
-      if (m.errors.filter(r => r.error !== "skipped").length) add("warn", t("fd_fail", { n: m.errors.filter(r => r.error !== "skipped").length, b: total }));
+      // A resolver we could not reach is a note about the connection, not a fault of the domain: it is shown, but it
+      // is not counted as one of the "things to fix" and it never lowers the grade.
+      if (miss) add("note", t("fd_fail", { n: miss, b: total }));
     }
     if (spf && spf.checked) {
       if (spf.count === 0) add("warn", t("fd_spf_none"));
@@ -498,7 +504,8 @@ import { encodeResult, decodeResult, sharePath, resultsFromSnapshot, CODES } fro
     if (dn.state === "broken") add("bad", t("dn_broken"));
     if (ns && ns.onlyRegistrar.length) add("warn", t("fd_ns", { names: ns.onlyRegistrar.slice(0, 3).join(", ") }));
     if (ns && ns.onlyResolver.length) add("warn", t("fd_ns_extra", { names: ns.onlyResolver.slice(0, 3).join(", ") }));
-    if (!F.length && spf && spf.checked) add("ok", t("fd_ok"));
+    // "nothing found" is about the domain: an unreachable resolver is a note, so it does not hide a clean result
+    if (!F.some(x => x.level === "warn" || x.level === "bad") && spf && spf.checked) add("ok", t("fd_ok"));
     F.sort((a, b) => (a.level === "bad" ? 0 : 1) - (b.level === "bad" ? 0 : 1));
     state.findings = F.slice(0, 4);
     const ul = $("findings");
@@ -769,7 +776,7 @@ import { encodeResult, decodeResult, sharePath, resultsFromSnapshot, CODES } fro
       v: 1, d: state.domain, t: state.types, at: state.startedAt, r: rows, m: dm, x: d, xz,
       // the DNSSEC verdict, so a shared link shows the same third number (an older link has none: "unknown")
       dn: state.dnssec ? [state.dnssec.state, state.dnssec.answered] : ["unknown", 0],
-      s: { ty: primary || state.types[0] || "A", val: first ? first.data : "", ok: m ? m.ok.length : 0,
+      s: { ty: primary || state.types[0] || "A", val: first ? first.data : "", ok: m ? m.answered : 0,
         tot: RESOLVERS.length, n: state.records.length },
     };
   }
@@ -824,7 +831,8 @@ import { encodeResult, decodeResult, sharePath, resultsFromSnapshot, CODES } fro
     // the four checks, one row each: the same verdicts the page shows, with a dot for what needs attention
     const primary = heroType();
     const m = primary && state.merged ? state.merged[primary] : null;
-    const covered = !!m && m.ok.length * 2 >= RESOLVERS.length;
+    const ans = m ? m.answered : 0;
+    const covered = ans * 2 >= RESOLVERS.length;
     const rd = state.rdap || null;
     const suffix = "." + ((rd && rd.tld) || tldOf(state.domain));
     const rdap = !rd ? ["bad", t("rd_fail")]
@@ -833,8 +841,8 @@ import { encodeResult, decodeResult, sharePath, resultsFromSnapshot, CODES } fro
       : rd.notFound ? ["muted", t("rd_none")]
       : ["bad", t("rd_fail")];
     const rows = [
-      [m && m.ok.length ? (covered && m.consistency === 1 ? "ok" : "warn") : "muted", t("k_agree"),
-        m && m.ok.length ? m.majority.resolvers.length + " / " + m.ok.length : "—"],
+      [m && m.majority ? (covered && m.consistency === 1 ? "ok" : "warn") : "muted", t("k_agree"),
+        m && m.majority ? m.majority.resolvers.length + " / " + ans : "—"],
       [!g.mail ? "muted" : g.mail === "D" ? "bad" : g.mail === "C" ? "warn" : "ok", t("k_mail"), g.mail || "—"],
       [dn.state === "pass" ? "ok" : dn.state === "broken" ? "bad" : "muted", t("k_dnssec"), t("dn_card_" + dn.state)],
       [rdap[0], t("h_rdap"), rdap[1]],
@@ -855,9 +863,9 @@ import { encodeResult, decodeResult, sharePath, resultsFromSnapshot, CODES } fro
     });
 
     // how much of the picture the checks are based on, and how many things are worth fixing
-    const problems = (state.findings || []).filter(f => f.level !== "ok").length;
+    const problems = (state.findings || []).filter(f => f.level === "warn" || f.level === "bad").length;
     const cov = m
-      ? t("card_cov", { ok: m.ok.length, tot: RESOLVERS.length, fail: m.errors.length }) + " · " + (problems ? t("card_findings", { n: problems }) : t("card_clean"))
+      ? t("card_cov", { ok: ans, tot: RESOLVERS.length, fail: m.unreachable.length }) + " · " + (problems ? t("card_findings", { n: problems }) : t("card_clean"))
       : t("v_allfail");
     x.fillStyle = v("muted"); x.textAlign = "left";
     kit.fit(x, cov, w, 22, 15, 400);

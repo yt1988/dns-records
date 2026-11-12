@@ -9,7 +9,9 @@
 import { pack, unpack, CodecError } from "../public/assets/share/codec.js";
 
 export const CODE_VERSION = "1";
-export const CODES = { ok: 0, nx: 3, servfail: 2, timeout: 4, network: 5, http: 6, bad: 7, skipped: 8, refused: 9 };
+// 9 and up were added later: a link made by this build and opened by an older page is read as an unknown error there,
+// which is treated as "we don't know", never as the domain's fault.
+export const CODES = { ok: 0, nx: 3, servfail: 2, timeout: 4, network: 5, http: 6, bad: 7, skipped: 8, refused: 9, rcode: 10 };
 
 export async function encodeResult(obj) {
   return CODE_VERSION + "~" + await pack(JSON.stringify(obj));
@@ -52,5 +54,5 @@ export function resultsFromSnapshot(snap) {
 }
 
 function errorOf(code) {
-  return { 2: "servfail", 4: "timeout", 5: "network", 6: "http", 7: "bad", 8: "skipped", 9: "refused" }[code] || null;
+  return { 2: "servfail", 4: "timeout", 5: "network", 6: "http", 7: "bad", 8: "skipped", 9: "refused", 10: "rcode" }[code] || null;
 }

@@ -19,7 +19,7 @@ export default {
 
   v_nx: "{domain} doesn't exist (NXDOMAIN)",
   v_empty: "No {type} records",
-  v_allfail: "No resolver answered",
+  v_allfail: "No resolver answered", v_servfail: "{n} resolvers answered but gave no records (SERVFAIL and the like)",
   v_all: "All {n} resolvers that answered gave the same answer",
   v_most: "Of the {b} that answered, {a} gave the same answer",
   v_one: "Only one resolver answered", v_few_all: "Only {a} of {b} resolvers answered; those that did agree", v_few_most: "Only {c} of {b} resolvers answered; {a} of those agree",
@@ -32,7 +32,7 @@ export default {
 
   k_agree: "Same answer", k_mail: "Mail grade", k_dnssec: "DNSSEC",
   fd_stale: "A different answer from {n} of {b} resolvers: {names}",
-  fd_fail: "No answer from {n} of {b} resolvers",
+  fd_fail: "{n} of {b} resolvers could not be reached this time — most likely your own connection; not counted in the grade",
   fd_spf_none: "No SPF record: receivers can't tell who may send mail as this domain",
   fd_spf_plus: "SPF ends in +all: anyone can send mail as this domain",
   fd_spf_noall: "SPF doesn't end with -all or ~all: some senders are never refused",
@@ -90,7 +90,7 @@ export default {
   help_h: "Help",
   docs: [
     ["What does this page look up?", "Enter a domain: nine record types (A, AAAA, CNAME, MX, NS, TXT, CAA, SRV, SOA) are asked at 12 public DNS resolvers, each over DNS over HTTPS from your browser. The values are merged, and each resolver's own answer is shown under Resolver answers. Registration data comes from RDAP, the JSON version of WHOIS."],
-    ["What does the checkup grade mean?", "The letter is the lower of two grades: how the resolvers' answers compare, and how the mail setup looks. The answers get an A only when every resolver answered and all gave the same answer; up to half failing makes it a B. The mail grade comes from SPF and DMARC and only applies when the domain has an MX that accepts mail. A signed domain whose DNSSEC fails to validate drops one more step. CAA and IPv6 are shown as badges and never change the letter."],
+    ["What does the checkup grade mean?", "The letter is the lower of two grades: how the resolvers' answers compare, and how the mail setup looks. Agreement is counted among the resolvers that answered: if all of them said the same thing the answers get an A, and one different answer makes it a B. A resolver this page could not reach — usually your own network — counts neither for nor against; a SERVFAIL or REFUSED from the resolver is an answer and does count. Fewer than half of the twelve answering means no grade. The mail grade comes from SPF and DMARC and only applies when the domain has an MX that accepts mail. A signed domain whose DNSSEC fails to validate drops one more step. CAA and IPv6 are shown as badges and never change the letter."],
     ["What does DNSSEC tell me?", "DNSSEC lets a resolver prove that an answer really comes from the domain and was not altered. The page asks the parent zone for a DS record and reads the AD bit from resolvers that are known to validate. \"On, and validates\" means the domain is signed and those resolvers agree; \"On, but validation fails\" means a signed domain answers with a broken chain, and resolvers that check will refuse it. Off is normal and doesn't lower the grade; with too little evidence the page says it can't tell."],
     ["How long does a DNS change take to show up?", "When a record changes, every resolver keeps its old copy until the TTL (time to live) runs out. So right after a change some resolvers still answer with the old value, and the Resolver answers panel shows which ones. The page can only see what public resolvers have cached: a browser cannot reach the domain's own authoritative server on port 53, so it cannot show the zone's current truth."],
     ["Why do some resolvers say they couldn't connect?", "The queries go straight from your browser to each resolver. In mainland China, Cloudflare and Google DNS are usually blocked and some others are too, so those rows say they could not connect. That is a fact about the path, not an empty record set: a resolver that did not answer is never counted as disagreeing."],

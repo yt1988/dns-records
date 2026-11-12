@@ -19,7 +19,7 @@ export default {
 
   v_nx: "{domain} n'existe pas (NXDOMAIN)",
   v_empty: "Aucun enregistrement {type}",
-  v_allfail: "Aucun résolveur n'a répondu",
+  v_allfail: "Aucun résolveur n'a répondu", v_servfail: "{n} résolveurs ont répondu mais sans enregistrement (SERVFAIL ou autre)",
   v_all: "Les {n} résolveurs qui ont répondu donnent la même réponse",
   v_most: "Sur les {b} qui ont répondu, {a} donnent la même réponse",
   v_one: "Un seul résolveur a répondu", v_few_all: "Seuls {a} des {b} résolveurs ont répondu ; ils donnent tous la même réponse", v_few_most: "Seuls {c} des {b} résolveurs ont répondu ; {a} d'entre eux donnent la même réponse",
@@ -32,7 +32,7 @@ export default {
 
   k_agree: "Réponses identiques", k_mail: "Note e-mail", k_dnssec: "DNSSEC",
   fd_stale: "{n} des {b} résolveurs donnent une autre réponse : {names}",
-  fd_fail: "{n} des {b} résolveurs n'ont pas répondu",
+  fd_fail: "{n} des {b} résolveurs sont restés injoignables cette fois (sans doute votre connexion) ; cela ne compte pas dans la note",
   fd_spf_none: "Aucun enregistrement SPF : le destinataire ne peut pas savoir quels serveurs peuvent envoyer pour ce domaine",
   fd_spf_plus: "Le SPF finit par +all : n'importe qui peut envoyer du courrier avec ce domaine",
   fd_spf_noall: "Le SPF ne finit ni par -all ni par ~all : certains expéditeurs ne sont jamais refusés",
@@ -89,7 +89,7 @@ export default {
   help_h: "Aide",
   docs: [
     ["Que vérifie cette page ?", "Saisissez un domaine : neuf types d'enregistrement (A, AAAA, CNAME, MX, NS, TXT, CAA, SRV, SOA) sont demandés à 12 résolveurs DNS publics, chacun en DNS over HTTPS depuis votre navigateur. Les valeurs sont fusionnées et la réponse de chaque résolveur apparaît dans Réponses des résolveurs. Les données de registre viennent de RDAP, la version structurée de WHOIS."],
-    ["Comment la note de bilan est-elle calculée ?", "La note est la plus basse de deux notes : la concordance des réponses des résolveurs et l'état du mail. Les réponses n'obtiennent un A que si les 12 ont répondu et donnent la même réponse ; un seul échec sur douze fait B. La note mail vient de SPF et DMARC et ne s'applique que si le domaine a un MX qui accepte le courrier. Un domaine signé dont DNSSEC ne valide pas perd un cran de plus. CAA et IPv6 ne sont que des badges et ne changent jamais la lettre."],
+    ["Comment la note de bilan est-elle calculée ?", "La note est la plus basse de deux notes : la concordance des réponses des résolveurs et l'état du mail. Seuls les résolveurs qui ont répondu comptent : s'ils disent tous la même chose, c'est un A ; une réponse différente en fait un B. Un résolveur que cette page n'a pas pu joindre (souvent votre connexion) ne compte ni pour ni contre ; un SERVFAIL ou un REFUSED du résolveur est une réponse et compte. Si moins de la moitié des douze répondent, il n'y a pas de note. La note mail vient de SPF et DMARC et ne s'applique que si le domaine a un MX qui accepte le courrier. Un domaine signé dont DNSSEC ne valide pas perd un cran de plus. CAA et IPv6 ne sont que des badges et ne changent jamais la lettre."],
     ["Que me dit DNSSEC ?", "DNSSEC permet à un résolveur de prouver qu'une réponse vient bien de ce domaine et n'a pas été modifiée. La page demande l'enregistrement DS à la zone parente et lit le bit AD de résolveurs reconnus comme validants. « Actif et validé » signifie que le domaine est signé et que ces résolveurs le confirment ; « Actif, mais la validation échoue » signifie qu'un domaine signé répond avec une chaîne cassée, et les résolveurs qui vérifient le refuseront. Inactif est la situation normale et ne baisse pas la note ; quand les preuves manquent, la page dit qu'elle ne peut pas savoir."],
     ["Combien de temps un changement DNS met-il à se voir ?", "Quand un enregistrement change, chaque résolveur garde son ancienne copie jusqu'à l'expiration du TTL (durée de vie). Juste après un changement, certains résolveurs répondent donc encore avec l'ancienne valeur, et le panneau des réponses montre lesquels. La page ne voit que ce que les résolveurs publics ont en cache : un navigateur ne peut pas joindre le serveur autoritatif du domaine sur le port 53, il ne peut donc pas montrer la vérité actuelle de la zone."],
     ["Pourquoi certains résolveurs disent-ils « connexion impossible » ?", "Les requêtes vont de votre navigateur directement à chaque résolveur. En Chine continentale, Cloudflare et Google DNS sont souvent bloqués, et quelques autres aussi, donc ces lignes indiquent « connexion impossible ». C'est un fait sur le chemin, pas un ensemble d'enregistrements vide : un résolveur qui n'a pas répondu n'est jamais compté comme divergence."],

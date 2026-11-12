@@ -19,7 +19,7 @@ export default {
 
   v_nx: "{domain} no existe (NXDOMAIN)",
   v_empty: "No hay registros {type}",
-  v_allfail: "Ningún resolutor respondió",
+  v_allfail: "Ningún resolutor respondió", v_servfail: "{n} resolutores respondieron pero sin registros (SERVFAIL y similares)",
   v_all: "Los {n} resolutores que respondieron dieron la misma respuesta",
   v_most: "De los {b} que respondieron, {a} dieron la misma respuesta",
   v_one: "Solo respondió un resolutor", v_few_all: "Solo respondieron {a} de {b} resolutores; los que respondieron coinciden", v_few_most: "Solo respondieron {c} de {b} resolutores; {a} de ellos coinciden",
@@ -32,7 +32,7 @@ export default {
 
   k_agree: "Misma respuesta", k_mail: "Nota del correo", k_dnssec: "DNSSEC",
   fd_stale: "{n} de {b} resolutores dieron otra respuesta: {names}",
-  fd_fail: "{n} de {b} resolutores no respondieron",
+  fd_fail: "{n} de {b} resolutores no se pudieron alcanzar esta vez (probablemente tu conexión); no cuenta para la nota",
   fd_spf_none: "No hay registro SPF: quien recibe el correo no puede saber qué servidores pueden enviar por este dominio",
   fd_spf_plus: "El SPF termina en +all: cualquiera puede enviar correo como este dominio",
   fd_spf_noall: "El SPF no termina en -all ni ~all: algunos remitentes nunca se rechazan",
@@ -89,7 +89,7 @@ export default {
   help_h: "Ayuda",
   docs: [
     ["¿Qué consulta esta página?", "Escribe un dominio: se preguntan nueve tipos de registro (A, AAAA, CNAME, MX, NS, TXT, CAA, SRV, SOA) a 12 resolutores DNS públicos, cada uno por DNS over HTTPS desde tu navegador. Los valores se unen y la respuesta de cada resolutor aparece en Respuestas de los resolutores. Los datos de registro vienen de RDAP, la versión JSON de WHOIS."],
-    ["¿Qué significa la nota del chequeo?", "La letra es la menor de dos notas: cómo se comparan las respuestas de los resolutores y cómo está el correo. Las respuestas solo sacan una A cuando todos los resolutores respondieron y todos dieron la misma respuesta; si falla hasta la mitad, baja a B. La nota del correo sale de SPF y DMARC y solo se aplica cuando el dominio tiene un MX que acepta correo. Un dominio firmado cuyo DNSSEC no valida baja un paso más. CAA e IPv6 son distintivos y nunca cambian la letra."],
+    ["¿Qué significa la nota del chequeo?", "La letra es la menor de dos notas: cómo se comparan las respuestas de los resolutores y cómo está el correo. Solo cuentan los resolutores que respondieron: si todos dicen lo mismo, hay una A; una respuesta distinta la baja a B. Un resolutor al que esta página no llegó (normalmente por tu conexión) no cuenta ni a favor ni en contra; un SERVFAIL o REFUSED del resolutor sí es una respuesta y cuenta. Si responden menos de la mitad de los doce, no hay nota. La nota del correo sale de SPF y DMARC y solo se aplica cuando el dominio tiene un MX que acepta correo. Un dominio firmado cuyo DNSSEC no valida baja un paso más. CAA e IPv6 son distintivos y nunca cambian la letra."],
     ["¿Qué me dice DNSSEC?", "DNSSEC permite que un resolutor demuestre que una respuesta viene de verdad de ese dominio y no se alteró. La página pide a la zona padre el registro DS y lee el bit AD de resolutores que se sabe que validan. «Activo y valida» significa que el dominio está firmado y esos resolutores lo confirman; «Activo, pero falla la validación» significa que un dominio firmado responde con una cadena rota, y los resolutores que comprueban lo rechazarán. Desactivado es lo normal y no baja la nota; cuando falta evidencia, la página dice que no puede saberlo."],
     ["¿Cuánto tarda en verse un cambio de DNS?", "Cuando un registro cambia, cada resolutor guarda su copia antigua hasta que vence el TTL (tiempo de vida). Por eso, justo después de un cambio, algunos resolutores siguen respondiendo con el valor viejo, y el panel de respuestas muestra cuáles. La página solo ve lo que tienen en caché los resolutores públicos: un navegador no puede llegar al servidor autoritativo del dominio por el puerto 53, así que no puede mostrar la verdad actual de la zona."],
     ["¿Por qué algunos resolutores dicen que no conectaron?", "Las consultas van de tu navegador directamente a cada resolutor. En China continental, Cloudflare y Google DNS suelen estar bloqueados, y algunos otros también, así que esas filas dicen que no conectaron. Es un hecho sobre la ruta, no un conjunto de registros vacío: un resolutor que no respondió nunca cuenta como discrepancia."],
