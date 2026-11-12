@@ -24,6 +24,8 @@ const fill = (s, vars) => String(s).replace(/\{(\w+)\}/g, (m, k) => (k in vars ?
 // Registration lookups are for this site's own page, not for other sites to borrow: CORS names dig.1ms.dog only.
 const ALLOWED_ORIGIN = "https://dig.1ms.dog";
 const CACHE_SUCCESS = 43200, CACHE_FAILURE = 600, CACHE_CLIENT = 3600;
+// Bump when the /whois answer gains or loses fields, so a deploy never serves an old-shape entry from the edge cache.
+const CACHE_VERSION = "2";
 
 async function handleWhois(request, url, env, ctx) {
   const headers = { "content-type": "application/json; charset=utf-8", "vary": "origin" };
@@ -38,7 +40,12 @@ async function handleWhois(request, url, env, ctx) {
   }
 
   const store = typeof caches !== "undefined" ? caches.default : null;
-  const key = new Request("https://whois.internal/?d=" + domain);
+  // The cache key is the request's own URL, so it carries the domain and nothing else can share an entry. The version
+  // parameter is part of the key: when the answer's shape changes, old entries (up to twelve hours of them) are left
+  // behind instead of being served without the new fields.
+  const keyURL = new URL(url);
+  keyURL.searchParams.set("v", CACHE_VERSION);
+  const key = new Request(keyURL.toString(), { method: "GET" });
   if (store) {
     const hit = await store.match(key);
     if (hit) return reply(await hit.json(), 200, { "cache-control": "public, max-age=" + CACHE_CLIENT });

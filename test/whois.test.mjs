@@ -1,6 +1,6 @@
-// The Worker's registration lookup: which domains it accepts, how each registry's WHOIS text is read, and that the
-// answer carries the six public fields and nothing about the registrant. The socket and HTTP are stubbed here; the
-// real servers are checked by hand (docs/decisions.md).
+// The Worker's registration lookup: which domains it accepts, how each registry's WHOIS text is read — registrant side
+// included — and that one call does the whole RDAP-then-WHOIS chain. The socket and HTTP are stubbed here; the real
+// servers are checked by hand (docs/decisions.md).
 import test from "node:test";
 import assert from "node:assert/strict";
 import { validDomain, parseWhois, isoDate, queryWhois, lookupRegistration, WHOIS_SERVERS } from "../src/whois.mjs";
@@ -78,24 +78,27 @@ test("dates from the four registries become what the page can format", () => {
   assert.equal(isoDate(""), null);
 });
 
-test("CNNIC's English WHOIS keys are read, and the registrant is not", () => {
+test("CNNIC's English WHOIS keys are read, registrant included", () => {
   const d = parseWhois(CN);
   assert.equal(d.registrar, "北京国科云计算技术有限公司");
   assert.equal(d.created, "2003-03-17T12:20");
   assert.equal(d.expires, "2027-03-17T12:48");
   assert.deepEqual(d.nameservers, ["ns3.sina.com.cn", "ns2.sina.com.cn"]);
   assert.deepEqual(d.status, ["clientDeleteProhibited", "serverTransferProhibited"]);
-  assert.equal(JSON.stringify(d).includes("someone@example.com"), false);
-  assert.equal(JSON.stringify(d).includes("一些公司"), false);
+  // published by the registry, so it is shown as written — Chinese registrant names included
+  assert.equal(d.registrant, "一些公司");
+  assert.equal(d.email, "someone@example.com");
+  assert.equal(d.dnssec, "unsigned");
 });
 
-test("JPRS's bracket keys are read, and its registrant block is not", () => {
+test("JPRS's bracket keys are read, registrant included", () => {
   const d = parseWhois(JP);
   assert.equal(d.created, "2001-02-02");
   assert.equal(d.expires, "2027-02-28");
   assert.deepEqual(d.status, ["Active"]);
   assert.deepEqual(d.nameservers, ["ns1.jprs.jp", "ns2.jprs.jp"]);
-  assert.equal(JSON.stringify(d).includes("someone@example.jp"), false);
+  assert.equal(d.registrant, "Japan Registry Services Co.,Ltd.");
+  assert.equal(d.email, "someone@example.jp");
   assert.equal(d.registrar, null);
 });
 
@@ -106,7 +109,7 @@ test("TCI's key: value pairs and comma-separated states are read", () => {
   assert.equal(d.expires, "2027-10-01T21:00");
   assert.deepEqual(d.status, ["REGISTERED", "DELEGATED", "VERIFIED"]);
   assert.deepEqual(d.nameservers, ["ns1.tcinet.ru"]);
-  assert.equal(JSON.stringify(d).includes("Some Company"), false);
+  assert.equal(d.registrantOrg, "Some Company");
 });
 
 test("HKDNR's date-first fields and bare name-server list are read", () => {
@@ -162,7 +165,31 @@ test("with RDAP unreachable, the registry's WHOIS answers and is marked as such"
   assert.equal(out.ok, true);
   assert.equal(out.src, "whois");
   assert.equal(out.registrar, "北京国科云计算技术有限公司");
-  assert.equal(JSON.stringify(out).includes("someone@example.com"), false);
+  assert.equal(out.registrant, "一些公司");
+  assert.equal(out.email, "someone@example.com");
+  assert.equal(out.dnssec, "unsigned");
+  // the registry's own reply travels with the parsed fields, so a field the parser misses is still readable
+  assert.equal(out.raw, CN.trim());
+});
+
+test("one lookup does the whole chain: one RDAP request, then one socket, never a second round trip", async () => {
+  let fetches = 0, sockets = 0;
+  const connect = (host, port) => { sockets++; return fakeConnect(CN)(host, port); };
+  const out = await lookupRegistration("sina.cn", { fetchImpl: async () => { fetches++; return noRdap(); }, connect });
+  assert.equal(out.src, "whois");
+  assert.equal(fetches, 1, "RDAP is asked once");
+  assert.equal(sockets, 1, "and WHOIS once, inside the same call");
+});
+
+test("the page asks the Worker at most once per lookup, and only after the browser's own RDAP failed", async () => {
+  // the built page cannot be run here without a DOM; this pins the shape of the one call site instead
+  const { readFile } = await import("node:fs/promises");
+  const app = await readFile(new URL("../src/app.js", import.meta.url), "utf8");
+  // one call site in the whole page: the fallback inside loadRdap, after the browser's own RDAP failed
+  assert.equal((app.match(/fetchServerRegistration\(/g) || []).length, 1, "exactly one call to the Worker");
+  const at = app.indexOf("fetchServerRegistration(name)");
+  assert.ok(at > 0, "the call goes through the single fallback in loadRdap");
+  assert.ok(app.slice(at, at + 400).includes("state.rdap = r"), "its result is the answer, not a second request");
 });
 
 test("RDAP that works is used first, and says src rdap", async () => {

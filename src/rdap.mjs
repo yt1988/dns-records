@@ -60,7 +60,10 @@ export async function fetchRdap(domain, { fetchImpl = fetch, signal, timeout = 9
     if (!res.ok) return { error: "http", status: res.status };
     let json;
     try { json = await res.json(); } catch (e) { return { error: "bad" }; }
-    return { data: normalize(json) };
+    const data = normalize(json);
+    // The registry's own reply, for the expandable "raw record": anything the parser misses is still there to read.
+    data.raw = String(JSON.stringify(json, null, 2) || "").slice(0, 16000);
+    return { data };
   } catch (e) {
     if (timedOut) return { error: "timeout" };
     if (e && (e.name === "AbortError" || e.name === "TimeoutError")) return { error: "aborted" };
@@ -96,6 +99,10 @@ export async function fetchServerRegistration(domain, { fetchImpl = fetch, signa
         created: j.created || null, expires: j.expires || null, updated: j.updated || null,
         status: Array.isArray(j.status) ? j.status : [],
         nameservers: Array.isArray(j.nameservers) ? j.nameservers : [],
+        // the registrant side the registry publishes, and its own reply for the expandable raw record
+        registrant: j.registrant || null, registrantOrg: j.registrantOrg || null,
+        email: j.email || null, phone: j.phone || null, dnssec: j.dnssec || null,
+        raw: typeof j.raw === "string" ? j.raw : null,
       },
     };
     if (j.reason === "notfound") return { notFound: true, src };
@@ -108,10 +115,19 @@ export async function fetchServerRegistration(domain, { fetchImpl = fetch, signa
   }
 }
 
+// vCard fields (fn, org, email, tel) as plain strings; org may be an array of strings per the vCard spec.
+function vcard(entity) {
+  const card = entity && Array.isArray(entity.vcardArray) && Array.isArray(entity.vcardArray[1]) ? entity.vcardArray[1] : [];
+  const get = name => card.filter(p => Array.isArray(p) && p[0] === name)
+    .map(p => (Array.isArray(p[3]) ? p[3].join(" ") : p[3]))
+    .map(v => (typeof v === "string" ? v.trim() : ""))
+    .filter(Boolean);
+  return { fn: get("fn"), org: get("org"), email: get("email"), tel: get("tel") };
+}
+
 function vname(entity) {
-  const card = Array.isArray(entity.vcardArray) && Array.isArray(entity.vcardArray[1]) ? entity.vcardArray[1] : [];
-  const fn = card.find(p => Array.isArray(p) && p[0] === "fn");
-  return (fn && typeof fn[3] === "string" && fn[3].trim()) || entity.handle || null;
+  const fn = vcard(entity).fn;
+  return fn[0] || entity.handle || null;
 }
 
 const eventDate = (events, ...actions) => {
@@ -129,6 +145,11 @@ export function normalize(json) {
   const nameservers = (Array.isArray(json.nameservers) ? json.nameservers : [])
     .map(n => (typeof n === "string" ? n : n.ldhName || n.unicodeName || ""))
     .filter(Boolean);
+  // The registrant as the registry publishes it. A privacy service or a registry that redacts it (DENIC) gives an
+  // empty vCard, and then there is nothing to show — not a field to invent.
+  const rc = vcard(entities.find(e => Array.isArray(e.roles) && e.roles.includes("registrant")));
+  const signed = json.secureDNS && typeof json.secureDNS.delegationSigned === "boolean"
+    ? (json.secureDNS.delegationSigned ? "signed" : "unsigned") : null;
   return {
     handle: json.handle || null,
     registrar: registrarEnt ? vname(registrarEnt) : null,
@@ -139,5 +160,10 @@ export function normalize(json) {
     updated: eventDate(json.events, "last changed", "last update of rdap database"),
     status: (Array.isArray(json.status) ? json.status : []).filter(s => typeof s === "string"),
     nameservers: [...new Set(nameservers.map(n => n.toLowerCase().replace(/\.+$/, "")))],
+    registrant: rc.fn[0] || null,
+    registrantOrg: rc.org.join(", ") || null,
+    email: [...new Set(rc.email)].join(", ") || null,
+    phone: [...new Set(rc.tel)].join(", ") || null,
+    dnssec: signed,
   };
 }

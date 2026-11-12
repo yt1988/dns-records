@@ -53,12 +53,18 @@ question goes to two resolvers that already answered the other types (Cloudflare
 carry no EDNS DO bit, and AD is read from the answer header. Registration data is read in the browser first: through
 https://rdap.org/, which redirects to the right registry, or the registry's own RDAP for suffixes outside IANA's
 bootstrap that publish it with CORS (currently .io). When a browser cannot read the registry — the suffix has no RDAP
-(.cn, .jp, .ru, .hk), or its RDAP sends no CORS header (.de) — the page asks the Worker's `GET /whois?d=<domain>`, which
-tries RDAP without CORS and then the registry's port-43 WHOIS (currently CNNIC, JPRS, TCI and HKDNR). That answer is
-marked on the page as fetched by the server, and it carries only the registrar, the dates, the status flags and the name
-servers: registrant names, e-mails and phone numbers are never read out of the registry's reply or returned. A suffix
-with neither (currently .vn) says it cannot be looked up and links to the registry's own WHOIS page — it never claims
-the domain has no registration.
+(.cn, .jp, .ru, .hk), or its RDAP sends no CORS header (.de) — the page asks the Worker's `GET /whois?d=<domain>`, and
+that one request runs the whole chain: RDAP without CORS, then the registry's port-43 WHOIS (currently CNNIC, JPRS, TCI
+and HKDNR). The block shows what the registry publishes — registrar, dates, status, name servers, its DNSSEC state, and
+the registrant's name or company, e-mail and phone when it publishes them (a registry that withholds them, or a privacy
+service, simply has no such field, and none is invented). Each block names its source, and the registry's own reply sits
+behind a "Raw record" disclosure, so a field this page misses is still there to read. A suffix with neither (currently
+.vn) says it cannot be looked up and links to the registry's own WHOIS page — it never claims the domain has no
+registration.
+
+That is also the whole cost: the DNS queries never touch a server, and a registration lookup costs one Worker request
+only for a suffix a browser cannot read (.cn, .jp, .ru, .hk, .de); everything else, including .com, .net and .org,
+costs none. Results are cached for twelve hours (ten minutes for a failure), keyed by the full request URL.
 
 Not in this version: DKIM selectors and certificates (separate tools), proxy integration, accounts.
 
@@ -119,9 +125,10 @@ asked through it.
 The page sends each DNS query from the visitor's browser to the resolvers listed under Resolver answers; 1ms.dog's server
 never sees a DNS query or its answer. Registration data is asked by the browser too (rdap.org, or the registry's own
 RDAP). When a browser cannot read a registry, the page asks the Worker's `/whois`: it tries RDAP and then the registry's
-port-43 WHOIS, and returns only the fields listed above — never registrant details — and the page marks the answer as
-fetched by the server. Those lookups are cached for twelve hours (failures ten minutes) and no log is kept. A shared
-link contains the domain's own public records and the registration fields that were on screen — never the visitor's IP.
+port-43 WHOIS, and returns what the registry publishes, registrant included — that data is the registry's own public
+record, and the page marks the answer as fetched by the server. Those lookups are cached for twelve hours (failures ten
+minutes) and no log is kept. A shared link contains the domain's own public records and the registration fields shown
+for it — never the visitor's IP, and not the registrant or contact rows of a shared result.
 Both the share dialog and the Q&A say this in every language. No cookies, no accounts, no analytics beyond the shell's
 page counts.
 

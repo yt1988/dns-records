@@ -5,9 +5,10 @@
 // registry's port-43 WHOIS server — so /whois asks the registry on the visitor's behalf. This is the one kind of query
 // that passes through 1ms.dog's server, and the page says so wherever it shows the answer.
 //
-// What this module returns is deliberately narrow: registrar, dates, status flags and name servers. A registry's WHOIS
-// reply also carries the registrant's name, company, e-mail and phone (.cn does), and none of that is read out here or
-// leaves the Worker — the visitor asked about the domain, not about whoever owns it.
+// What this module returns is what the registry itself publishes, registrant included: registrar, dates, status flags,
+// name servers, DNSSEC state, and the registrant's name or company, e-mail and phone when the registry has them. A
+// registry that withholds them (DENIC under GDPR, a privacy service) simply has no such field, and none is invented.
+// The registry's own reply is passed along as raw text so a field this parser misses is still there to read.
 import { RDAP_BASE, normalize, tldOf } from "./rdap.mjs";
 
 // The registries we ask over port 43, measured from Cloudflare's network (docs/decisions.md). No guessing: a suffix
@@ -28,6 +29,10 @@ export const QUIET_TLDS = ["vn"];
 export const MAX_BYTES = 40960;
 export const TIMEOUT_MS = 8000;
 const IDLE_MS = 1500;
+// The raw reply is for reading, not for shipping unbounded: registries send a few kilobytes, and the page shows it in
+// an expandable block.
+const RAW_MAX = 16000;
+export const clipRaw = s => { const t = String(s || "").replace(/\s+$/, ""); return t.length > RAW_MAX ? t.slice(0, RAW_MAX) + "\n…" : t; };
 
 // A domain the page would accept: ASCII labels only (the page hands over punycode), at least two labels.
 const DOMAIN_RE = /^[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?(?:\.[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?)+$/;
@@ -101,6 +106,9 @@ export function parseWhois(text) {
   const nameservers = pick("name server", "name servers", "name servers information", "nserver", "域名服务器")
     .map(s => s.replace(/\.+$/, "").toLowerCase())
     .filter(s => NS_RE.test(s));
+  // The registrant side, as the registry publishes it: .cn and .jp name it outright, .ru writes org/person. Values are
+  // kept as written — no masking, no rewriting — and a registry that leaves them out gets no field here.
+  const joined = (...keys) => [...new Set(pick(...keys).map(s => String(s).trim()).filter(Boolean))].join(", ") || null;
   const out = {
     registrar: first("registrar", "sponsoring registrar", "registrar name"),
     created: isoDate(first("registration time", "created on", "created", "registration date", "registered on", "registered", "domain name commencement date")),
@@ -108,8 +116,14 @@ export function parseWhois(text) {
     updated: isoDate(first("last updated", "last update", "updated", "last modified", "modified")),
     status: [...new Set(status)].slice(0, 8),
     nameservers: [...new Set(nameservers)].slice(0, 12),
+    registrant: first("registrant", "registrant name", "registrant contact name", "person"),
+    registrantOrg: first("registrant organization", "registrant organisation", "registrant company", "org", "organization", "organisation"),
+    email: joined("registrant contact email", "registrant email", "registrant e-mail", "email", "e-mail"),
+    phone: joined("registrant phone", "registrant phone number", "registrant telephone", "phone", "telephone", "phone number"),
+    dnssec: first("dnssec", "dnssec status", "dns-sec"),
   };
-  const any = out.registrar || out.created || out.expires || out.updated || out.status.length || out.nameservers.length;
+  const any = out.registrar || out.created || out.expires || out.updated || out.status.length || out.nameservers.length
+    || out.registrant || out.registrantOrg || out.email || out.phone;
   return any ? out : null;
 }
 
@@ -166,7 +180,9 @@ async function rdapAsk(domain, { fetchImpl, signal }) {
   if (!res.ok) return { error: "http" };
   let json;
   try { json = await res.json(); } catch (e) { return { error: "bad" }; }
-  return { data: normalize(json) };
+  const data = normalize(json);
+  data.raw = clipRaw(JSON.stringify(json, null, 2));
+  return { data };
 }
 
 // The whole answer for /whois: IANA-bootstrap RDAP (or the registry's own RDAP) first, port-43 WHOIS second.
@@ -190,7 +206,8 @@ export async function lookupRegistration(domain, { fetchImpl = fetch, connect, t
     if (text == null) return { ok: false, reason: "timeout", tld };
     if (NOT_FOUND.test(text)) return { ok: false, src: "whois", reason: "notfound", tld };
     const data = parseWhois(text);
-    if (data) return { ok: true, src: "whois", tld, ...data };
+    // The registry's own reply goes along with the parsed fields, so a field this parser misses is still readable.
+    if (data) return { ok: true, src: "whois", tld, ...data, raw: clipRaw(text) };
     // A reply that names the domain but has no fields at all (JPRS does this for a held example domain) is the
     // registry answering with nothing, not a broken lookup.
     if (text.toLowerCase().includes(d)) return { ok: false, src: "whois", reason: "notfound", tld };

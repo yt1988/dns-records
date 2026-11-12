@@ -326,7 +326,10 @@ import { encodeResult, decodeResult, sharePath, resultsFromSnapshot, CODES } fro
     const rb = $("rdapBody");
     rb.textContent = "";
     const dl = el("dl", "rdap");
-    [t("rd_registrar"), t("rd_created"), t("rd_expires"), t("rd_updated"), t("rd_status"), t("rd_ns")].forEach(k => {
+    // The six rows every registry fills, plus the three that are usually there: reserving them keeps the block from
+    // jumping when the data lands (docs/decisions.md, CLS).
+    [t("rd_registrar"), t("rd_created"), t("rd_expires"), t("rd_updated"), t("rd_status"), t("rd_ns"),
+      t("rd_registrant"), t("rd_email"), t("rd_dnssec")].forEach(k => {
       dl.appendChild(el("dt", "", k));
       dl.appendChild(el("dd", "", "…"));
     });
@@ -717,8 +720,10 @@ import { encodeResult, decodeResult, sharePath, resultsFromSnapshot, CODES } fro
       } else line(body, t("rd_whois_unknown"), "m");
       return;
     }
-    // An empty answer that came from the server still came from the server: name the source either way.
-    const srcNote = () => { if (state.rdap.src) body.appendChild(el("p", "m", t(state.rdap.src === "whois" ? "rd_src_whois" : "rd_src_rdap"))); };
+    // Every registration block names where its data came from, and whether the visitor's browser or this site's
+    // server read it. An empty answer that came from the server still came from the server.
+    const srcNote = () => body.appendChild(el("p", "m", t(state.rdap.src === "whois" ? "rd_src_whois"
+      : state.rdap.src === "rdap" ? "rd_src_rdap" : "rd_from_rdap")));
     if (state.rdap.notFound) { st.textContent = t("rd_none"); line(body, t("rd_none_why"), "m"); srcNote(); return; }
     const d = state.rdap.data;
     const dl = el("dl", "rdap");
@@ -742,9 +747,23 @@ import { encodeResult, decodeResult, sharePath, resultsFromSnapshot, CODES } fro
       d.nameservers.forEach(s => wrap.appendChild(el("span", "pill", s)));
       row(t("rd_ns"), null, wrap);
     }
+    // The registrant side, exactly as the registry publishes it: shown when it is there, absent (not "hidden") when
+    // the registry withholds it. No masking, no rewriting, no truncation.
+    if (d.registrant) row(t("rd_registrant"), d.registrant);
+    if (d.registrantOrg) row(t("rd_org"), d.registrantOrg);
+    if (d.email) row(t("rd_email"), d.email);
+    if (d.phone) row(t("rd_phone"), d.phone);
+    if (d.dnssec) row(t("rd_dnssec"), d.dnssec);
     body.appendChild(dl);
-    // This answer was fetched by the 1ms.dog server, not by the visitor's browser. Say so, every time.
+    // Where this block came from, and who read it. Always shown, not only for server-side lookups.
     srcNote();
+    // The registry's own reply, for when the parse above misses a field. Closed by default; the page stays readable.
+    if (d.raw) {
+      const det = el("details", "raw");
+      det.appendChild(el("summary", "", t("rd_raw")));
+      det.appendChild(el("pre", "", d.raw));
+      body.appendChild(det);
+    }
   }
 
   /* ---------------- links to other tools ---------------- */

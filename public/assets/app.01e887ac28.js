@@ -570,7 +570,9 @@
       } catch (e) {
         return { error: "bad" };
       }
-      return { data: normalize(json) };
+      const data = normalize(json);
+      data.raw = String(JSON.stringify(json, null, 2) || "").slice(0, 16e3);
+      return { data };
     } catch (e) {
       if (timedOut) return { error: "timeout" };
       if (e && (e.name === "AbortError" || e.name === "TimeoutError")) return { error: "aborted" };
@@ -610,7 +612,14 @@
           expires: j.expires || null,
           updated: j.updated || null,
           status: Array.isArray(j.status) ? j.status : [],
-          nameservers: Array.isArray(j.nameservers) ? j.nameservers : []
+          nameservers: Array.isArray(j.nameservers) ? j.nameservers : [],
+          // the registrant side the registry publishes, and its own reply for the expandable raw record
+          registrant: j.registrant || null,
+          registrantOrg: j.registrantOrg || null,
+          email: j.email || null,
+          phone: j.phone || null,
+          dnssec: j.dnssec || null,
+          raw: typeof j.raw === "string" ? j.raw : null
         }
       };
       if (j.reason === "notfound") return { notFound: true, src };
@@ -622,10 +631,14 @@
       if (signal) signal.removeEventListener("abort", stop);
     }
   }
+  function vcard(entity) {
+    const card = entity && Array.isArray(entity.vcardArray) && Array.isArray(entity.vcardArray[1]) ? entity.vcardArray[1] : [];
+    const get = (name) => card.filter((p) => Array.isArray(p) && p[0] === name).map((p) => Array.isArray(p[3]) ? p[3].join(" ") : p[3]).map((v) => typeof v === "string" ? v.trim() : "").filter(Boolean);
+    return { fn: get("fn"), org: get("org"), email: get("email"), tel: get("tel") };
+  }
   function vname(entity) {
-    const card = Array.isArray(entity.vcardArray) && Array.isArray(entity.vcardArray[1]) ? entity.vcardArray[1] : [];
-    const fn = card.find((p) => Array.isArray(p) && p[0] === "fn");
-    return fn && typeof fn[3] === "string" && fn[3].trim() || entity.handle || null;
+    const fn = vcard(entity).fn;
+    return fn[0] || entity.handle || null;
   }
   var eventDate = (events, ...actions) => {
     for (const action of actions) {
@@ -638,6 +651,8 @@
     const entities = Array.isArray(json.entities) ? json.entities : [];
     const registrarEnt = entities.find((e) => Array.isArray(e.roles) && e.roles.includes("registrar")) || entities.find((e) => Array.isArray(e.roles) && e.roles.includes("sponsor"));
     const nameservers = (Array.isArray(json.nameservers) ? json.nameservers : []).map((n) => typeof n === "string" ? n : n.ldhName || n.unicodeName || "").filter(Boolean);
+    const rc = vcard(entities.find((e) => Array.isArray(e.roles) && e.roles.includes("registrant")));
+    const signed = json.secureDNS && typeof json.secureDNS.delegationSigned === "boolean" ? json.secureDNS.delegationSigned ? "signed" : "unsigned" : null;
     return {
       handle: json.handle || null,
       registrar: registrarEnt ? vname(registrarEnt) : null,
@@ -646,7 +661,12 @@
       expires: eventDate(json.events, "expiration"),
       updated: eventDate(json.events, "last changed", "last update of rdap database"),
       status: (Array.isArray(json.status) ? json.status : []).filter((s) => typeof s === "string"),
-      nameservers: [...new Set(nameservers.map((n) => n.toLowerCase().replace(/\.+$/, "")))]
+      nameservers: [...new Set(nameservers.map((n) => n.toLowerCase().replace(/\.+$/, "")))],
+      registrant: rc.fn[0] || null,
+      registrantOrg: rc.org.join(", ") || null,
+      email: [...new Set(rc.email)].join(", ") || null,
+      phone: [...new Set(rc.tel)].join(", ") || null,
+      dnssec: signed
     };
   }
 
@@ -1157,7 +1177,17 @@
       const rb = $("rdapBody");
       rb.textContent = "";
       const dl = el("dl", "rdap");
-      [t("rd_registrar"), t("rd_created"), t("rd_expires"), t("rd_updated"), t("rd_status"), t("rd_ns")].forEach((k) => {
+      [
+        t("rd_registrar"),
+        t("rd_created"),
+        t("rd_expires"),
+        t("rd_updated"),
+        t("rd_status"),
+        t("rd_ns"),
+        t("rd_registrant"),
+        t("rd_email"),
+        t("rd_dnssec")
+      ].forEach((k) => {
         dl.appendChild(el("dt", "", k));
         dl.appendChild(el("dd", "", "\u2026"));
       });
@@ -1549,9 +1579,7 @@
         } else line(body, t("rd_whois_unknown"), "m");
         return;
       }
-      const srcNote = () => {
-        if (state.rdap.src) body.appendChild(el("p", "m", t(state.rdap.src === "whois" ? "rd_src_whois" : "rd_src_rdap")));
-      };
+      const srcNote = () => body.appendChild(el("p", "m", t(state.rdap.src === "whois" ? "rd_src_whois" : state.rdap.src === "rdap" ? "rd_src_rdap" : "rd_from_rdap")));
       if (state.rdap.notFound) {
         st.textContent = t("rd_none");
         line(body, t("rd_none_why"), "m");
@@ -1590,8 +1618,19 @@
         d.nameservers.forEach((s) => wrap.appendChild(el("span", "pill", s)));
         row(t("rd_ns"), null, wrap);
       }
+      if (d.registrant) row(t("rd_registrant"), d.registrant);
+      if (d.registrantOrg) row(t("rd_org"), d.registrantOrg);
+      if (d.email) row(t("rd_email"), d.email);
+      if (d.phone) row(t("rd_phone"), d.phone);
+      if (d.dnssec) row(t("rd_dnssec"), d.dnssec);
       body.appendChild(dl);
       srcNote();
+      if (d.raw) {
+        const det = el("details", "raw");
+        det.appendChild(el("summary", "", t("rd_raw")));
+        det.appendChild(el("pre", "", d.raw));
+        body.appendChild(det);
+      }
     }
     function renderLinks() {
       const box = $("links");
