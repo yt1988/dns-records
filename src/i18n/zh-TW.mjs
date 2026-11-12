@@ -55,7 +55,7 @@ export default {
   e_timeout: "逾時", e_network: "連不上", e_http: "HTTP 錯誤 {s}", e_bad: "回答讀不出來",
   e_servfail: "SERVFAIL", e_refused: "REFUSED", e_rcode: "DNS 錯誤 {s}", e_skipped: "未查詢：解析器沒有回應", e_nx: "NXDOMAIN", e_empty: "沒有記錄",
 
-  h_mail: "郵件", mx_h: "MX（收信伺服器）", mx_none: "沒有 MX 記錄：這個網域收不到郵件", mx_null: "Null MX（0 .）：這個網域不接收郵件", mail_unchecked: "未檢查：本次查詢沒有請求所需的記錄",
+  h_mail: "郵件", mx_h: "MX（收信伺服器）", mx_none: "沒有 MX 記錄：這個網域收不到郵件", mx_noanswer: "沒有任何一家解析器回答 MX 記錄，無法判斷這個網域怎麼收信", mx_null: "Null MX（0 .）：這個網域不接收郵件", mail_unchecked: "未檢查：本次查詢沒有請求所需的記錄",
   spf_h: "SPF", spf_none: "沒有 SPF 記錄", spf_records: "記錄：{n} 條",
   spf_pass: "以 +all 結尾：任何人都能以這個網域寄信", spf_fail: "以 -all 結尾：其他寄件者會被拒絕",
   spf_softfail: "以 ~all 結尾：其他寄件者會被標記為可疑", spf_neutral: "以 ?all 結尾：對其他寄件者沒有策略",

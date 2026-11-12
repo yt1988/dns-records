@@ -55,7 +55,7 @@ export default {
   e_timeout: "Tiempo agotado", e_network: "No conectó", e_http: "Error HTTP {s}", e_bad: "Respuesta ilegible",
   e_servfail: "SERVFAIL", e_refused: "REFUSED", e_rcode: "Error DNS {s}", e_skipped: "No se preguntó: el resolutor no respondió", e_nx: "NXDOMAIN", e_empty: "Sin registros",
 
-  h_mail: "Correo", mx_h: "MX (servidores de correo)", mx_none: "No hay registros MX: el dominio no puede recibir correo", mx_null: "MX nulo (0 .): este dominio no acepta correo", mail_unchecked: "Sin comprobar: esta consulta no pidió los registros necesarios",
+  h_mail: "Correo", mx_h: "MX (servidores de correo)", mx_none: "No hay registros MX: el dominio no puede recibir correo", mx_noanswer: "Ningún resolutor respondió con registros MX, así que no se puede saber cómo recibe correo este dominio", mx_null: "MX nulo (0 .): este dominio no acepta correo", mail_unchecked: "Sin comprobar: esta consulta no pidió los registros necesarios",
   spf_h: "SPF", spf_none: "Sin registro SPF", spf_records: "Registros: {n}",
   spf_pass: "Termina en +all: cualquiera puede enviar como este dominio", spf_fail: "Termina en -all: los demás remitentes se rechazan",
   spf_softfail: "Termina en ~all: los demás remitentes se marcan como sospechosos", spf_neutral: "Termina en ?all: no hay política para los demás remitentes",

@@ -55,7 +55,7 @@ export default {
   e_timeout: "Délai dépassé", e_network: "Connexion impossible", e_http: "Erreur HTTP {s}", e_bad: "Réponse illisible",
   e_servfail: "SERVFAIL", e_refused: "REFUSED", e_rcode: "Erreur DNS {s}", e_skipped: "Non interrogé : le résolveur n'a pas répondu", e_nx: "NXDOMAIN", e_empty: "Aucun enregistrement",
 
-  h_mail: "Mail", mx_h: "MX (serveurs de messagerie)", mx_none: "Aucun enregistrement MX : ce domaine ne peut pas recevoir de courrier", mx_null: "MX nul (0 .) : ce domaine n'accepte pas de courrier", mail_unchecked: "Non vérifié : cette recherche n'a pas demandé les enregistrements nécessaires",
+  h_mail: "Mail", mx_h: "MX (serveurs de messagerie)", mx_none: "Aucun enregistrement MX : ce domaine ne peut pas recevoir de courrier", mx_noanswer: "Aucun résolveur n'a répondu avec des enregistrements MX : impossible de savoir comment ce domaine reçoit son courrier", mx_null: "MX nul (0 .) : ce domaine n'accepte pas de courrier", mail_unchecked: "Non vérifié : cette recherche n'a pas demandé les enregistrements nécessaires",
   spf_h: "SPF", spf_none: "Aucun enregistrement SPF", spf_records: "Enregistrements : {n}",
   spf_pass: "Finit par +all : n'importe qui peut envoyer avec ce domaine", spf_fail: "Finit par -all : les autres expéditeurs sont refusés",
   spf_softfail: "Finit par ~all : les autres expéditeurs sont signalés comme suspects", spf_neutral: "Finit par ?all : aucune politique pour les autres expéditeurs",

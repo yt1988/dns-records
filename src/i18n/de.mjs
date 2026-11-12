@@ -55,7 +55,7 @@ export default {
   e_timeout: "Zeitüberschreitung", e_network: "Keine Verbindung", e_http: "HTTP-Fehler {s}", e_bad: "Antwort nicht lesbar",
   e_servfail: "SERVFAIL", e_refused: "REFUSED", e_rcode: "DNS-Fehler {s}", e_skipped: "Nicht gefragt: Der Resolver hat nicht geantwortet", e_nx: "NXDOMAIN", e_empty: "Keine Einträge",
 
-  h_mail: "Mail", mx_h: "MX (Mailserver)", mx_none: "Kein MX-Eintrag: Diese Domain kann keine Mail empfangen", mx_null: "Null MX (0 .): Diese Domain nimmt keine Mail an", mail_unchecked: "Nicht geprüft: Diese Abfrage hat die nötigen Einträge nicht angefordert",
+  h_mail: "Mail", mx_h: "MX (Mailserver)", mx_none: "Kein MX-Eintrag: Diese Domain kann keine Mail empfangen", mx_noanswer: "Kein Resolver hat MX-Einträge geliefert, daher lässt sich nicht sagen, wie diese Domain E-Mail empfängt", mx_null: "Null MX (0 .): Diese Domain nimmt keine Mail an", mail_unchecked: "Nicht geprüft: Diese Abfrage hat die nötigen Einträge nicht angefordert",
   spf_h: "SPF", spf_none: "Kein SPF-Eintrag", spf_records: "Einträge: {n}",
   spf_pass: "Endet auf +all: Jeder kann als diese Domain senden", spf_fail: "Endet auf -all: Andere Absender werden abgelehnt",
 

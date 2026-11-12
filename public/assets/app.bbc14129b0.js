@@ -1168,6 +1168,7 @@
       $("vTitle").textContent = t("running");
       $("vSub").textContent = " ";
       $("findings").textContent = "";
+      for (let i = 0; i < 3; i++) $("findings").appendChild(el("li", "ph", "\u2026"));
       $("badges").textContent = "";
       $("badges").hidden = false;
       const tb = $("recBody");
@@ -1513,8 +1514,12 @@
       if (!hasMx) line(block(body, t("mx_h"), null), t("mail_unchecked"), "m");
       else {
         const mx = majorityRecords("MX");
+        const mm = state.merged && state.merged.MX, mxUnseen = mm && mm.answered === 0;
         const nullMx = mx.length === 1 && /^0\s+\.?$/.test(mx[0].data.trim());
-        if (!mx.length || nullMx) {
+        if (!mx.length && mxUnseen) {
+          const b = block(body, t("mx_h"), null, "");
+          line(b, t("mx_noanswer"), "m");
+        } else if (!mx.length || nullMx) {
           const b = block(body, t("mx_h"), null, "warn");
           line(b, t(nullMx ? "mx_null" : "mx_none"), "m");
           if (nullMx) pills(b, mx.map((r) => r.data));

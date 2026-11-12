@@ -55,7 +55,7 @@ export default {
   e_timeout: "시간 초과", e_network: "연결 실패", e_http: "HTTP 오류 {s}", e_bad: "응답을 읽을 수 없음",
   e_servfail: "SERVFAIL", e_refused: "REFUSED", e_rcode: "DNS 오류 {s}", e_skipped: "조회 안 함: 리졸버가 응답하지 않았습니다", e_nx: "NXDOMAIN", e_empty: "레코드 없음",
 
-  h_mail: "메일", mx_h: "MX(메일 서버)", mx_none: "MX 레코드가 없습니다: 이 도메인은 메일을 받을 수 없습니다", mx_null: "Null MX(0 .): 이 도메인은 메일을 받지 않습니다", mail_unchecked: "확인하지 않음: 이 조회에서 필요한 레코드를 요청하지 않았습니다",
+  h_mail: "메일", mx_h: "MX(메일 서버)", mx_none: "MX 레코드가 없습니다: 이 도메인은 메일을 받을 수 없습니다", mx_noanswer: "어떤 리졸버도 MX 레코드를 응답하지 않아 이 도메인의 메일 수신 방식을 판단할 수 없습니다", mx_null: "Null MX(0 .): 이 도메인은 메일을 받지 않습니다", mail_unchecked: "확인하지 않음: 이 조회에서 필요한 레코드를 요청하지 않았습니다",
   spf_h: "SPF", spf_none: "SPF 레코드 없음", spf_records: "레코드: {n}개",
   spf_pass: "+all로 끝남: 누구나 이 도메인으로 보낼 수 있음", spf_fail: "-all로 끝남: 다른 발신자는 거부됨",
   spf_softfail: "~all로 끝남: 다른 발신자는 의심스러운 것으로 표시됨", spf_neutral: "?all로 끝남: 다른 발신자에 대한 정책 없음",

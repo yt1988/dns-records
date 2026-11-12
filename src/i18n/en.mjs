@@ -56,7 +56,7 @@ export default {
   e_timeout: "Timeout", e_network: "Couldn't connect", e_http: "HTTP error {s}", e_bad: "Unreadable answer",
   e_servfail: "SERVFAIL", e_refused: "REFUSED", e_rcode: "DNS error {s}", e_skipped: "Not asked: the resolver didn't answer", e_nx: "NXDOMAIN", e_empty: "No records",
 
-  h_mail: "Email", mx_h: "MX (mail servers)", mx_none: "No MX records: the domain can't receive mail", mx_null: "Null MX (0 .): this domain accepts no mail", mail_unchecked: "Not checked: this lookup did not ask for the records it needs",
+  h_mail: "Email", mx_h: "MX (mail servers)", mx_none: "No MX records: the domain can't receive mail", mx_noanswer: "No resolver returned MX records, so we can't tell how this domain receives mail", mx_null: "Null MX (0 .): this domain accepts no mail", mail_unchecked: "Not checked: this lookup did not ask for the records it needs",
   spf_h: "SPF", spf_none: "No SPF record", spf_records: "Records: {n}",
   spf_pass: "Ends with +all: anyone may send as this domain", spf_fail: "Ends with -all: other senders are rejected",
   spf_softfail: "Ends with ~all: other senders are marked as suspicious", spf_neutral: "Ends with ?all: no policy for other senders",

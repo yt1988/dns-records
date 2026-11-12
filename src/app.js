@@ -298,7 +298,10 @@ import { encodeResult, decodeResult, sharePath, resultsFromSnapshot, CODES } fro
     $("vDot").className = "dot";
     $("vTitle").textContent = t("running");
     $("vSub").textContent = " ";
+    // The verdict can show up to three findings; reserve their lines now, in the order they will keep, so the last one
+    // to be decided fills a place that already existed instead of pushing records down (CLS, docs/decisions.md).
     $("findings").textContent = "";
+    for (let i = 0; i < 3; i++) $("findings").appendChild(el("li", "ph", "…"));
     // the badge line stays in the layout even while empty: it arrives with the first answer, and a line that appears
     // then would move the whole page (CLS)
     $("badges").textContent = "";
@@ -637,9 +640,16 @@ import { encodeResult, decodeResult, sharePath, resultsFromSnapshot, CODES } fro
     if (!hasMx) line(block(body, t("mx_h"), null), t("mail_unchecked"), "m");
     else {
       const mx = majorityRecords("MX");
+      // No resolver answered MX at all: that is not "this domain has no MX records", it is "we could not see any".
+      // Saying the domain receives no mail from it would turn an observation about the network into a claim about the
+      // domain (tool-contract: 结论只写观测到的).
+      const mm = state.merged && state.merged.MX, mxUnseen = mm && mm.answered === 0;
       // RFC 7505 null MX: one record, "0 .", meaning the domain takes no mail at all
       const nullMx = mx.length === 1 && /^0\s+\.?$/.test(mx[0].data.trim());
-      if (!mx.length || nullMx) {
+      if (!mx.length && mxUnseen) {
+        const b = block(body, t("mx_h"), null, "");
+        line(b, t("mx_noanswer"), "m");
+      } else if (!mx.length || nullMx) {
         const b = block(body, t("mx_h"), null, "warn");
         line(b, t(nullMx ? "mx_null" : "mx_none"), "m");
         if (nullMx) pills(b, mx.map(r => r.data));

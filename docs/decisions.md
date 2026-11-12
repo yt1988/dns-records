@@ -220,7 +220,7 @@ rdap.org 对这类后缀回的不是注册局的 404，而是它自己的
 错开 0.4–6 秒的包装，每 100 ms 记一次各块的位置和高度。改之前，占位表格 6 行、真实只有 2 行，底部的两列会往上
 跳约 140 px；改之后只剩结论里的发现列表变长、记录表少一行的差别，底部两列移动 33 px（不到一行）。
 
-- 结论：发现列表最少留两行（`.findings { min-height: 48px }`）。
+- 结论：发现列表最少留两行（`.findings { min-height: 48px }`；后来发现会长到三行，2026-11-12 改成 75 px，见下）。
 - 记录：桌面上表格至少留 180 px，但只在有行时留（`:has(#recBody tr)`），NXDOMAIN 的空表就按自然高度。
 - 邮件和注册：各有最小高度（300 / 176 px），占位行数按常见的形状来（注册信息 6 行：注册商、注册、到期、更新、
   状态、NS）。
@@ -361,3 +361,17 @@ socket 的 8 秒预算改成从整个请求开始算，不会变成两次 8 秒�
 
 实测：www.cloudflare.com → 浏览器直接读到 cloudflare.com 的 RDAP，注册信息完整，0 次 `/whois`；
 www.sina.cn → 1 次 `/whois`，CNNIC 先答 Invalid parameter，再取 sina.cn 的记录；www.hkirc.hk、www.jprs.jp 同理。
+
+## 2026-11-12 · 发现列表留三行；没有 MX 回答时不说「收不到邮件」
+
+**CLS 的第二处**（Public 量的：6332 ms 时 `findings` 从 0 长到 74 px，CLS 0.047）。骨架给三张卡、记录表和邮件
+都留了位置，唯独发现列表没占位。改法：查询一开始就往 `#findings` 里放三行占位（`skeleton()` 建 3 个 `li.ph`），
+数据到了逐条填；`.findings` 的 `min-height` 从 48 px 提到 75 px（三行），占位行用 muted 色。实测本地
+sina.cn（12 家 1 家没连上、3 条发现）：1080×900 下 CLS **0**，`#findings` 高 75 px；375 px 不横向滚动，
+原始记录展开也不滚。
+
+**邮件那句**：原来没有 MX 时一律说「没有 MX 记录：这个域名收不到邮件」。但「12 家都没回答 MX」和「域名确实没有
+MX」不是一回事：前者是我们没问到，后者才是观测到的结论。按工具契约（不知道不能画成没问题），
+`state.merged.MX.answered === 0` 时改用 `mx_noanswer`：「没有一家解析器回答 MX 记录，无法判断这个域名怎么收信」
+（en: "No resolver returned MX records, so we can't tell how this domain receives mail"），十种语言。有解析器
+作答、答案为空仍然是 `mx_none`，Null MX 仍然是 `mx_null`。分享链接打开时走同一条渲染路径，同样这句话。

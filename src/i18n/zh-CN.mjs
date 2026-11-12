@@ -55,7 +55,7 @@ export default {
   e_timeout: "超时", e_network: "连不上", e_http: "HTTP 错误 {s}", e_bad: "回答读不出来",
   e_servfail: "SERVFAIL", e_refused: "REFUSED", e_rcode: "DNS 错误 {s}", e_skipped: "未查询：解析器没有应答", e_nx: "NXDOMAIN", e_empty: "没有记录",
 
-  h_mail: "邮件", mx_h: "MX（收信服务器）", mx_none: "没有 MX 记录：这个域名收不到邮件", mx_null: "Null MX（0 .）：这个域名不接收邮件", mail_unchecked: "未检查：本次查询没有请求所需的记录",
+  h_mail: "邮件", mx_h: "MX（收信服务器）", mx_none: "没有 MX 记录：这个域名收不到邮件", mx_noanswer: "没有一家解析器回答 MX 记录，无法判断这个域名怎么收信", mx_null: "Null MX（0 .）：这个域名不接收邮件", mail_unchecked: "未检查：本次查询没有请求所需的记录",
   spf_h: "SPF", spf_none: "没有 SPF 记录", spf_records: "记录：{n} 条",
   spf_pass: "以 +all 结尾：任何人都能以这个域名发信", spf_fail: "以 -all 结尾：其他发信人会被拒绝",
   spf_softfail: "以 ~all 结尾：其他发信人会被标记为可疑", spf_neutral: "以 ?all 结尾：对其他发信人没有策略",

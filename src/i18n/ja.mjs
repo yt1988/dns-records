@@ -55,7 +55,7 @@ export default {
   e_timeout: "タイムアウト", e_network: "接続できず", e_http: "HTTP エラー {s}", e_bad: "応答を読めません",
   e_servfail: "SERVFAIL", e_refused: "REFUSED", e_rcode: "DNS エラー {s}", e_skipped: "未問い合わせ：リゾルバーが応答しませんでした", e_nx: "NXDOMAIN", e_empty: "レコードなし",
 
-  h_mail: "メール", mx_h: "MX（メール受信サーバー）", mx_none: "MX レコードがありません：このドメインはメールを受信できません", mx_null: "Null MX（0 .）：このドメインはメールを受け取りません", mail_unchecked: "未確認：この検索では必要なレコードを取得していません",
+  h_mail: "メール", mx_h: "MX（メール受信サーバー）", mx_none: "MX レコードがありません：このドメインはメールを受信できません", mx_noanswer: "どのリゾルバーも MX レコードを返さなかったため、このドメインがメールをどう受け取るかは判断できません", mx_null: "Null MX（0 .）：このドメインはメールを受け取りません", mail_unchecked: "未確認：この検索では必要なレコードを取得していません",
   spf_h: "SPF", spf_none: "SPF レコードなし", spf_records: "レコード：{n} 件",
   spf_pass: "+all で終わる：誰でもこのドメインとして送信できる", spf_fail: "-all で終わる：他の送信者は拒否される",
   spf_softfail: "~all で終わる：他の送信者は疑わしいと記録される", spf_neutral: "?all で終わる：他の送信者への方針がない",
