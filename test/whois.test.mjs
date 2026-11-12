@@ -192,6 +192,18 @@ test("the page asks the Worker at most once per lookup, and only after the brows
   assert.ok(app.slice(at, at + 400).includes("state.rdap = r"), "its result is the answer, not a second request");
 });
 
+test("a shared result never carries the registrant or contact rows", async () => {
+  // the owner's call: the share card and the share link both leave registrant details out — a shared result is about
+  // the domain's DNS, and the registry publishes those details anyway for whoever looks it up themselves.
+  const { readFile } = await import("node:fs/promises");
+  const app = await readFile(new URL("../src/app.js", import.meta.url), "utf8");
+  const at = app.indexOf("const d = state.rdap && state.rdap.data ? {");
+  assert.ok(at > 0, "the snapshot's registration block is found");
+  const block = app.slice(at, app.indexOf("} : null;", at));
+  for (const field of ["registrar", "created", "expires", "status", "nameservers"]) assert.ok(block.includes(field), field);
+  for (const field of ["registrant", "email", "phone", "raw"]) assert.equal(block.includes(field), false, field + " must stay out");
+});
+
 test("RDAP that works is used first, and says src rdap", async () => {
   const rdap = { handle: "D1", status: ["active"], events: [{ eventAction: "registration", eventDate: "2000-01-01T00:00:00Z" }],
     nameservers: [{ ldhName: "NS1.EXAMPLE.DE" }], entities: [] };
