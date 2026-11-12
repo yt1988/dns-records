@@ -73,12 +73,19 @@ export function parseWhois(text) {
     const br = /^\[([^\]]{1,40})\]\s*(.*)$/.exec(line);
     if (br) { key = br[1]; value = br[2].trim(); }
     else {
-      const kv = /^([A-Za-z][A-Za-z0-9 ._\-/()]{1,40}?)\s*:\s*(.*)$/.exec(line);
+      // HKDNR puts a hundred-character explanation inside some key names ("Company English Name (It should be …)")
+      const kv = /^([A-Za-z][A-Za-z0-9 ._\-/()]{1,200}?)\s*:\s*(.*)$/.exec(line);
       if (kv) { key = kv[1]; value = kv[2].trim(); }
     }
     if (!key) continue;
-    const k = key.toLowerCase().replace(/\s+/g, " ").trim();
+    const raw = key.toLowerCase().replace(/\s+/g, " ").trim();
+    const k = raw.replace(/\s*\(.*$/, "").trim();
     if (value) { add(k, value); continue; }
+    // A key whose value is on the line below ("DNSSEC:" then an indented "signedDelegation")
+    if (!/name servers?$/.test(k) && k !== "name servers information") {
+      const next = (lines[i + 1] || "").trim();
+      if (next && !/^\[?[A-Za-z][^:]{1,200}:\s*/.test(next)) { add(k, next); continue; }
+    }
     add(k, "");
     // HKIRC lists the name servers as bare host names under an empty "Name Servers Information:" line
     if (/name servers?$/.test(k) || k === "name servers information") {
@@ -116,8 +123,8 @@ export function parseWhois(text) {
     updated: isoDate(first("last updated", "last update", "updated", "last modified", "modified")),
     status: [...new Set(status)].slice(0, 8),
     nameservers: [...new Set(nameservers)].slice(0, 12),
-    registrant: first("registrant", "registrant name", "registrant contact name", "person"),
-    registrantOrg: first("registrant organization", "registrant organisation", "registrant company", "org", "organization", "organisation"),
+    registrant: first("registrant", "registrant name", "registrant contact name", "person", "company chinese name"),
+    registrantOrg: first("registrant organization", "registrant organisation", "registrant company", "org", "organization", "organisation", "company english name"),
     email: joined("registrant contact email", "registrant email", "registrant e-mail", "email", "e-mail"),
     phone: joined("registrant phone", "registrant phone number", "registrant telephone", "phone", "telephone", "phone number"),
     dnssec: first("dnssec", "dnssec status", "dns-sec"),

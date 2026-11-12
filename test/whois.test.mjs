@@ -50,7 +50,21 @@ Domain Name Commencement Date: 04-05-2004
 Expiry Date: 16-11-2035
 Domain Status: Active
 
+DNSSEC:
+  signedDelegation
+
 Registrar Name: Hong Kong Domain Name Registration Company Limited
+
+Reseller:
+
+CDN Variant / Punycode
+
+Registrant Contact Information:
+
+Company English Name (It should be the same as the registered/corporation name on your Business Register Certificate or relevant documents): HONG KONG INTERNET REGISTRATION CORPORATION LIMITED
+Company Chinese name:  香港互聯網註冊管理有限公司
+Country: Hong Kong (HK)
+Email:  domainmgt@hkdnr.hk
 
 Name Servers Information:
 
@@ -119,6 +133,11 @@ test("HKDNR's date-first fields and bare name-server list are read", () => {
   assert.equal(d.expires, "2035-11-16");
   assert.deepEqual(d.nameservers, ["ns7.hkirc.net.hk", "ns8.hkirc.net.hk"]);
   assert.deepEqual(d.status, ["Active"]);
+  // HKDNR's value sits on the line below its key, and the registrant names are given in two languages
+  assert.equal(d.dnssec, "signedDelegation");
+  assert.equal(d.registrantOrg, "HONG KONG INTERNET REGISTRATION CORPORATION LIMITED");
+  assert.equal(d.registrant, "香港互聯網註冊管理有限公司");
+  assert.equal(d.email, "domainmgt@hkdnr.hk");
 });
 
 test("a reply with no fields at all is not turned into an empty registration", () => {
