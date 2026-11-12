@@ -82,6 +82,7 @@ export default {
   rd_whois: "Consulter chez {registry}", rd_whois_unknown: "La page WHOIS du registre peut l'avoir.",
   rd_registrant: "Titulaire", rd_org: "Organisation", rd_email: "E-mail", rd_phone: "Téléphone", rd_dnssec: "DNSSEC au registre",
   rd_raw: "Enregistrement brut",
+  rd_parent: "Les données de registre sont celles de {domain} : un nom d'hôte en dessous n'a pas d'enregistrement propre.",
   rd_from_rdap: "Source : RDAP, lu par votre navigateur.",
   rd_src_rdap: "Source : RDAP, consulté par le serveur de 1ms.dog car le RDAP de ce registre ne peut pas être lu depuis un navigateur.",
   rd_src_whois: "Source : WHOIS du registre sur le port 43, consulté par le serveur de 1ms.dog car ce suffixe n'a pas de RDAP lisible par le navigateur.",

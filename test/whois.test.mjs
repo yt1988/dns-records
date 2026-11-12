@@ -4,6 +4,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { validDomain, parseWhois, isoDate, queryWhois, lookupRegistration, WHOIS_SERVERS } from "../src/whois.mjs";
+import { parentDomains } from "../src/rdap.mjs";
 
 const CN = `Domain Name: SINA.CN
 ROID: 20030311s10001s00038551-cn
@@ -177,6 +178,22 @@ test("no socket to open leaves no answer instead of guessing", async () => {
   assert.equal(await queryWhois("sina.cn", WHOIS_SERVERS.cn, { connect: () => { throw new Error("blocked"); } }), null);
 });
 
+// A socket stand-in that answers per query text, so the whole "host name, then its domain" walk can be followed.
+function answeringConnect(answers) {
+  const seen = [];
+  const connect = (host, port) => {
+    let reply = "";
+    return {
+      opened: Promise.resolve(),
+      writable: { getWriter: () => ({ write: async q => { const t = new TextDecoder().decode(q).trim(); seen.push(t); reply = answers[t] || ""; }, releaseLock() {} }) },
+      readable: { getReader: () => { let done = false; return { read: async () => (done ? { done: true } : (done = true, { done: false, value: new TextEncoder().encode(reply) })) }; } },
+      close() {},
+    };
+  };
+  connect.seen = seen;
+  return connect;
+}
+
 const noRdap = () => new Response("No RDAP service is available for this resource", { status: 404 });
 
 test("with RDAP unreachable, the registry's WHOIS answers and is marked as such", async () => {
@@ -189,6 +206,49 @@ test("with RDAP unreachable, the registry's WHOIS answers and is marked as such"
   assert.equal(out.dnssec, "unsigned");
   // the registry's own reply travels with the parsed fields, so a field the parser misses is still readable
   assert.equal(out.raw, CN.trim());
+});
+
+test("the names a lookup tries: the host first, then one label shorter, down to two", () => {
+  assert.deepEqual(parentDomains("www.cloudflare.com"), ["www.cloudflare.com", "cloudflare.com"]);
+  assert.deepEqual(parentDomains("a.b.example.co.uk"), ["a.b.example.co.uk", "b.example.co.uk", "example.co.uk"]);
+  assert.deepEqual(parentDomains("sina.cn"), ["sina.cn"]);
+});
+
+test("a host name is looked up as the domain it belongs to", async () => {
+  // registries hold records for registered names only, so www.sina.cn has none; the answer is sina.cn's, and it says so
+  const answers = { "www.sina.cn": "No matching record.", "sina.cn": CN };
+  const out = await lookupRegistration("www.sina.cn", { fetchImpl: async () => noRdap(), connect: answeringConnect(answers) });
+  assert.equal(out.ok, true);
+  assert.equal(out.lookedUp, "sina.cn");
+  assert.equal(out.registrant, "一些公司");
+});
+
+test("CNNIC's 'Invalid parameter' for a host name is answered with the domain's record, not 'not found'", async () => {
+  // what CNNIC really says for www.sina.cn: "Invalid parameter:www.sina.cn" — it holds the domain's record, not this
+  const out = await lookupRegistration("www.sina.cn", {
+    fetchImpl: async () => noRdap(),
+    connect: answeringConnect({ "www.sina.cn": "Invalid parameter:www.sina.cn\n", "sina.cn": CN }),
+  });
+  assert.equal(out.ok, true);
+  assert.equal(out.lookedUp, "sina.cn");
+  assert.equal(out.registrar, "北京国科云计算技术有限公司");
+});
+
+test("HKDNR's 'Incorrect input' for a host name also falls back to the domain", async () => {
+  const out = await lookupRegistration("www.hkirc.hk", {
+    fetchImpl: async () => noRdap(),
+    connect: answeringConnect({ "www.hkirc.hk": "Incorrect input, please try again.\n", "hkirc.hk": HK }),
+  });
+  assert.equal(out.ok, true);
+  assert.equal(out.lookedUp, "hkirc.hk");
+});
+
+test("a host name under an unregistered domain is still 'not found', and names the domain it asked about", async () => {
+  const out = await lookupRegistration("www.no-such-domain-zzz9.cn", {
+    fetchImpl: async () => noRdap(), connect: answeringConnect({ "www.no-such-domain-zzz9.cn": "No matching record.", "no-such-domain-zzz9.cn": "No matching record." }),
+  });
+  assert.equal(out.reason, "notfound");
+  assert.equal(out.lookedUp, "no-such-domain-zzz9.cn");
 });
 
 test("one lookup does the whole chain: one RDAP request, then one socket, never a second round trip", async () => {
@@ -243,7 +303,7 @@ test("a registry that says it never heard of the domain is not asked over WHOIS"
     fetchImpl: async () => new Response("{}", { status: 404 }),
     connect: () => { sockets++; return null; },
   });
-  assert.deepEqual(out, { ok: false, src: "rdap", reason: "notfound", tld: "com" });
+  assert.deepEqual(out, { ok: false, src: "rdap", reason: "notfound", tld: "com", lookedUp: "nope.com" });
   assert.equal(sockets, 0);
 });
 
@@ -256,5 +316,5 @@ test("a suffix we have no server for is 'cannot ask', not 'nothing there'", asyn
 
 test("a WHOIS reply that says the domain is not registered is not found, not an error", async () => {
   const out = await lookupRegistration("no-such-domain-zzz9.cn", { fetchImpl: async () => noRdap(), connect: fakeConnect("No matching record.") });
-  assert.deepEqual(out, { ok: false, src: "whois", reason: "notfound", tld: "cn" });
+  assert.deepEqual(out, { ok: false, src: "whois", reason: "notfound", tld: "cn", lookedUp: "no-such-domain-zzz9.cn" });
 });

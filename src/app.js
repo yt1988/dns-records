@@ -757,6 +757,10 @@ import { encodeResult, decodeResult, sharePath, resultsFromSnapshot, CODES } fro
     body.appendChild(dl);
     // Where this block came from, and who read it. Always shown, not only for server-side lookups.
     srcNote();
+    // A host name has no record of its own; say which name this record belongs to, so the block is not mistaken for
+    // the visitor's own host (www.example.com → example.com).
+    if (state.rdap.lookedUp && state.rdap.lookedUp !== state.domain)
+      body.appendChild(el("p", "m", t("rd_parent", { domain: state.rdap.lookedUp })));
     // The registry's own reply, for when the parse above misses a field. Closed by default; the page stays readable.
     if (d.raw) {
       const det = el("details", "raw");

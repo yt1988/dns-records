@@ -536,6 +536,12 @@
   function registryOf(domain) {
     return REGISTRY_WHOIS[tldOf(domain)] || null;
   }
+  function parentDomains(domain) {
+    const labels = String(domain || "").toLowerCase().replace(/\.+$/, "").split(".").filter(Boolean);
+    const out = [];
+    for (let i = 0; i <= labels.length - 2 && out.length < 3; i++) out.push(labels.slice(i).join("."));
+    return out;
+  }
   async function fetchRdap(domain, { fetchImpl = fetch, signal, timeout = 9e3 } = {}) {
     const ctl = new AbortController();
     let timedOut = false;
@@ -549,30 +555,37 @@
       else signal.addEventListener("abort", stop);
     }
     try {
-      const tld = tldOf(domain);
-      const supplement = RDAP_SUPPLEMENTS[tld];
-      const res = await fetchImpl((supplement ? supplement.base : RDAP_BASE) + encodeURIComponent(domain), {
-        signal: ctl.signal,
-        credentials: "omit",
-        referrerPolicy: "no-referrer",
-        headers: { accept: "application/rdap+json, application/json" }
-      });
-      if (res.status === 404) {
-        if (supplement) return { notFound: true };
-        const body = await res.text().catch(() => "");
-        if (/no rdap service/i.test(body)) return { unsupported: true, tld };
-        return NO_RDAP_TLDS.indexOf(tld) >= 0 ? { unsupported: true, tld } : { notFound: true };
+      const candidates = parentDomains(domain);
+      for (let i = 0; i < candidates.length; i++) {
+        const name = candidates[i], tld = tldOf(name), last = i === candidates.length - 1;
+        const supplement = RDAP_SUPPLEMENTS[tld];
+        const res = await fetchImpl((supplement ? supplement.base : RDAP_BASE) + encodeURIComponent(name), {
+          signal: ctl.signal,
+          credentials: "omit",
+          referrerPolicy: "no-referrer",
+          headers: { accept: "application/rdap+json, application/json" }
+        });
+        if (res.status === 404) {
+          if (!supplement) {
+            const body = await res.text().catch(() => "");
+            if (/no rdap service/i.test(body)) return { unsupported: true, tld, lookedUp: name };
+            if (NO_RDAP_TLDS.indexOf(tld) >= 0) return { unsupported: true, tld, lookedUp: name };
+          }
+          if (!last) continue;
+          return { notFound: true, lookedUp: name };
+        }
+        if (!res.ok) return { error: "http", status: res.status };
+        let json;
+        try {
+          json = await res.json();
+        } catch (e) {
+          return { error: "bad" };
+        }
+        const data = normalize(json);
+        data.raw = String(JSON.stringify(json, null, 2) || "").slice(0, 16e3);
+        return { data, lookedUp: name };
       }
-      if (!res.ok) return { error: "http", status: res.status };
-      let json;
-      try {
-        json = await res.json();
-      } catch (e) {
-        return { error: "bad" };
-      }
-      const data = normalize(json);
-      data.raw = String(JSON.stringify(json, null, 2) || "").slice(0, 16e3);
-      return { data };
+      return { notFound: true };
     } catch (e) {
       if (timedOut) return { error: "timeout" };
       if (e && (e.name === "AbortError" || e.name === "TimeoutError")) return { error: "aborted" };
@@ -604,6 +617,7 @@
       const src = j.src === "whois" ? "whois" : "rdap";
       if (j.ok) return {
         src,
+        lookedUp: typeof j.lookedUp === "string" ? j.lookedUp : null,
         data: {
           handle: null,
           registrar: j.registrar || null,
@@ -622,7 +636,7 @@
           raw: typeof j.raw === "string" ? j.raw : null
         }
       };
-      if (j.reason === "notfound") return { notFound: true, src };
+      if (j.reason === "notfound") return { notFound: true, src, lookedUp: typeof j.lookedUp === "string" ? j.lookedUp : null };
       return null;
     } catch (e) {
       return null;
@@ -1625,6 +1639,8 @@
       if (d.dnssec) row(t("rd_dnssec"), d.dnssec);
       body.appendChild(dl);
       srcNote();
+      if (state.rdap.lookedUp && state.rdap.lookedUp !== state.domain)
+        body.appendChild(el("p", "m", t("rd_parent", { domain: state.rdap.lookedUp })));
       if (d.raw) {
         const det = el("details", "raw");
         det.appendChild(el("summary", "", t("rd_raw")));

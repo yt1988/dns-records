@@ -82,6 +82,7 @@ export default {
   rd_whois: "{registry} で調べる", rd_whois_unknown: "レジストリ自身の WHOIS ページなら調べられることがあります。",
   rd_registrant: "登録者", rd_org: "組織", rd_email: "メール", rd_phone: "電話", rd_dnssec: "レジストリの DNSSEC",
   rd_raw: "生の応答",
+  rd_parent: "登録情報は {domain} のものです。その下のホスト名に独自の登録記録はありません。",
   rd_from_rdap: "出典：RDAP（ブラウザーが直接取得）。",
   rd_src_rdap: "出典：RDAP。このレジストリの RDAP はブラウザーから読めないため、1ms.dog のサーバーが代わりに取得しました。",
   rd_src_whois: "出典：レジストリの WHOIS（43 番ポート）。このサフィックスにはブラウザーで読める RDAP がないため、1ms.dog のサーバーが代わりに取得しました。",

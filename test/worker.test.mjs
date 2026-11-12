@@ -91,8 +91,9 @@ test("/whois answers with what the registry publishes, and only dig.1ms.dog may 
     assert.equal(body.email, "someone@example.com");
     assert.equal(body.dnssec, "unsigned");
     assert.match(body.raw, /Sponsoring Registrar: Example Registrar/);
-    assert.deepEqual(Object.keys(body).sort(), ["created", "dnssec", "email", "expires", "nameservers", "ok", "phone",
-      "raw", "registrant", "registrantOrg", "registrar", "src", "status", "tld", "updated"].sort());
+    assert.equal(body.lookedUp, "sina.cn");
+    assert.deepEqual(Object.keys(body).sort(), ["created", "dnssec", "email", "expires", "lookedUp", "nameservers", "ok",
+      "phone", "raw", "registrant", "registrantOrg", "registrar", "src", "status", "tld", "updated"].sort());
     const other = await worker.fetch(new Request("https://dig.1ms.dog/whois?d=sina.cn", { headers: { origin: "https://example.org" } }), {
       ASSETS: { fetch: async () => page() }, WHOIS_CONNECT: () => socket(),
     });

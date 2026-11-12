@@ -33,6 +33,18 @@ export function registryOf(domain) {
   return REGISTRY_WHOIS[tldOf(domain)] || null;
 }
 
+// The names a registry may hold a record for, most specific first: www.sina.cn → sina.cn. Registration data belongs to
+// the registrable domain, so looking up a host name only ever returns "not found"; there is no public-suffix list here,
+// just one label at a time down to two labels, which is the most a registry can hold without a suffix of its own.
+export function parentDomains(domain) {
+  const labels = String(domain || "").toLowerCase().replace(/\.+$/, "").split(".").filter(Boolean);
+  const out = [];
+  // three is enough for the shapes people type: www.example.com and www.example.co.uk; deeper hosts stop there rather
+  // than walking a long chain of names the registry cannot hold either.
+  for (let i = 0; i <= labels.length - 2 && out.length < 3; i++) out.push(labels.slice(i).join("."));
+  return out;
+}
+
 export async function fetchRdap(domain, { fetchImpl = fetch, signal, timeout = 9000 } = {}) {
   const ctl = new AbortController();
   let timedOut = false;
@@ -43,27 +55,35 @@ export async function fetchRdap(domain, { fetchImpl = fetch, signal, timeout = 9
     else signal.addEventListener("abort", stop);
   }
   try {
-    const tld = tldOf(domain);
-    const supplement = RDAP_SUPPLEMENTS[tld];
-    const res = await fetchImpl((supplement ? supplement.base : RDAP_BASE) + encodeURIComponent(domain), {
-      signal: ctl.signal, credentials: "omit", referrerPolicy: "no-referrer",
-      headers: { accept: "application/rdap+json, application/json" },
-    });
-    if (res.status === 404) {
-      // rdap.org's 404 is about the suffix, the registry's is about the domain. Only rdap.org is asked that question.
-      if (supplement) return { notFound: true };
-      const body = await res.text().catch(() => "");
-      if (/no rdap service/i.test(body)) return { unsupported: true, tld };
-      // An unreadable 404 from a suffix we know has no service is still "cannot ask", not "no registration data".
-      return NO_RDAP_TLDS.indexOf(tld) >= 0 ? { unsupported: true, tld } : { notFound: true };
+    const candidates = parentDomains(domain);
+    for (let i = 0; i < candidates.length; i++) {
+      const name = candidates[i], tld = tldOf(name), last = i === candidates.length - 1;
+      const supplement = RDAP_SUPPLEMENTS[tld];
+      const res = await fetchImpl((supplement ? supplement.base : RDAP_BASE) + encodeURIComponent(name), {
+        signal: ctl.signal, credentials: "omit", referrerPolicy: "no-referrer",
+        headers: { accept: "application/rdap+json, application/json" },
+      });
+      if (res.status === 404) {
+        // rdap.org's 404 is about the suffix, the registry's is about the domain. Only rdap.org is asked that question.
+        if (!supplement) {
+          const body = await res.text().catch(() => "");
+          if (/no rdap service/i.test(body)) return { unsupported: true, tld, lookedUp: name };
+          // An unreadable 404 from a suffix we know has no service is still "cannot ask", not "no registration data".
+          if (NO_RDAP_TLDS.indexOf(tld) >= 0) return { unsupported: true, tld, lookedUp: name };
+        }
+        // "not found" for a host name says nothing about the domain it belongs to: try one label shorter.
+        if (!last) continue;
+        return { notFound: true, lookedUp: name };
+      }
+      if (!res.ok) return { error: "http", status: res.status };
+      let json;
+      try { json = await res.json(); } catch (e) { return { error: "bad" }; }
+      const data = normalize(json);
+      // The registry's own reply, for the expandable "raw record": anything the parser misses is still there to read.
+      data.raw = String(JSON.stringify(json, null, 2) || "").slice(0, 16000);
+      return { data, lookedUp: name };
     }
-    if (!res.ok) return { error: "http", status: res.status };
-    let json;
-    try { json = await res.json(); } catch (e) { return { error: "bad" }; }
-    const data = normalize(json);
-    // The registry's own reply, for the expandable "raw record": anything the parser misses is still there to read.
-    data.raw = String(JSON.stringify(json, null, 2) || "").slice(0, 16000);
-    return { data };
+    return { notFound: true };
   } catch (e) {
     if (timedOut) return { error: "timeout" };
     if (e && (e.name === "AbortError" || e.name === "TimeoutError")) return { error: "aborted" };
@@ -94,6 +114,7 @@ export async function fetchServerRegistration(domain, { fetchImpl = fetch, signa
     const src = j.src === "whois" ? "whois" : "rdap";
     if (j.ok) return {
       src,
+      lookedUp: typeof j.lookedUp === "string" ? j.lookedUp : null,
       data: {
         handle: null, registrar: j.registrar || null, registrarUrl: j.registrarUrl || null,
         created: j.created || null, expires: j.expires || null, updated: j.updated || null,
@@ -105,7 +126,7 @@ export async function fetchServerRegistration(domain, { fetchImpl = fetch, signa
         raw: typeof j.raw === "string" ? j.raw : null,
       },
     };
-    if (j.reason === "notfound") return { notFound: true, src };
+    if (j.reason === "notfound") return { notFound: true, src, lookedUp: typeof j.lookedUp === "string" ? j.lookedUp : null };
     return null;
   } catch (e) {
     return null;

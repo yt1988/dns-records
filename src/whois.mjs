@@ -9,7 +9,7 @@
 // name servers, DNSSEC state, and the registrant's name or company, e-mail and phone when the registry has them. A
 // registry that withholds them (DENIC under GDPR, a privacy service) simply has no such field, and none is invented.
 // The registry's own reply is passed along as raw text so a field this parser misses is still there to read.
-import { RDAP_BASE, normalize, tldOf } from "./rdap.mjs";
+import { RDAP_BASE, normalize, tldOf, parentDomains } from "./rdap.mjs";
 
 // The registries we ask over port 43, measured from Cloudflare's network (docs/decisions.md). No guessing: a suffix
 // without an entry here and without RDAP is "we cannot ask", never "there is nothing".
@@ -193,34 +193,53 @@ async function rdapAsk(domain, { fetchImpl, signal }) {
 }
 
 // The whole answer for /whois: IANA-bootstrap RDAP (or the registry's own RDAP) first, port-43 WHOIS second.
+// A host name is looked up as its registrable domain — www.sina.cn is answered with sina.cn's record, and the answer
+// says which name it belongs to in `lookedUp` — because a registry only holds records for registered names.
 // { ok: true, src: "rdap" | "whois", ...fields } or { ok: false, reason: "notfound" | "no-service" | "timeout" | "error" }.
 export async function lookupRegistration(domain, { fetchImpl = fetch, connect, timeout = TIMEOUT_MS } = {}) {
   const d = validDomain(domain);
   if (!d) return { ok: false, reason: "bad-domain" };
   const tld = tldOf(d);
+  const names = parentDomains(d);
+  const started = Date.now();
+  const left = () => Math.max(1500, timeout - (Date.now() - started));
+
   const ctl = new AbortController();
   const timer = setTimeout(() => ctl.abort(), timeout);
-  let rdap = null;
-  try { rdap = await rdapAsk(d, { fetchImpl, signal: ctl.signal }); }
-  catch (e) { rdap = { error: e && e.name === "AbortError" ? "timeout" : "network" }; }
-  finally { clearTimeout(timer); }
-  if (rdap.data) return { ok: true, src: "rdap", tld, ...rdap.data };
-  if (rdap.notFound) return { ok: false, src: "rdap", reason: "notfound", tld };
+  let rdap = null, miss = null;
+  try {
+    for (const name of names) {
+      try { rdap = await rdapAsk(name, { fetchImpl, signal: ctl.signal }); }
+      catch (e) { rdap = { error: e && e.name === "AbortError" ? "timeout" : "network" }; }
+      if (rdap.data) return { ok: true, src: "rdap", tld, lookedUp: name, ...rdap.data };
+      // "not found" for a host name is not "not found" for the domain: try one label shorter before saying so.
+      if (rdap.notFound) { miss = name; continue; }
+      break;
+    }
+  } finally { clearTimeout(timer); }
+  if (miss) return { ok: false, src: "rdap", reason: "notfound", tld, lookedUp: miss };
 
   const server = WHOIS_SERVERS[tld];
   if (server) {
-    const text = await queryWhois(d, server, { connect, timeout });
-    if (text == null) return { ok: false, reason: "timeout", tld };
-    if (NOT_FOUND.test(text)) return { ok: false, src: "whois", reason: "notfound", tld };
-    const data = parseWhois(text);
-    // The registry's own reply goes along with the parsed fields, so a field this parser misses is still readable.
-    if (data) return { ok: true, src: "whois", tld, ...data, raw: clipRaw(text) };
-    // A reply that names the domain but has no fields at all (JPRS does this for a held example domain) is the
-    // registry answering with nothing, not a broken lookup.
-    if (text.toLowerCase().includes(d)) return { ok: false, src: "whois", reason: "notfound", tld };
-    return { ok: false, reason: "error", tld };
+    let missing = null;
+    for (let i = 0; i < names.length; i++) {
+      const name = names[i], last = i === names.length - 1;
+      const text = await queryWhois(name, server, { connect, timeout: left() });
+      if (text == null) return { ok: false, reason: "timeout", tld };
+      if (NOT_FOUND.test(text)) { missing = name; continue; }
+      const data = parseWhois(text);
+      // The registry's own reply goes along with the parsed fields, so a field this parser misses is still readable.
+      if (data) return { ok: true, src: "whois", tld, lookedUp: name, ...data, raw: clipRaw(text) };
+      // A reply with no fields (JPRS answers a held example domain with the name and nothing else, CNNIC says
+      // "Invalid parameter:" for a host name, HKDNR "Incorrect input") says nothing about the domain it belongs to,
+      // so go one label shorter. On the last name it is the registry answering badly, and that is an error.
+      if (!last) { missing = name; continue; }
+      if (text.toLowerCase().includes(name)) return { ok: false, src: "whois", reason: "notfound", tld, lookedUp: name };
+      return { ok: false, reason: "error", tld };
+    }
+    return { ok: false, src: "whois", reason: "notfound", tld, lookedUp: missing };
   }
-  if (rdap.error === "timeout") return { ok: false, reason: "timeout", tld };
+  if (rdap && rdap.error === "timeout") return { ok: false, reason: "timeout", tld };
   if (QUIET_TLDS.indexOf(tld) >= 0) return { ok: false, reason: "no-service", tld };
-  return { ok: false, reason: rdap.noService ? "no-service" : "error", tld };
+  return { ok: false, reason: rdap && rdap.noService ? "no-service" : "error", tld };
 }

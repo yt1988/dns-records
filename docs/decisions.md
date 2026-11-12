@@ -339,3 +339,25 @@ vCard 取 `fn`/`org`/`email`/`tel`，`secureDNS.delegationSigned` 取签名状�
 图片）；分享链接的快照 `x` 里也只有注册商、日期、状态、NS，注册人不上链接。站长确认：分享结果不带走注册人和
 联系方式（链接和卡片一样），要看就自己查一次。`src/app.js` 里快照那段只取这五个字段，测试钉住它不能多出
 registrant / email / phone。
+
+## 2026-11-12 · 注册信息按「可注册域名」查，不按主机名
+
+站长报的问题：输入 www.cloudflare.com 查不到注册信息，输入 cloudflare.com 才行。原因很简单——注册局只登记注册名，
+`www.cloudflare.com` 这种主机名在注册局那里根本没有记录：rdap.org 回 404、CNNIC 回 `Invalid parameter:www.sina.cn`、
+HKDNR 回 `Incorrect input`，页面于是说「查不到」。DNS 那部分仍然查访客输入的完整名字（www 的 CNAME 就该看），
+只有注册信息这一块改成往上一层层找。
+
+**做法**：`parentDomains(name)` 给出最多三级候选，最具体的在前（`a.b.example.co.uk` → `a.b.example.co.uk`、
+`b.example.co.uk`、`example.co.uk`）。浏览器侧 `fetchRdap` 和 Worker 侧 `lookupRegistration` 都按这个顺序试：
+RDAP 先，注册局的 404 或「没有这个域名的记录」就换上一级；43 端口 WHOIS 同理，`No matching record`、
+`Invalid parameter`、`Incorrect input`、只回一个域名没有字段，都算「这个名字它没有」，继续往上一级。
+三级封顶：再深的链子注册局也不会持有，没必要一路问到 `co.uk`。
+
+**代价**：还是**一次** `/whois` 请求（Public 的硬要求没变），只是 Worker 内部可能多一次 RDAP 或 socket；
+socket 的 8 秒预算改成从整个请求开始算，不会变成两次 8 秒。浏览器侧的 RDAP 多一跳是免费的。
+
+**页面怎么说**：应答带 `lookedUp`（实际查到记录的那个名字）；和访客输入的不一样时，注册信息块下面加一行
+`rd_parent`：「注册信息属于 {domain}——它下面的主机名没有自己的注册记录。」十种语言。分享快照不带这个字段。
+
+实测：www.cloudflare.com → 浏览器直接读到 cloudflare.com 的 RDAP，注册信息完整，0 次 `/whois`；
+www.sina.cn → 1 次 `/whois`，CNNIC 先答 Invalid parameter，再取 sina.cn 的记录；www.hkirc.hk、www.jprs.jp 同理。

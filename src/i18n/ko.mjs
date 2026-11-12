@@ -82,6 +82,7 @@ export default {
   rd_whois: "{registry}에서 조회", rd_whois_unknown: "등록기관의 WHOIS 페이지에서는 확인할 수 있을 수 있습니다.",
   rd_registrant: "등록자", rd_org: "기관", rd_email: "이메일", rd_phone: "전화", rd_dnssec: "등록기관의 DNSSEC",
   rd_raw: "원본 기록",
+  rd_parent: "등록 정보는 {domain}의 것입니다. 그 아래 호스트 이름에는 자체 등록 기록이 없습니다.",
   rd_from_rdap: "출처: RDAP, 브라우저가 직접 읽음.",
   rd_src_rdap: "출처: RDAP, 이 등록기관의 RDAP는 브라우저에서 읽을 수 없어 1ms.dog 서버가 대신 조회했습니다.",
   rd_src_whois: "출처: 등록기관 WHOIS(43번 포트), 이 접미사에는 브라우저가 읽을 수 있는 RDAP가 없어 1ms.dog 서버가 대신 조회했습니다.",

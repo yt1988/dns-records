@@ -82,6 +82,7 @@ export default {
   rd_whois: "去 {registry} 查詢", rd_whois_unknown: "可以在註冊局自己的 WHOIS 頁面查詢。",
   rd_registrant: "註冊人", rd_org: "機構", rd_email: "電子郵件", rd_phone: "電話", rd_dnssec: "註冊局的 DNSSEC",
   rd_raw: "原始紀錄",
+  rd_parent: "註冊資訊屬於 {domain}——它下面的主機名沒有自己的註冊紀錄。",
   rd_from_rdap: "資料來源：RDAP，瀏覽器直接讀取。",
   rd_src_rdap: "資料來源：RDAP，由 1ms.dog 的伺服器代查（註冊局的 RDAP 不允許瀏覽器直接讀）。",
   rd_src_whois: "資料來源：註冊局 WHOIS（43 埠），由 1ms.dog 的伺服器代查（這個字尾沒有瀏覽器能讀的 RDAP）。",
