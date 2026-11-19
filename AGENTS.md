@@ -26,7 +26,7 @@ npm run dev        # wrangler dev，http://localhost:8794
 
 | 改了什么 | 跑什么 |
 |---|---|
-| 任何 `src/`、`scripts/`、文案 | `npm test`（先确认 public/ 已重新生成并提交，再跑 58 个测试：wire 解析、合并、SPF/DMARC、DNSSEC、等级、RDAP、分享码、页面、Worker）。提交前必须通过 |
+| 任何 `src/`、`scripts/`、文案 | `npm test`（先确认 public/ 已重新生成并提交，再跑 `test/*.test.mjs` 的全部测试：wire 解析、合并、SPF/DMARC、DNSSEC、等级、RDAP、分享码、页面、Worker）。提交前必须通过 |
 | 页面外观 | 再在浏览器里看桌面和手机宽度 375 px，中文和俄语（字最长）；页面不能横向滚动；第一屏要能看到输入框和结论 |
 | 解析器列表 `src/resolvers.mjs` | 按 README 的步骤逐家确认 DoH + CORS，最好从另一个网络也看一次；再 `npm run build && npm test` |
 | 分享组件 `public/assets/share/` | **不要改**。它是外壳 `assets/share/` 的原样复制；要改先去外壳仓库改那一份，再同步过来 |

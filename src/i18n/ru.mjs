@@ -75,7 +75,7 @@ export default {
   dn_off_why: "У родительской зоны нет записи DS, поэтому резолверы не проверяют этот домен. Так у большинства доменов, и на оценку это не влияет.",
   dn_unknown_why: "Нужны ответ DS и хотя бы 2 резолвера-валидатора; в этот раз их было {n}.",
   dn_card_pass: "Вкл.", dn_card_broken: "Сломан", dn_card_off: "Выкл.", dn_card_unknown: "—",
-  bd_caa: "CAA", bd_ipv6: "IPv6",
+  bd_caa: "CAA настроен", bd_ipv6: "IPv6",
 
   h_rdap: "Регистрация", rd_registrar: "Регистратор", rd_created: "Зарегистрирован", rd_expires: "Истекает", rd_updated: "Обновлён",
   rd_status: "Статус", rd_ns: "Серверы имён у регистратора", rd_loading: "Читаю данные регистрации…",

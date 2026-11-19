@@ -74,7 +74,7 @@ export default {
   dn_off_why: "父區沒有 DS 記錄，解析器不會驗證這個網域。大多數網域都是這樣，不影響等級。",
   dn_unknown_why: "判斷需要 DS 的回答和至少 2 家會驗證的解析器，這次有 {n} 家。",
   dn_card_pass: "開", dn_card_broken: "斷鏈", dn_card_off: "關", dn_card_unknown: "—",
-  bd_caa: "CAA", bd_ipv6: "IPv6",
+  bd_caa: "CAA 已設定", bd_ipv6: "IPv6",
 
   h_rdap: "註冊資訊", rd_registrar: "註冊商", rd_created: "註冊時間", rd_expires: "到期時間", rd_updated: "更新時間",
   rd_status: "狀態", rd_ns: "註冊局的 NS", rd_loading: "正在讀取註冊資訊…",

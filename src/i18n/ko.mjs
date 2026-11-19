@@ -74,7 +74,7 @@ export default {
   dn_off_why: "상위 영역에 DS 레코드가 없어 리졸버가 이 도메인을 검증하지 않습니다. 대부분의 도메인이 이 상태이며 등급은 내려가지 않습니다.",
   dn_unknown_why: "판단하려면 DS 응답과 검증 리졸버 2곳 이상이 필요합니다. 이번에는 {n}곳이었습니다.",
   dn_card_pass: "켜짐", dn_card_broken: "끊김", dn_card_off: "꺼짐", dn_card_unknown: "—",
-  bd_caa: "CAA", bd_ipv6: "IPv6",
+  bd_caa: "CAA 설정됨", bd_ipv6: "IPv6",
 
   h_rdap: "등록 정보", rd_registrar: "등록업체", rd_created: "등록일", rd_expires: "만료일", rd_updated: "갱신일",
   rd_status: "상태", rd_ns: "등록기관의 NS", rd_loading: "등록 정보를 읽는 중…",

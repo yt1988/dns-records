@@ -30,8 +30,10 @@ const sha = s => createHash("sha256").update(s).digest("base64");
 
 // Strings only the build uses (the page already shows them); everything else goes to the browser
 const BUILD_ONLY = new Set(["name", "seo_title", "seo_desc", "seo_kw", "og_sub", "h1", "intro", "docs",
-  "a_help", "a_close", "a_prev", "a_next", "a_lang", "a_theme", "lang_label", "f_domain", "f_domain_ph",
+  "a_help", "a_close", "a_prev", "a_next", "a_lang", "lang_label", "f_domain", "f_domain_ph",
   "f_types", "f_types_hint", "go", "share", "report_result", "report_prefill", "help_h", "foot_src"]);
+// a_theme is not build-only: page.html uses it for the button's first label, and app.js sets it again on every theme
+// change, so the runtime strings need it too (it leaked the raw key "a_theme" as the button's aria-label before).
 
 const pathOf = slug => "/" + (slug ? slug + "/" : "");
 

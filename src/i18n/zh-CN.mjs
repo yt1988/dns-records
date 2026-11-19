@@ -74,7 +74,7 @@ export default {
   dn_off_why: "父区没有 DS 记录，解析器不会验证这个域名。大多数域名都是这样，不影响等级。",
   dn_unknown_why: "判断需要 DS 的回答和至少 2 家会验证的解析器，这次有 {n} 家。",
   dn_card_pass: "开", dn_card_broken: "断链", dn_card_off: "关", dn_card_unknown: "—",
-  bd_caa: "CAA", bd_ipv6: "IPv6",
+  bd_caa: "CAA 已配置", bd_ipv6: "IPv6",
 
   h_rdap: "注册信息", rd_registrar: "注册商", rd_created: "注册时间", rd_expires: "到期时间", rd_updated: "更新时间",
   rd_status: "状态", rd_ns: "注册局的 NS", rd_loading: "正在读取注册信息…",

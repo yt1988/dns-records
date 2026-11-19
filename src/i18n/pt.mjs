@@ -74,7 +74,7 @@ export default {
   dn_off_why: "A zona pai não tem registro DS, então os resolvedores não validam este domínio. É o caso da maioria dos domínios e não reduz a nota.",
   dn_unknown_why: "É preciso uma resposta DS e pelo menos 2 resolvedores validadores; desta vez foram {n}.",
   dn_card_pass: "Ativo", dn_card_broken: "Rompido", dn_card_off: "Inativo", dn_card_unknown: "—",
-  bd_caa: "CAA", bd_ipv6: "IPv6",
+  bd_caa: "CAA configurado", bd_ipv6: "IPv6",
 
   h_rdap: "Registro", rd_registrar: "Registrador", rd_created: "Registrado em", rd_expires: "Expira em", rd_updated: "Atualizado em",
   rd_status: "Status", rd_ns: "Servidores de nomes do registrador", rd_loading: "Lendo os dados de registro…",

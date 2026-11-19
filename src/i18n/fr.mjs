@@ -74,7 +74,7 @@ export default {
   dn_off_why: "La zone parente n'a pas d'enregistrement DS, donc les résolveurs ne valident pas ce domaine. C'est le cas de la plupart des domaines et cela ne baisse pas la note.",
   dn_unknown_why: "Il faut une réponse DS et au moins 2 résolveurs validants ; il y en a eu {n}.",
   dn_card_pass: "Actif", dn_card_broken: "Cassé", dn_card_off: "Inactif", dn_card_unknown: "—",
-  bd_caa: "CAA", bd_ipv6: "IPv6",
+  bd_caa: "CAA configuré", bd_ipv6: "IPv6",
 
   h_rdap: "Enregistrement", rd_registrar: "Registraire", rd_created: "Créé le", rd_expires: "Expire le", rd_updated: "Mis à jour le",
   rd_status: "Statut", rd_ns: "Serveurs de noms du registre", rd_loading: "Lecture des données de registre…",

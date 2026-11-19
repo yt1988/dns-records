@@ -429,3 +429,27 @@ zone 查询抢 `state.results`。代价只在「主机是独立 zone」这种少
 测试：`test/zone.test.mjs` 14 项——apex 保持、主机只问一次、CNAME 跨 zone 上一层、两级后缀不砍、未注册名字
 问到 `x.co.uk` 就停、NXDOMAIN、无回答、非上级 SOA 忽略、`nameFor` 分流、`preferRegistrable`，以及页面接线
 （zone 类型问 `apex`、`_dmarc.<apex>`、DS 问 `state.apex`、`lateApex` 的重问路径）。`npm test` 104 项全过。
+
+## 2026-11-19 · 外部审计的三条：main 地标、a_theme 泄露、CAA 徽章
+
+站长转来一份外部 P0 审计（经 Public 派下来），其中三条属于这一页。三条都先在本地构建产物和浏览器里复现，再改。
+
+**缺 `<main>`。** 页面的内容列原来是 `<div class="app">`，整页没有地标。改成 `<main class="app">`：CSS 一行没动，
+桌面和 375 px 的布局不变；帮助弹窗的 `.scrim` 本来就在 `.app` 外面，继续留在 main 外面（`position: fixed`，移动它
+不影响版式）。外壳的「其他工具」注入点 `[data-ms-more]` 仍在 main 里、弹窗之前，符合 tool-contract 的顺序要求。
+
+**主题按钮把 i18n 键当成了 aria-label。** 构建产物里的 `aria-label="Theme"` 是对的，但 `app.js` 每次切换主题都会
+调 `t("a_theme")` 重写 `aria-label` 和 `title`，而 `a_theme` 在 `scripts/build.mjs` 的 `BUILD_ONLY` 名单里，不进浏览器
+用的字符串文件，`t()` 于是回退成键名本身。把它移出 `BUILD_ONLY`（它本来就是构建和运行时都用），并加一条回归测试：
+扫描 `src/app.js` 里所有字面量 `t("…")`，每个键都必须出现在已构建的 `l.en.*.js` 里。动态拼的键（`"e_" + res.error`）
+跳过。这条测试还能挡住以后再把运行时键误放进 `BUILD_ONLY`。
+
+**`github.com` 上「空的、孤立的 CAA 标签」。** 先排除 DNS 解析和渲染：12 家解析器里能连上的都回了同样的 7 条 CAA
+（digicert、globalsign、letsencrypt、sectigo，各一条 issue 和 issuewild），没有空记录；`rdlen=0` 的 CAA 在
+`src/dns.mjs` 里会报 `short CAA`，那家解析器显示为错误，不会被画成一条空记录。审计看到的是**徽章**：`.badges`
+一行里只有一个写着「CAA」的小胶囊（`github.com` 没有 AAAA，IPv6 徽章不出现），光一个缩写读不出任何结论，看起来
+就是一枚空标签。改的是文案：`bd_caa` 十种语言从「CAA」改成说明事实的短语（「CAA 已配置」/ "CAA set" /
+「CAA настроен」…），IPv6 徽章保持「IPv6」。徽章仍然只是徽章，不参与等级（和 2026-11-11 的决定一致）。
+
+验证：`npm test` 106 项全过；本地构建产物在浏览器里查 `github.com`，zh-CN／ru 下 `main` 一个、主题按钮读作「主题」/
+「Тема」、徽章读作「CAA 已配置」/「CAA настроен」，375 px 下 `scrollWidth` 375，无横向滚动。

@@ -74,6 +74,27 @@ test("the brand keeps the tool's name for screen readers where the narrow layout
   assert.match(css, /@media \(max-width: 540px\)[^}]*}\s*\.brand-name \{ display: none; \}/);
 });
 
+test("every page has one main landmark, and the help dialog stays outside it", async () => {
+  for (const [lang, slug] of SLUGS) {
+    const html = await page(slug);
+    assert.equal((html.match(/<main\b/g) || []).length, 1, lang + " main");
+    assert.equal((html.match(/<\/main>/g) || []).length, 1, lang + " main close");
+    assert.match(html, /<main class="app">[\s\S]*<\/main>\s*<div class="scrim" id="help"/, lang);
+  }
+});
+
+test("every literal string key the page code asks for ships in the browser's strings file", async () => {
+  // a_theme was in BUILD_ONLY while app.js asked for it at runtime: the theme button's label became "a_theme"
+  const app = await readFile(new URL("../src/app.js", import.meta.url), "utf8");
+  // keys ending in _ are built at runtime ("e_" + res.error), so the literal prefix is not a key by itself
+  const keys = new Set([...app.matchAll(/\bt\("([a-z][a-z0-9_]*)"/g)].map(m => m[1]).filter(k => !k.endsWith("_")));
+  assert.ok(keys.size > 50, "the scan found the page's t() calls");
+  const file = (await readdir(new URL("assets/", pub))).find(f => /^l\.en\.[0-9a-f]+\.js$/.test(f));
+  const js = await readFile(new URL("assets/" + file, pub), "utf8");
+  const strings = JSON.parse(js.trim().replace(/^window\.L1MS=/, "").replace(/;$/, ""));
+  for (const k of keys) assert.ok(k in strings, "not in the browser's strings: " + k);
+});
+
 test("a long value in mail cannot widen the page past 375 px", async () => {
   // cloudflare.com's DMARC rua address is a long unbreakable mailto: token; without wrapping the two-column card
   // took 360 px of a 343 px track and the page scrolled 1 px sideways on a phone

@@ -75,7 +75,7 @@ export default {
   dn_off_why: "The parent zone has no DS record, so resolvers don't validate this domain. Most domains are like this, and it doesn't lower the grade.",
   dn_unknown_why: "Telling needs a DS answer and at least two validating resolvers; {n} answered.",
   dn_card_pass: "On", dn_card_broken: "Broken", dn_card_off: "Off", dn_card_unknown: "—",
-  bd_caa: "CAA", bd_ipv6: "IPv6",
+  bd_caa: "CAA set", bd_ipv6: "IPv6",
 
   h_rdap: "Registration", rd_registrar: "Registrar", rd_created: "Registered", rd_expires: "Expires", rd_updated: "Updated",
   rd_status: "Status", rd_ns: "Name servers at the registrar", rd_loading: "Reading registration data…",

@@ -74,7 +74,7 @@ export default {
   dn_off_why: "親ゾーンに DS レコードがないため、リゾルバーはこのドメインを検証しません。ほとんどのドメインがこの状態で、評価は下がりません。",
   dn_unknown_why: "判断には DS の応答と、検証できるリゾルバーが 2 台以上必要です。今回は {n} 台でした。",
   dn_card_pass: "有効", dn_card_broken: "破綻", dn_card_off: "無効", dn_card_unknown: "—",
-  bd_caa: "CAA", bd_ipv6: "IPv6",
+  bd_caa: "CAA 設定済み", bd_ipv6: "IPv6",
 
   h_rdap: "登録情報", rd_registrar: "登録業者", rd_created: "登録日", rd_expires: "有効期限", rd_updated: "更新日",
   rd_status: "状態", rd_ns: "レジストリの NS", rd_loading: "登録情報を読み込み中…",

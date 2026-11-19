@@ -75,7 +75,7 @@ export default {
   dn_off_why: "Die Elternzone hat keinen DS-Eintrag, daher validieren die Resolver diese Domain nicht. Das ist bei den meisten Domains so und kostet keine Note.",
   dn_unknown_why: "Nötig sind eine DS-Antwort und mindestens 2 validierende Resolver; es waren {n}.",
   dn_card_pass: "Aktiv", dn_card_broken: "Defekt", dn_card_off: "Inaktiv", dn_card_unknown: "—",
-  bd_caa: "CAA", bd_ipv6: "IPv6",
+  bd_caa: "CAA konfiguriert", bd_ipv6: "IPv6",
 
   h_rdap: "Registrierung", rd_registrar: "Registrar", rd_created: "Registriert", rd_expires: "Läuft ab", rd_updated: "Aktualisiert",
   rd_status: "Status", rd_ns: "Nameserver der Registry", rd_loading: "Registrierungsdaten werden gelesen…",
