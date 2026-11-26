@@ -453,3 +453,19 @@ zone 查询抢 `state.results`。代价只在「主机是独立 zone」这种少
 
 验证：`npm test` 106 项全过；本地构建产物在浏览器里查 `github.com`，zh-CN／ru 下 `main` 一个、主题按钮读作「主题」/
 「Тема」、徽章读作「CAA 已配置」/「CAA настроен」，375 px 下 `scrollWidth` 375，无横向滚动。
+
+## 2026-11-26 · 每个内联 `<svg>` 自带命名空间
+
+#146 一.3：Safari 的 Dark Reader 把页面上每个图标 `outerHTML` 成 `data:image/svg+xml` 再当图片加载，命名空间不是
+属性，`outerHTML` 补不上 `xmlns`，独立解码就失败，控制台刷一串 `Unable to load image data:image/svg+xml…`。
+`1ms-ui` 查实根因后，shell 加了 HTMLRewriter 在出站 HTML 上补 `xmlns`（shell `50e684f`），并要求各工具自己负责
+脚本里拼出来的图标。
+
+这一页两处都补上，不只改 shell 要求的运行时那处：
+
+- `src/app.js` 的 `EXT`（外链图标，`innerHTML` 拼进页面）加 `xmlns`。这是 shell 碰不到的那部分。
+- `src/page.html` 的 9 个静态图标也加上。走 1ms.dog 时 shell 会补，但自部署的副本没有 shell，仓库自己也该是
+  对的。本地验证：不带命名空间的图标序列化后当图片解码 `fail`，带的 `ok`。
+
+测试（`test/pages.test.mjs`）：构建出的每个语言页里，去掉 `<script>` 后每个 `<svg>` 都带 `xmlns`；`src/app.js`
+里所有以字符串拼出的 `<svg` 也都要带。`npm run check -- dig` 在 shell 仓库里检查同一件事（标记部分）。
