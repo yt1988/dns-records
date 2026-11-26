@@ -74,6 +74,21 @@ test("the brand keeps the tool's name for screen readers where the narrow layout
   assert.match(css, /@media \(max-width: 540px\)[^}]*}\s*\.brand-name \{ display: none; \}/);
 });
 
+test("every inline icon in the markup says it is SVG, and so does the one the page code builds", async () => {
+  // the namespace is not an attribute: outerHTML drops it, and an extension that reloads the icon as a standalone
+  // image (Safari's Dark Reader) cannot decode it (#146 一.3). The shell fills it in on the way through, but a
+  // self-hosted copy has no shell, and script-built markup is out of the shell's reach either way.
+  const app = await readFile(new URL("../src/app.js", import.meta.url), "utf8");
+  const built = [...app.matchAll(/['"]<svg\b[^>]*>/g)].map(m => m[0].slice(1));
+  assert.ok(built.length > 0, "the scan found the icons app.js builds");
+  for (const tag of built) assert.match(tag, /xmlns="http:\/\/www\.w3\.org\/2000\/svg"/);
+  for (const [lang, slug] of SLUGS) {
+    const html = (await page(slug)).replace(/<script[\s\S]*?<\/script>/g, "");
+    const bare = [...html.matchAll(/<svg\b[^>]*>/g)].map(m => m[0]).filter(t => !t.includes('xmlns="http://www.w3.org/2000/svg"'));
+    assert.deepEqual(bare, [], lang + " has icons without a namespace");
+  }
+});
+
 test("every page has one main landmark, and the help dialog stays outside it", async () => {
   for (const [lang, slug] of SLUGS) {
     const html = await page(slug);
