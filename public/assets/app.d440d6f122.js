@@ -1904,7 +1904,11 @@
         await sharePromise;
       }
       if (!state.shareCode) return;
-      const mod = await import("/assets/share/share.js?v=10");
+      const mod = await import("/assets/share/share.js?v=11").catch(() => null);
+      if (!mod) {
+        window.msShareDown && window.msShareDown();
+        return;
+      }
       mod.share({
         lang: LANG,
         name: t("app_name"),
@@ -1997,7 +2001,7 @@
       $("verdict").hidden = false;
     }
     function sharedBanner(snap) {
-      import("/assets/share/share.js?v=10").then(({ received }) => {
+      import("/assets/share/share.js?v=11").then(({ received }) => {
         received({
           lang: LANG,
           ts: snap.at,

@@ -968,7 +968,8 @@ import { encodeResult, decodeResult, sharePath, resultsFromSnapshot, CODES } fro
   $("shareBtn").onclick = async () => {
     if (!state.shareCode) { prepareShare(); await sharePromise; }
     if (!state.shareCode) return;
-    const mod = await import("/assets/share/share.js?v=10");
+    const mod = await import("/assets/share/share.js?v=11").catch(() => null);
+    if (!mod) { window.msShareDown && window.msShareDown(); return; }
     mod.share({
       lang: LANG, name: t("app_name"), file: "dns-records", show: [], never: ["ip"],
       link: () => location.origin + (D.paths && D.paths[LANG] ? D.paths[LANG] : "/") + "r/" + state.shareCode,
@@ -1063,7 +1064,7 @@ import { encodeResult, decodeResult, sharePath, resultsFromSnapshot, CODES } fro
   // The shared banner (/assets/share/, the same one every tool uses): what this is, and the way to the visitor's own
   // lookup, which replaces it on this language's page.
   function sharedBanner(snap) {
-    import("/assets/share/share.js?v=10").then(({ received }) => {
+    import("/assets/share/share.js?v=11").then(({ received }) => {
       received({
         lang: LANG, ts: snap.at, at: document.querySelector(".hero"),
         test: () => {
